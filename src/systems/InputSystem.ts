@@ -4,14 +4,15 @@
  */
 
 import { System, World } from '../core/ECS';
+import { Transform } from '../components/Transform';
 import { Velocity } from '../components/Velocity';
 import { Tag } from '../components/Tag';
-import { GAME_CONFIG, SCALE_FACTOR } from '../config/constants';
+import { GAME_CONFIG } from '../config/constants';
 
 export class InputSystem extends System {
   private keys: Set<string> = new Set();
-  private touchStart: { x: number, y: number } | null = null;
-  private touchCurrent: { x: number, y: number } | null = null;
+  private lastTouchPos: { x: number, y: number } | null = null;
+  private currentTouchPos: { x: number, y: number } | null = null;
   
   constructor() {
     super();
@@ -31,10 +32,11 @@ export class InputSystem extends System {
   
   private setupTouch(): void {
     const handleTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
       if (e.touches.length > 0) {
         const touch = e.touches[0];
-        this.touchStart = { x: touch.clientX, y: touch.clientY };
-        this.touchCurrent = { x: touch.clientX, y: touch.clientY };
+        this.lastTouchPos = { x: touch.clientX, y: touch.clientY };
+        this.currentTouchPos = { x: touch.clientX, y: touch.clientY };
       }
     };
     
@@ -42,13 +44,13 @@ export class InputSystem extends System {
       e.preventDefault();
       if (e.touches.length > 0) {
         const touch = e.touches[0];
-        this.touchCurrent = { x: touch.clientX, y: touch.clientY };
+        this.currentTouchPos = { x: touch.clientX, y: touch.clientY };
       }
     };
     
     const handleTouchEnd = () => {
-      this.touchStart = null;
-      this.touchCurrent = null;
+      this.lastTouchPos = null;
+      this.currentTouchPos = null;
     };
     
     window.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -59,7 +61,7 @@ export class InputSystem extends System {
   
   update(world: World, _delta: number): void {
     // 找到玩家实体
-    const players = this.query(world, 'Tag', 'Velocity').filter(e => {
+    const players = this.query(world, 'Tag', 'Transform', 'Velocity').filter(e => {
       const tag = e.getComponent<Tag>('Tag');
       return tag && tag.value === 'player';
     });
@@ -67,55 +69,58 @@ export class InputSystem extends System {
     if (players.length === 0) return;
     
     const player = players[0];
-    const velocity = player.getComponent<Velocity>('Velocity')!;
+    const transform = player.getComponent('Transform');
+    const velocity = player.getComponent<Velocity>('Velocity');
     
-    // 获取输入向量
+    if (!transform || !velocity) return;
+    
+    // 键盘输入
     let vx = 0;
     let vy = 0;
     
-    // 键盘输入
     if (this.keys.has('a') || this.keys.has('arrowleft')) vx -= 1;
     if (this.keys.has('d') || this.keys.has('arrowright')) vx += 1;
     if (this.keys.has('w') || this.keys.has('arrowup')) vy -= 1;
     if (this.keys.has('s') || this.keys.has('arrowdown')) vy += 1;
     
-    // 触摸输入（虚拟摇杆）
-    if (this.touchStart && this.touchCurrent) {
-      const dx = this.touchCurrent.x - this.touchStart.x;
-      const dy = this.touchCurrent.y - this.touchStart.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+    // 触摸输入（相对拖动 - 触摸板风格）
+    if (this.currentTouchPos && this.lastTouchPos) {
+      // 计算手指移动的距离
+      const dx = this.currentTouchPos.x - this.lastTouchPos.x;
+      const dy = this.currentTouchPos.y - this.lastTouchPos.y;
       
-      // 死区和最大偏移应用缩放
-      const deadZone = 10 * SCALE_FACTOR;
-      const maxDistance = 80 * SCALE_FACTOR;
+      // 灵敏度系数（可调整，1.5 = 手指移动 1px，飞机移动 1.5px）
+      const sensitivity = 1.5;
       
-      if (distance > deadZone) {
-        vx = Math.max(-1, Math.min(1, dx / maxDistance));
-        vy = Math.max(-1, Math.min(1, dy / maxDistance));
-      }
+      // 直接移动飞机位置（相对位移）
+      transform.x += dx * sensitivity;
+      transform.y += dy * sensitivity;
+      
+      // 更新上一次位置为当前位置
+      this.lastTouchPos = { ...this.currentTouchPos };
+      
+      // 清空速度（触摸直接控制位置，不需要速度）
+      velocity.vx = 0;
+      velocity.vy = 0;
+      
+      return; // 触摸时不使用键盘输入
     }
     
-    // 归一化向量
+    // 归一化向量（键盘输入）
     const magnitude = Math.sqrt(vx * vx + vy * vy);
     if (magnitude > 0) {
       vx /= magnitude;
       vy /= magnitude;
     }
     
-    // 应用速度
+    // 应用速度（键盘模式）
     velocity.vx = vx * GAME_CONFIG.PLAYER_SPEED;
     velocity.vy = vy * GAME_CONFIG.PLAYER_SPEED;
   }
   
-  // 获取虚拟摇杆数据（供UI渲染）
-  getJoystickData(): { start: { x: number, y: number }, current: { x: number, y: number } } | null {
-    if (this.touchStart && this.touchCurrent) {
-      return {
-        start: this.touchStart,
-        current: this.touchCurrent
-      };
-    }
-    return null;
+  // 获取触摸数据（供UI渲染）
+  getTouchData(): { x: number, y: number } | null {
+    return this.currentTouchPos;
   }
 }
 
