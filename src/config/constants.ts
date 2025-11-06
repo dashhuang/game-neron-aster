@@ -70,14 +70,14 @@ export const GAME_CONFIG = {
   HEX_HP: 60,
   HEX_SPEED: 40,
   HEX_DAMAGE: 8,
-  HEX_SIZE: 50,
+  HEX_SIZE: 16 * SCALE_FACTOR,
   HEX_XP: 2,
   
   // 敌人 - 箭头群（应用缩放系数）
   ARROW_HP: 20,
   ARROW_SPEED: 120,
   ARROW_DAMAGE: 5,
-  ARROW_SIZE: 40,
+  ARROW_SIZE: 12 * SCALE_FACTOR,
   ARROW_XP: 1,
   
   // 经验与升级（应用缩放系数）

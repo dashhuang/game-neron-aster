@@ -1,6 +1,6 @@
 /**
  * EnemySpawnSystem - 敌人生成系统
- * 定时在屏幕上方生成敌人
+ * 定时在屏幕上方生成敌人（使用配置驱动）
  */
 
 import { System, World } from '../core/ECS';
@@ -32,14 +32,16 @@ export class EnemySpawnSystem extends System {
       for (let i = 0; i < count; i++) {
         // 随机位置（屏幕上方）
         const x = Math.random() * GAME_WIDTH;
-        const y = -100; // 屏幕上方（根据新尺寸调整）
+        const y = -50; // 屏幕上方
         
-        // 随机选择敌人配置
+        // 从配置中随机选择敌人类型
         const enemyId = Math.random() > 0.5 ? 'hex_basic' : 'arrow_fast';
         const enemyConfig = gameData.getEnemy(enemyId);
         
         if (enemyConfig) {
           createEnemyFromConfig(world, this.stage, x, y, enemyConfig);
+        } else {
+          console.error(`未找到敌人配置: ${enemyId}`);
         }
       }
     }
