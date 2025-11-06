@@ -83,25 +83,40 @@ export class InputSystem extends System {
     if (this.keys.has('w') || this.keys.has('arrowup')) vy -= 1;
     if (this.keys.has('s') || this.keys.has('arrowdown')) vy += 1;
     
-    // 触摸输入（相对拖动 - 触摸板风格）
+    // 触摸输入（相对拖动 - 触摸板风格 + 速度控制）
     if (this.currentTouchPos && this.lastTouchPos) {
       // 计算手指移动的距离
       const dx = this.currentTouchPos.x - this.lastTouchPos.x;
       const dy = this.currentTouchPos.y - this.lastTouchPos.y;
       
-      // 灵敏度系数（可调整，1.5 = 手指移动 1px，飞机移动 1.5px）
-      const sensitivity = 1.5;
+      // 计算移动距离
+      const distance = Math.sqrt(dx * dx + dy * dy);
       
-      // 直接移动飞机位置（相对位移）
-      transform.x += dx * sensitivity;
-      transform.y += dy * sensitivity;
+      // 如果有移动（超过小阈值）
+      if (distance > 0.5) {
+        // 计算归一化方向
+        const dirX = dx / distance;
+        const dirY = dy / distance;
+        
+        // 灵敏度系数：控制触摸滑动对速度的影响
+        // 数值越大，轻轻滑动就能达到最大速度
+        const touchSensitivity = 30;
+        
+        // 计算速度倍数（基于滑动距离）
+        // 滑动越快，速度越大（但有上限）
+        const speedMultiplier = Math.min(1.0, distance / touchSensitivity);
+        
+        // 设置速度（方向 × 玩家速度 × 倍数）
+        velocity.vx = dirX * GAME_CONFIG.PLAYER_SPEED * speedMultiplier;
+        velocity.vy = dirY * GAME_CONFIG.PLAYER_SPEED * speedMultiplier;
+      } else {
+        // 没有移动，速度归零（飞机停止）
+        velocity.vx = 0;
+        velocity.vy = 0;
+      }
       
       // 更新上一次位置为当前位置
       this.lastTouchPos = { ...this.currentTouchPos };
-      
-      // 清空速度（触摸直接控制位置，不需要速度）
-      velocity.vx = 0;
-      velocity.vy = 0;
       
       return; // 触摸时不使用键盘输入
     }
