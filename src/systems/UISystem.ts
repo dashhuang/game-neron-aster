@@ -92,15 +92,19 @@ export class UISystem extends System {
   }
   
   private createJoystick(): void {
-    // 虚拟摇杆应用缩放
-    const outerRadius = 60 * SCALE_FACTOR;
-    const innerRadius = 25 * SCALE_FACTOR;
-    const joystick = NeonRenderer.createJoystick(outerRadius, innerRadius);
-    this.joystickOuter = joystick.outer;
-    this.joystickInner = joystick.inner;
+    // 创建触摸点指示器（可选，用于调试）
+    const innerRadius = 15 * SCALE_FACTOR;
     
-    this.joystickOuter.visible = false;
+    this.joystickInner = new Graphics();
+    this.joystickInner.circle(0, 0, innerRadius);
+    this.joystickInner.fill({ color: COLORS.UI_PRIMARY, alpha: 0.3 });
+    this.joystickInner.circle(0, 0, innerRadius);
+    this.joystickInner.stroke({ width: 2, color: COLORS.UI_PRIMARY, alpha: 0.6 });
     this.joystickInner.visible = false;
+    
+    // 外圈不再需要
+    this.joystickOuter = new Graphics();
+    this.joystickOuter.visible = false;
     
     this.uiContainer.addChild(this.joystickOuter);
     this.uiContainer.addChild(this.joystickInner);
@@ -139,21 +143,20 @@ export class UISystem extends System {
       this.xpBar.fill({ color: COLORS.UI_PROGRESS, alpha: 0.9 });
     }
     
-    // 更新虚拟摇杆显示
-    const joystickData = this.inputSystem.getJoystickData();
-    if (joystickData) {
-      this.joystickOuter.visible = true;
-      this.joystickInner.visible = true;
+    // 更新触摸点指示器（可选显示）
+    const touchData = this.inputSystem.getTouchData();
+    if (touchData) {
+      // 显示触摸点位置（调试用，可以关闭）
+      // this.joystickInner.visible = true;
+      // this.joystickInner.x = touchData.x;
+      // this.joystickInner.y = touchData.y;
       
-      this.joystickOuter.x = joystickData.start.x;
-      this.joystickOuter.y = joystickData.start.y;
-      
-      this.joystickInner.x = joystickData.current.x;
-      this.joystickInner.y = joystickData.current.y;
+      // 默认不显示，因为直接拖动不需要视觉提示
+      this.joystickInner.visible = false;
     } else {
-      this.joystickOuter.visible = false;
       this.joystickInner.visible = false;
     }
+    this.joystickOuter.visible = false; // 外圈不再使用
   }
 }
 

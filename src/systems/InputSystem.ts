@@ -10,9 +10,9 @@ import { GAME_CONFIG, SCALE_FACTOR } from '../config/constants';
 
 export class InputSystem extends System {
   private keys: Set<string> = new Set();
-  private touchLast: { x: number, y: number } | null = null;      // 上一帧触摸位置
-  private touchCurrent: { x: number, y: number } | null = null;   // 当前触摸位置
-  private touchSensitivity: number = 5.0;  // 触摸灵敏度（可配置，数值越大越灵敏）
+  private touchActive: boolean = false;
+  private lastTouchPos: { x: number, y: number } | null = null;
+  private currentTouchPos: { x: number, y: number } | null = null;
   
   constructor() {
     super();
@@ -34,9 +34,9 @@ export class InputSystem extends System {
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length > 0) {
         const touch = e.touches[0];
-        // 初始化触摸位置
-        this.touchLast = { x: touch.clientX, y: touch.clientY };
-        this.touchCurrent = { x: touch.clientX, y: touch.clientY };
+        this.touchActive = true;
+        this.lastTouchPos = { x: touch.clientX, y: touch.clientY };
+        this.currentTouchPos = { x: touch.clientX, y: touch.clientY };
       }
     };
     
@@ -44,15 +44,14 @@ export class InputSystem extends System {
       e.preventDefault();
       if (e.touches.length > 0) {
         const touch = e.touches[0];
-        // 更新当前位置
-        this.touchCurrent = { x: touch.clientX, y: touch.clientY };
+        this.currentTouchPos = { x: touch.clientX, y: touch.clientY };
       }
     };
     
     const handleTouchEnd = () => {
-      // 清空触摸数据
-      this.touchLast = null;
-      this.touchCurrent = null;
+      this.touchActive = false;
+      this.lastTouchPos = null;
+      this.currentTouchPos = null;
     };
     
     window.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -61,7 +60,7 @@ export class InputSystem extends System {
     window.addEventListener('touchcancel', handleTouchEnd);
   }
   
-  update(world: World, _delta: number): void {
+  update(world: World, delta: number): void {
     // 找到玩家实体
     const players = this.query(world, 'Tag', 'Velocity').filter(e => {
       const tag = e.getComponent<Tag>('Tag');
@@ -73,83 +72,75 @@ export class InputSystem extends System {
     const player = players[0];
     const velocity = player.getComponent<Velocity>('Velocity')!;
     
+    // 获取玩家最大速度（可升级）
+    const maxSpeed = GAME_CONFIG.PLAYER_SPEED;
+    
     // 获取输入向量
     let vx = 0;
     let vy = 0;
     
-    // 键盘输入（方向输入，-1 到 1）
-    let keyboardInput = false;
-    if (this.keys.has('a') || this.keys.has('arrowleft')) {
-      vx -= 1;
-      keyboardInput = true;
-    }
-    if (this.keys.has('d') || this.keys.has('arrowright')) {
-      vx += 1;
-      keyboardInput = true;
-    }
-    if (this.keys.has('w') || this.keys.has('arrowup')) {
-      vy -= 1;
-      keyboardInput = true;
-    }
-    if (this.keys.has('s') || this.keys.has('arrowdown')) {
-      vy += 1;
-      keyboardInput = true;
+    // 键盘输入（使用最大速度）
+    if (this.keys.has('a') || this.keys.has('arrowleft')) vx -= 1;
+    if (this.keys.has('d') || this.keys.has('arrowright')) vx += 1;
+    if (this.keys.has('w') || this.keys.has('arrowup')) vy -= 1;
+    if (this.keys.has('s') || this.keys.has('arrowdown')) vy += 1;
+    
+    // 归一化键盘输入
+    const keyboardMagnitude = Math.sqrt(vx * vx + vy * vy);
+    if (keyboardMagnitude > 0) {
+      vx /= keyboardMagnitude;
+      vy /= keyboardMagnitude;
+      // 键盘输入直接使用最大速度
+      velocity.vx = vx * maxSpeed;
+      velocity.vy = vy * maxSpeed;
+      return; // 键盘输入优先，跳过触摸
     }
     
-    if (keyboardInput) {
-      // 键盘输入：归一化方向后应用最大速度
-      const magnitude = Math.sqrt(vx * vx + vy * vy);
-      if (magnitude > 0) {
-        vx = (vx / magnitude) * GAME_CONFIG.PLAYER_SPEED;
-        vy = (vy / magnitude) * GAME_CONFIG.PLAYER_SPEED;
-      }
-    } else if (this.touchLast && this.touchCurrent) {
-      // 触摸输入（相对拖动模式 - 类似触摸板）
+    // 触摸输入（相对拖动，带速度限制）
+    if (this.touchActive && this.lastTouchPos && this.currentTouchPos) {
       // 计算手指移动的距离（像素）
-      const dx = this.touchCurrent.x - this.touchLast.x;
-      const dy = this.touchCurrent.y - this.touchLast.y;
+      const dx = this.currentTouchPos.x - this.lastTouchPos.x;
+      const dy = this.currentTouchPos.y - this.lastTouchPos.y;
       
-      // 应用灵敏度，转换为速度
-      // touchSensitivity 越大，手指滑动同样距离，飞机移动越快
-      vx = dx * this.touchSensitivity;
-      vy = dy * this.touchSensitivity;
+      // 转换为速度（像素/秒）
+      const touchVx = dx / delta;
+      const touchVy = dy / delta;
       
-      // 限制最大速度
-      const magnitude = Math.sqrt(vx * vx + vy * vy);
-      if (magnitude > GAME_CONFIG.PLAYER_SPEED) {
-        // 超过最大速度，归一化后应用最大速度
-        vx = (vx / magnitude) * GAME_CONFIG.PLAYER_SPEED;
-        vy = (vy / magnitude) * GAME_CONFIG.PLAYER_SPEED;
+      // 计算触摸速度的大小
+      const touchSpeed = Math.sqrt(touchVx * touchVx + touchVy * touchVy);
+      
+      if (touchSpeed > 0) {
+        // 如果触摸速度超过飞机最大速度，限制到最大速度
+        if (touchSpeed > maxSpeed) {
+          const scale = maxSpeed / touchSpeed;
+          velocity.vx = touchVx * scale;
+          velocity.vy = touchVy * scale;
+        } else {
+          // 慢速滑动，完全跟手
+          velocity.vx = touchVx;
+          velocity.vy = touchVy;
+        }
+      } else {
+        // 没有移动，停止
+        velocity.vx = 0;
+        velocity.vy = 0;
       }
       
-      // 更新上一帧位置
-      this.touchLast.x = this.touchCurrent.x;
-      this.touchLast.y = this.touchCurrent.y;
+      // 更新上一帧触摸位置
+      this.lastTouchPos = { ...this.currentTouchPos };
+    } else {
+      // 没有触摸输入，停止移动
+      velocity.vx = 0;
+      velocity.vy = 0;
     }
-    
-    // 应用速度
-    velocity.vx = vx;
-    velocity.vy = vy;
   }
   
-  // 获取虚拟摇杆数据（供UI渲染）
-  // 相对拖动模式下不显示摇杆，返回 null
-  getJoystickData(): { start: { x: number, y: number }, current: { x: number, y: number } } | null {
-    return null;  // 相对拖动模式不显示虚拟摇杆
-  }
-  
-  /**
-   * 设置触摸灵敏度（可供外部调整）
-   */
-  setTouchSensitivity(sensitivity: number): void {
-    this.touchSensitivity = sensitivity;
-  }
-  
-  /**
-   * 获取当前触摸灵敏度
-   */
-  getTouchSensitivity(): number {
-    return this.touchSensitivity;
+  // 获取触摸数据（供UI渲染，现在用于显示触摸点）
+  getTouchData(): { x: number, y: number } | null {
+    if (this.touchActive && this.currentTouchPos) {
+      return this.currentTouchPos;
+    }
+    return null;
   }
 }
 

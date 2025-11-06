@@ -33,7 +33,6 @@ export class GameEngine {
   private world: World;
   private gameStage: Container;
   private inputSystem: InputSystem;
-  private playerConfig: any = null;
   
   constructor() {
     // 创建 PixiJS 应用
@@ -82,14 +81,9 @@ export class GameEngine {
     
     // 创建玩家（使用默认配置）
     console.log('✈️  创建玩家...');
-    this.playerConfig = gameData.getPlayer('fighter_alpha');
-    if (this.playerConfig) {
-      createPlayer(this.world, this.gameStage, GAME_WIDTH / 2, GAME_HEIGHT - 200, this.playerConfig);
-      
-      // 设置触摸灵敏度
-      if (this.playerConfig.touchSensitivity) {
-        this.inputSystem.setTouchSensitivity(this.playerConfig.touchSensitivity);
-      }
+    const playerConfig = gameData.getPlayer('fighter_alpha');
+    if (playerConfig) {
+      createPlayer(this.world, this.gameStage, GAME_WIDTH / 2, GAME_HEIGHT - 200, playerConfig);
     } else {
       console.error('未找到玩家配置: fighter_alpha');
     }
