@@ -8,7 +8,7 @@
       "fireRate": 3.0,
       "bulletSpeed": 900,
       "bulletLifetime": 2.0,
-      "bulletSize": 6,
+      "bulletSize": 7.8,
       "bulletColor": 16777215,
       "pierce": 0,
       "bounce": 0,

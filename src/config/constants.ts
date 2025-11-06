@@ -7,6 +7,9 @@
 export const GAME_WIDTH = 720;
 export const GAME_HEIGHT = 1280;
 
+// 全局尺寸缩放系数（1.3 = 放大30%）
+export const SCALE_FACTOR = 1.3;
+
 // 颜色方案（霓虹配色）
 export const COLORS = {
   // 背景
@@ -50,37 +53,37 @@ export const RENDER_CONFIG = {
 
 // 物理/游戏数值
 export const GAME_CONFIG = {
-  // 玩家
+  // 玩家（应用缩放系数）
   PLAYER_SPEED: 280,
   PLAYER_HP: 100,
   PLAYER_SHIELD: 50,
-  PLAYER_SIZE: 20,
+  PLAYER_SIZE: 20 * SCALE_FACTOR,
   
-  // 武器
+  // 武器（应用缩放系数）
   FIRE_RATE: 3.0,          // 每秒射击次数
   BULLET_SPEED: 900,
   BULLET_DAMAGE: 12,
   BULLET_LIFETIME: 2.0,    // 秒
-  BULLET_SIZE: 6,
+  BULLET_SIZE: 6 * SCALE_FACTOR,
   
-  // 敌人 - 六边环
+  // 敌人 - 六边环（应用缩放系数）
   HEX_HP: 60,
   HEX_SPEED: 40,
   HEX_DAMAGE: 8,
-  HEX_SIZE: 16,
+  HEX_SIZE: 16 * SCALE_FACTOR,
   HEX_XP: 2,
   
-  // 敌人 - 箭头群
+  // 敌人 - 箭头群（应用缩放系数）
   ARROW_HP: 20,
   ARROW_SPEED: 120,
   ARROW_DAMAGE: 5,
-  ARROW_SIZE: 12,
+  ARROW_SIZE: 12 * SCALE_FACTOR,
   ARROW_XP: 1,
   
-  // 经验与升级
-  XP_MAGNET_RANGE: 120,    // 磁吸半径
-  XP_SIZE: 5,              // 豆子大小
-  XP_MOVE_SPEED: 200,      // 磁吸速度
+  // 经验与升级（应用缩放系数）
+  XP_MAGNET_RANGE: 120 * SCALE_FACTOR,    // 磁吸半径
+  XP_SIZE: 5 * SCALE_FACTOR,              // 豆子大小
+  XP_MOVE_SPEED: 200,      // 磁吸速度（不放大）
   LEVEL_UP_XP_BASE: 10,
   LEVEL_UP_XP_SCALE: 1.5,
   
