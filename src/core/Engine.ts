@@ -66,6 +66,9 @@ export class GameEngine {
       appDiv.appendChild(this.app.canvas);
     }
     
+    // 设置画布适配（保持长宽比）
+    this.setupCanvasResize();
+    
     // 启用排序
     this.gameStage.sortableChildren = true;
     this.app.stage.addChild(this.gameStage);
@@ -161,6 +164,51 @@ export class GameEngine {
     this.world.eventBus.on(Events.LEVEL_UP, (data) => {
       console.log('Level Up!', data.level);
       // TODO: 显示升级面板
+    });
+  }
+  
+  /**
+   * 设置画布自适应缩放（保持长宽比）
+   */
+  private setupCanvasResize(): void {
+    const resize = () => {
+      const canvas = this.app.canvas;
+      const parent = canvas.parentElement;
+      if (!parent) return;
+      
+      const parentWidth = parent.clientWidth;
+      const parentHeight = parent.clientHeight;
+      
+      // 计算缩放比例（保持 720:1280 的长宽比）
+      const gameRatio = GAME_WIDTH / GAME_HEIGHT; // 0.5625
+      const windowRatio = parentWidth / parentHeight;
+      
+      let newWidth: number;
+      let newHeight: number;
+      
+      if (windowRatio > gameRatio) {
+        // 窗口更宽，以高度为准
+        newHeight = parentHeight;
+        newWidth = newHeight * gameRatio;
+      } else {
+        // 窗口更高，以宽度为准
+        newWidth = parentWidth;
+        newHeight = newWidth / gameRatio;
+      }
+      
+      // 设置 canvas 的显示尺寸
+      canvas.style.width = `${newWidth}px`;
+      canvas.style.height = `${newHeight}px`;
+    };
+    
+    // 初始调整
+    resize();
+    
+    // 监听窗口大小变化
+    window.addEventListener('resize', resize);
+    // 监听屏幕旋转
+    window.addEventListener('orientationchange', () => {
+      setTimeout(resize, 100);
     });
   }
   
