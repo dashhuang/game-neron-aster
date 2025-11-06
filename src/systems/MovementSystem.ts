@@ -7,7 +7,7 @@ import { System, World } from '../core/ECS';
 import { Transform } from '../components/Transform';
 import { Velocity } from '../components/Velocity';
 import { Tag } from '../components/Tag';
-import { GAME_WIDTH, GAME_HEIGHT } from '../config/constants';
+import { GAME_WIDTH, GAME_HEIGHT, SCALE_FACTOR } from '../config/constants';
 
 export class MovementSystem extends System {
   update(world: World, delta: number): void {
@@ -26,8 +26,8 @@ export class MovementSystem extends System {
       if (hasPlayerTag) {
         const tag = entity.getComponent<Tag>('Tag');
         if (tag && tag.value === 'player') {
-          // 玩家中心点保持在屏幕内（飞机大小约20，margin=10确保子弹发射点可见）
-          const margin = 10;
+          // 玩家中心点保持在屏幕内（margin 应用缩放）
+          const margin = 10 * SCALE_FACTOR;
           transform.x = Math.max(margin, Math.min(GAME_WIDTH - margin, transform.x));
           transform.y = Math.max(margin, Math.min(GAME_HEIGHT - margin, transform.y));
         }

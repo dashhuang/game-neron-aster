@@ -5,7 +5,7 @@
 
 import { System, World } from '../core/ECS';
 import { Container, Text, Graphics } from 'pixi.js';
-import { COLORS, GAME_WIDTH } from '../config/constants';
+import { COLORS, GAME_WIDTH, SCALE_FACTOR } from '../config/constants';
 import { PlayerXP } from '../components/XP';
 import { Tag } from '../components/Tag';
 import { InputSystem } from './InputSystem';
@@ -92,7 +92,10 @@ export class UISystem extends System {
   }
   
   private createJoystick(): void {
-    const joystick = NeonRenderer.createJoystick(60, 25);
+    // 虚拟摇杆应用缩放
+    const outerRadius = 60 * SCALE_FACTOR;
+    const innerRadius = 25 * SCALE_FACTOR;
+    const joystick = NeonRenderer.createJoystick(outerRadius, innerRadius);
     this.joystickOuter = joystick.outer;
     this.joystickInner = joystick.inner;
     

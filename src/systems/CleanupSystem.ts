@@ -7,7 +7,7 @@ import { System, World } from '../core/ECS';
 import { Transform } from '../components/Transform';
 import { Render } from '../components/Render';
 import { Tag } from '../components/Tag';
-import { GAME_WIDTH, GAME_HEIGHT } from '../config/constants';
+import { GAME_WIDTH, GAME_HEIGHT, SCALE_FACTOR } from '../config/constants';
 import { Container } from 'pixi.js';
 
 export class CleanupSystem extends System {
@@ -30,8 +30,8 @@ export class CleanupSystem extends System {
       // 玩家不清理
       if (tag.value === 'player') continue;
       
-      // 检查是否超出屏幕边界（留一些余量）
-      const margin = 100;
+      // 检查是否超出屏幕边界（留一些余量，应用缩放）
+      const margin = 100 * SCALE_FACTOR;
       const outOfBounds = 
         transform.x < -margin ||
         transform.x > GAME_WIDTH + margin ||

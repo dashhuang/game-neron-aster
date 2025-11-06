@@ -9,7 +9,7 @@ import { Velocity } from '../components/Velocity';
 import { Render } from '../components/Render';
 import { XPShard, PlayerXP } from '../components/XP';
 import { Tag } from '../components/Tag';
-import { EntityType, GAME_CONFIG } from '../config/constants';
+import { EntityType, GAME_CONFIG, SCALE_FACTOR } from '../config/constants';
 
 export class PickupSystem extends System {
   update(world: World, _delta: number): void {
@@ -52,8 +52,9 @@ export class PickupSystem extends System {
         shardVelocity.vy = dirY * GAME_CONFIG.XP_MOVE_SPEED;
       }
       
-      // 拾取判定（距离很近）
-      if (distance < 20) {
+      // 拾取判定（距离很近，应用缩放）
+      const pickupDistance = 20 * SCALE_FACTOR;
+      if (distance < pickupDistance) {
         if (playerXP) {
           playerXP.current += shardData.amount;
           

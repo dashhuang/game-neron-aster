@@ -6,7 +6,7 @@
 import { System, World } from '../core/ECS';
 import { Velocity } from '../components/Velocity';
 import { Tag } from '../components/Tag';
-import { GAME_CONFIG } from '../config/constants';
+import { GAME_CONFIG, SCALE_FACTOR } from '../config/constants';
 
 export class InputSystem extends System {
   private keys: Set<string> = new Set();
@@ -85,8 +85,11 @@ export class InputSystem extends System {
       const dy = this.touchCurrent.y - this.touchStart.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       
-      if (distance > 10) { // 死区
-        const maxDistance = 80; // 最大偏移
+      // 死区和最大偏移应用缩放
+      const deadZone = 10 * SCALE_FACTOR;
+      const maxDistance = 80 * SCALE_FACTOR;
+      
+      if (distance > deadZone) {
         vx = Math.max(-1, Math.min(1, dx / maxDistance));
         vy = Math.max(-1, Math.min(1, dy / maxDistance));
       }
