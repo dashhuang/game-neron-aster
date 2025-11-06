@@ -86,6 +86,14 @@ export const GAME_CONFIG = {
   XP_MOVE_SPEED: 200,      // 磁吸速度（不放大）
   LEVEL_UP_XP_BASE: 10,
   LEVEL_UP_XP_SCALE: 1.5,
+
+  // 触摸板式控制（相对位移）参数（尺寸相关按缩放）
+  TOUCH_DEADZONE: 10 * SCALE_FACTOR,      // 死区像素（相对屏幕点）
+  TOUCH_MAX_DISTANCE: 80 * SCALE_FACTOR,  // 相对位移用于归一化的最大距离
+  TOUCH_SENSITIVITY: 1.0,                 // 基础灵敏度（倍数）
+  TOUCH_ACCEL_MUL_MIN: 1.0,               // 加速曲线最小倍数（小位移）
+  TOUCH_ACCEL_MUL_MAX: 2.5,               // 加速曲线最大倍数（大位移）
+  TOUCH_SMOOTHING: 0.15,                  // 指数平滑系数（0 无，0.1-0.2 建议）
   
   // 刷怪
   SPAWN_INTERVAL: 2.0,     // 秒
