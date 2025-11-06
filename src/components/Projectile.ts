@@ -1,0 +1,41 @@
+/**
+ * Projectile 组件 - 子弹属性
+ * 扩展子弹的行为（穿透、弹跳、追踪等）
+ */
+
+import { Component } from '../core/ECS';
+
+export interface Projectile extends Component {
+  type: 'Projectile';
+  damage: number;           // 伤害值
+  bulletType: string;       // 子弹类型 'normal', 'laser', 'missile'
+  pierce: number;           // 穿透次数（剩余）
+  maxPierce: number;        // 最大穿透次数
+  bounce: number;           // 弹跳次数（剩余）
+  maxBounce: number;        // 最大弹跳次数
+  homing?: {                // 追踪参数（可选）
+    enabled: boolean;
+    turnRate: number;       // 转向速率
+    trackingRange: number;  // 追踪范围
+  };
+}
+
+export function createProjectile(
+  damage: number,
+  bulletType: string = 'normal',
+  pierce: number = 0,
+  bounce: number = 0,
+  homing?: { enabled: boolean; turnRate: number; trackingRange: number }
+): Projectile {
+  return {
+    type: 'Projectile',
+    damage,
+    bulletType,
+    pierce,
+    maxPierce: pierce,
+    bounce,
+    maxBounce: bounce,
+    homing,
+  };
+}
+

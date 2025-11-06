@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0",
+  "players": [
+    {
+      "id": "fighter_alpha",
+      "name": "战斗机 α",
+      "baseHP": 100,
+      "baseShield": 50,
+      "baseSpeed": 280,
+      "startWeapon": "cannon_basic",
+      "magnetRange": 120,
+      "magnetSpeed": 200,
+      "size": 20,
+      "color": 65416,
+      "shape": "arrow",
+      "levelUpXPBase": 10,
+      "levelUpXPScale": 1.5
+    }
+  ]
+}
+

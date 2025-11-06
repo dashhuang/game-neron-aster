@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0",
+  "weapons": [
+    {
+      "id": "cannon_basic",
+      "name": "基础直射炮",
+      "damage": 12,
+      "fireRate": 3.0,
+      "bulletSpeed": 900,
+      "bulletLifetime": 2.0,
+      "bulletSize": 6,
+      "bulletColor": 16777215,
+      "pierce": 0,
+      "bounce": 0,
+      "spreadCount": 1,
+      "bulletType": "normal",
+      "tags": ["kinetic", "basic"]
+    }
+  ]
+}
+

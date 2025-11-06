@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "enemies": [
+    {
+      "id": "hex_basic",
+      "name": "六边环",
+      "hp": 60,
+      "speed": 40,
+      "damage": 8,
+      "size": 16,
+      "color": 17886,
+      "shape": "hexagon",
+      "xpDrop": 2,
+      "aiType": "straight_down",
+      "tags": ["geometric", "basic", "slow"]
+    },
+    {
+      "id": "arrow_fast",
+      "name": "箭头群",
+      "hp": 20,
+      "speed": 120,
+      "damage": 5,
+      "size": 12,
+      "color": 16728200,
+      "shape": "triangle",
+      "xpDrop": 1,
+      "aiType": "straight_down",
+      "tags": ["geometric", "basic", "fast"]
+    }
+  ]
+}
+
