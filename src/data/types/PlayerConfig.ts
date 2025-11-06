@@ -22,6 +22,9 @@ export interface PlayerConfig {
   magnetRange: number;           // 磁吸范围（像素）
   magnetSpeed: number;           // 磁吸速度（像素/秒）
   
+  // 触摸控制
+  touchSensitivity?: number;     // 触摸灵敏度（移动端，可选，默认 5.0）
+  
   // 视觉属性
   size: number;                  // 尺寸
   color: number;                 // 颜色

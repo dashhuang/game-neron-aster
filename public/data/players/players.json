@@ -10,6 +10,7 @@
       "startWeapon": "cannon_basic",
       "magnetRange": 156,
       "magnetSpeed": 200,
+      "touchSensitivity": 5.0,
       "size": 26,
       "color": 65416,
       "shape": "arrow",

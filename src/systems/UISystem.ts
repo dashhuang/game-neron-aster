@@ -139,13 +139,17 @@ export class UISystem extends System {
       this.xpBar.fill({ color: COLORS.UI_PROGRESS, alpha: 0.9 });
     }
     
-    // 更新触摸指示器（可选：显示当前触摸位置）
-    const touchData = this.inputSystem.getTouchData();
-    if (touchData) {
-      // 相对拖动模式下，不显示虚拟摇杆
-      // 可以选择显示一个小圆点指示触摸位置
-      this.joystickOuter.visible = false;
-      this.joystickInner.visible = false;
+    // 更新虚拟摇杆显示
+    const joystickData = this.inputSystem.getJoystickData();
+    if (joystickData) {
+      this.joystickOuter.visible = true;
+      this.joystickInner.visible = true;
+      
+      this.joystickOuter.x = joystickData.start.x;
+      this.joystickOuter.y = joystickData.start.y;
+      
+      this.joystickInner.x = joystickData.current.x;
+      this.joystickInner.y = joystickData.current.y;
     } else {
       this.joystickOuter.visible = false;
       this.joystickInner.visible = false;

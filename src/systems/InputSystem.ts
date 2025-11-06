@@ -4,15 +4,15 @@
  */
 
 import { System, World } from '../core/ECS';
-import { Transform } from '../components/Transform';
 import { Velocity } from '../components/Velocity';
 import { Tag } from '../components/Tag';
-import { GAME_CONFIG } from '../config/constants';
+import { GAME_CONFIG, SCALE_FACTOR } from '../config/constants';
 
 export class InputSystem extends System {
   private keys: Set<string> = new Set();
-  private lastTouchPos: { x: number, y: number } | null = null;
-  private currentTouchPos: { x: number, y: number } | null = null;
+  private touchLast: { x: number, y: number } | null = null;      // 上一帧触摸位置
+  private touchCurrent: { x: number, y: number } | null = null;   // 当前触摸位置
+  private touchSensitivity: number = 5.0;  // 触摸灵敏度（可配置，数值越大越灵敏）
   
   constructor() {
     super();
@@ -32,11 +32,11 @@ export class InputSystem extends System {
   
   private setupTouch(): void {
     const handleTouchStart = (e: TouchEvent) => {
-      e.preventDefault();
       if (e.touches.length > 0) {
         const touch = e.touches[0];
-        this.lastTouchPos = { x: touch.clientX, y: touch.clientY };
-        this.currentTouchPos = { x: touch.clientX, y: touch.clientY };
+        // 初始化触摸位置
+        this.touchLast = { x: touch.clientX, y: touch.clientY };
+        this.touchCurrent = { x: touch.clientX, y: touch.clientY };
       }
     };
     
@@ -44,13 +44,15 @@ export class InputSystem extends System {
       e.preventDefault();
       if (e.touches.length > 0) {
         const touch = e.touches[0];
-        this.currentTouchPos = { x: touch.clientX, y: touch.clientY };
+        // 更新当前位置
+        this.touchCurrent = { x: touch.clientX, y: touch.clientY };
       }
     };
     
     const handleTouchEnd = () => {
-      this.lastTouchPos = null;
-      this.currentTouchPos = null;
+      // 清空触摸数据
+      this.touchLast = null;
+      this.touchCurrent = null;
     };
     
     window.addEventListener('touchstart', handleTouchStart, { passive: false });
@@ -61,7 +63,7 @@ export class InputSystem extends System {
   
   update(world: World, _delta: number): void {
     // 找到玩家实体
-    const players = this.query(world, 'Tag', 'Transform', 'Velocity').filter(e => {
+    const players = this.query(world, 'Tag', 'Velocity').filter(e => {
       const tag = e.getComponent<Tag>('Tag');
       return tag && tag.value === 'player';
     });
@@ -69,70 +71,85 @@ export class InputSystem extends System {
     if (players.length === 0) return;
     
     const player = players[0];
-    const transform = player.getComponent('Transform');
-    const velocity = player.getComponent<Velocity>('Velocity');
+    const velocity = player.getComponent<Velocity>('Velocity')!;
     
-    if (!transform || !velocity) return;
-    
-    // 键盘输入
+    // 获取输入向量
     let vx = 0;
     let vy = 0;
     
-    if (this.keys.has('a') || this.keys.has('arrowleft')) vx -= 1;
-    if (this.keys.has('d') || this.keys.has('arrowright')) vx += 1;
-    if (this.keys.has('w') || this.keys.has('arrowup')) vy -= 1;
-    if (this.keys.has('s') || this.keys.has('arrowdown')) vy += 1;
+    // 键盘输入（方向输入，-1 到 1）
+    let keyboardInput = false;
+    if (this.keys.has('a') || this.keys.has('arrowleft')) {
+      vx -= 1;
+      keyboardInput = true;
+    }
+    if (this.keys.has('d') || this.keys.has('arrowright')) {
+      vx += 1;
+      keyboardInput = true;
+    }
+    if (this.keys.has('w') || this.keys.has('arrowup')) {
+      vy -= 1;
+      keyboardInput = true;
+    }
+    if (this.keys.has('s') || this.keys.has('arrowdown')) {
+      vy += 1;
+      keyboardInput = true;
+    }
     
-    // 触摸输入（相对拖动 - 触摸板风格 + 全速控制）
-    if (this.currentTouchPos && this.lastTouchPos) {
-      // 计算手指移动的距离
-      const dx = this.currentTouchPos.x - this.lastTouchPos.x;
-      const dy = this.currentTouchPos.y - this.lastTouchPos.y;
+    if (keyboardInput) {
+      // 键盘输入：归一化方向后应用最大速度
+      const magnitude = Math.sqrt(vx * vx + vy * vy);
+      if (magnitude > 0) {
+        vx = (vx / magnitude) * GAME_CONFIG.PLAYER_SPEED;
+        vy = (vy / magnitude) * GAME_CONFIG.PLAYER_SPEED;
+      }
+    } else if (this.touchLast && this.touchCurrent) {
+      // 触摸输入（相对拖动模式 - 类似触摸板）
+      // 计算手指移动的距离（像素）
+      const dx = this.touchCurrent.x - this.touchLast.x;
+      const dy = this.touchCurrent.y - this.touchLast.y;
       
-      // 计算移动距离
-      const distance = Math.sqrt(dx * dx + dy * dy);
+      // 应用灵敏度，转换为速度
+      // touchSensitivity 越大，手指滑动同样距离，飞机移动越快
+      vx = dx * this.touchSensitivity;
+      vy = dy * this.touchSensitivity;
       
-      // 如果有移动（超过小阈值）
-      if (distance > 0.5) {
-        // 计算归一化方向
-        const dirX = dx / distance;
-        const dirY = dy / distance;
-        
-        // 永远使用最大速度（与键盘一致）
-        velocity.vx = dirX * GAME_CONFIG.PLAYER_SPEED;
-        velocity.vy = dirY * GAME_CONFIG.PLAYER_SPEED;
-      } else {
-        // 没有明显移动，保持之前的速度（或逐渐减速）
-        // 添加轻微阻尼，让飞机平滑停止
-        velocity.vx *= 0.9;
-        velocity.vy *= 0.9;
-        
-        // 速度很小时归零
-        if (Math.abs(velocity.vx) < 10) velocity.vx = 0;
-        if (Math.abs(velocity.vy) < 10) velocity.vy = 0;
+      // 限制最大速度
+      const magnitude = Math.sqrt(vx * vx + vy * vy);
+      if (magnitude > GAME_CONFIG.PLAYER_SPEED) {
+        // 超过最大速度，归一化后应用最大速度
+        vx = (vx / magnitude) * GAME_CONFIG.PLAYER_SPEED;
+        vy = (vy / magnitude) * GAME_CONFIG.PLAYER_SPEED;
       }
       
-      // 更新上一次位置为当前位置
-      this.lastTouchPos = { ...this.currentTouchPos };
-      
-      return; // 触摸时不使用键盘输入
+      // 更新上一帧位置
+      this.touchLast.x = this.touchCurrent.x;
+      this.touchLast.y = this.touchCurrent.y;
     }
     
-    // 归一化向量（键盘输入）
-    const magnitude = Math.sqrt(vx * vx + vy * vy);
-    if (magnitude > 0) {
-      vx /= magnitude;
-      vy /= magnitude;
-    }
-    
-    // 应用速度（键盘模式）
-    velocity.vx = vx * GAME_CONFIG.PLAYER_SPEED;
-    velocity.vy = vy * GAME_CONFIG.PLAYER_SPEED;
+    // 应用速度
+    velocity.vx = vx;
+    velocity.vy = vy;
   }
   
-  // 获取触摸数据（供UI渲染）
-  getTouchData(): { x: number, y: number } | null {
-    return this.currentTouchPos;
+  // 获取虚拟摇杆数据（供UI渲染）
+  // 相对拖动模式下不显示摇杆，返回 null
+  getJoystickData(): { start: { x: number, y: number }, current: { x: number, y: number } } | null {
+    return null;  // 相对拖动模式不显示虚拟摇杆
+  }
+  
+  /**
+   * 设置触摸灵敏度（可供外部调整）
+   */
+  setTouchSensitivity(sensitivity: number): void {
+    this.touchSensitivity = sensitivity;
+  }
+  
+  /**
+   * 获取当前触摸灵敏度
+   */
+  getTouchSensitivity(): number {
+    return this.touchSensitivity;
   }
 }
 
