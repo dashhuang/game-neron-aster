@@ -6,7 +6,8 @@
 import { System, World } from '../core/ECS';
 import { GAME_CONFIG, GAME_WIDTH } from '../config/constants';
 import { Container } from 'pixi.js';
-import { createEnemy, EnemyType } from '../entities/Enemy';
+import { createEnemyFromConfig } from '../entities/Enemy';
+import { gameData } from '../data/DataLoader';
 
 export class EnemySpawnSystem extends System {
   private spawnTimer: number = 0;
@@ -31,12 +32,15 @@ export class EnemySpawnSystem extends System {
       for (let i = 0; i < count; i++) {
         // 随机位置（屏幕上方）
         const x = Math.random() * GAME_WIDTH;
-        const y = -50; // 屏幕上方
+        const y = -100; // 屏幕上方（根据新尺寸调整）
         
-        // 随机类型
-        const type = Math.random() > 0.5 ? EnemyType.HEX : EnemyType.ARROW;
+        // 随机选择敌人配置
+        const enemyId = Math.random() > 0.5 ? 'hex_basic' : 'arrow_fast';
+        const enemyConfig = gameData.getEnemy(enemyId);
         
-        createEnemy(world, this.stage, x, y, type);
+        if (enemyConfig) {
+          createEnemyFromConfig(world, this.stage, x, y, enemyConfig);
+        }
       }
     }
   }
