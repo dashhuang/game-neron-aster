@@ -286,10 +286,16 @@ export class UISystem extends System {
       this.xpBar.fill({ color: COLORS.UI_PROGRESS, alpha: 0.9 });
       
       // 更新玩家飞机右上角的血量显示
-      if (this.hpDisplayTimer > 0) {
-        this.hpDisplayTimer -= delta;
+      const hpPercent = Math.round((playerHealth.current / playerHealth.max) * 100);
+      const isLowHealth = hpPercent <= 25;
+      
+      // 血量 ≤ 25% 时持续显示，否则受伤后显示2秒
+      if (this.hpDisplayTimer > 0 || isLowHealth) {
+        // 仅在非低血量时倒计时
+        if (!isLowHealth && this.hpDisplayTimer > 0) {
+          this.hpDisplayTimer -= delta;
+        }
         
-        const hpPercent = Math.round((playerHealth.current / playerHealth.max) * 100);
         this.hpDisplayPercent.text = `${hpPercent}%`;
         
         // 位置：玩家右上角
