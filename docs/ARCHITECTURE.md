@@ -126,37 +126,42 @@ export const gameData = new DataLoader();
 ```
 1. InputSystem          # 处理输入
    ↓
-2. MovementSystem       # 更新位置
+2. AISystem             # AI 行为（更新敌人移动策略）
    ↓
-3. WeaponSystem         # 处理射击
+3. ProjectileSystem     # 子弹行为（追踪、弹跳）
    ↓
-4. CollisionSystem      # 碰撞检测
+4. MovementSystem       # 更新位置
    ↓
-5. HealthSystem         # 处理伤害
+5. WeaponSystem         # 处理射击
    ↓
-6. PickupSystem         # 拾取经验
+6. CollisionSystem      # 碰撞检测
    ↓
-7. LifetimeSystem       # 生命周期
+7. HealthSystem         # 处理伤害
    ↓
-8. CleanupSystem        # 清理超出屏幕实体
+8. PickupSystem         # 拾取经验
    ↓
-9. PerformanceSystem    # 限制实体数量
+9. LifetimeSystem       # 生命周期
    ↓
-10. EnemySpawnSystem    # 生成敌人
+10. CleanupSystem       # 清理超出屏幕实体
    ↓
-11. DeathSystem         # 处理死亡
+11. PerformanceSystem   # 限制实体数量
    ↓
-12. HitFlashSystem      # 受击特效
+12. EnemySpawnSystem    # 生成敌人
    ↓
-13. RenderSystem        # 同步渲染
+13. DeathSystem         # 处理死亡
    ↓
-14. UISystem            # UI 更新
+14. HitFlashSystem      # 受击特效
+   ↓
+15. RenderSystem        # 同步渲染
+   ↓
+16. UISystem            # UI 更新
 ```
 
 **顺序原则**：
-- 输入 → 逻辑 → 物理 → 渲染
+- 输入 → AI决策 → 物理行为 → 移动 → 战斗 → 渲染
 - 先生成事件 → 后消费事件
 - 性能系统在生成系统之前
+- AI 和 Projectile 在 Movement 之前更新速度
 
 ---
 

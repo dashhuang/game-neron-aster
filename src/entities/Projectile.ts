@@ -52,29 +52,3 @@ export function createPlayerBulletFromWeapon(
   return entity;
 }
 
-// 保留旧接口用于兼容
-/** @deprecated 使用 createPlayerBulletFromWeapon 代替 */
-export function createPlayerBullet(
-  world: World, 
-  stage: Container, 
-  x: number, 
-  y: number, 
-  speed: number,
-  lifetime: number
-): Entity {
-  const entity = world.createEntity();
-  
-  const sprite = NeonRenderer.createPlayerBullet(6);
-  stage.addChild(sprite);
-  
-  entity.addComponent(createTransform(x, y, 0, 1));
-  entity.addComponent(createVelocity(0, -speed));
-  entity.addComponent(createCollider(6, 'bullet'));
-  entity.addComponent(createRender(sprite, LAYERS.PLAYER_BULLETS));
-  entity.addComponent(createTag(EntityType.PLAYER_BULLET));
-  entity.addComponent(createLifetime(lifetime));
-  entity.addComponent(createProjectile(12, 'normal', 0, 0));
-  
-  return entity;
-}
-

@@ -12,6 +12,7 @@ import { TrackingBehavior } from '../ai/TrackingBehavior';
 
 export class AISystem extends System {
   private behaviors: Map<string, AIBehavior> = new Map();
+  private initializedEntities: Set<number> = new Set();
   
   constructor() {
     super();
@@ -44,6 +45,15 @@ export class AISystem extends System {
     for (const entity of entities) {
       const ai = entity.getComponent<AI>('AI');
       if (!ai) continue;
+      
+      // 首次遇到此实体，初始化 AI 状态
+      if (!this.initializedEntities.has(entity.id)) {
+        const behavior = this.behaviors.get(ai.behaviorId);
+        if (behavior && behavior.initialize) {
+          ai.state = behavior.initialize(entity, world);
+        }
+        this.initializedEntities.add(entity.id);
+      }
       
       // 获取对应的行为
       const behavior = this.behaviors.get(ai.behaviorId);
