@@ -66,11 +66,14 @@ export class UpgradeSystem extends System {
    * 显示升级面板
    */
   showUpgradePanel(world: World): void {
+    console.log('🎴 显示升级面板');
     this.isUpgrading = true;
     
     const upgrades = this.getRandomUpgrades(3);
+    console.log('📋 升级选项:', upgrades.map(u => u.name));
     
     this.upgradePanel.show(upgrades, (selectedUpgrade) => {
+      console.log('✨ 玩家选择:', selectedUpgrade.name);
       this.applyUpgrade(world, selectedUpgrade);
       this.upgradePanel.hide();
       this.isUpgrading = false;
@@ -101,9 +104,11 @@ export class UpgradeSystem extends System {
     // 添加升级效果到修改器
     for (const effect of upgrade.effects) {
       addModifier(statMod, effect.stat, effect.operation, effect.value);
+      console.log(`  ➕ 添加效果: ${effect.stat} ${effect.operation} ${effect.value}`);
     }
     
     console.log(`✅ 升级应用: ${upgrade.name}`);
+    console.log(`📊 当前修改器数量: ${statMod.modifiers.length}`);
   }
   
   update(world: World, delta: number): void {

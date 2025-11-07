@@ -28,7 +28,12 @@ export class StatModifierSystem extends System {
     const player = players[0];
     const statMod = player.getComponent<StatModifier>('StatModifier');
     
-    if (!statMod || statMod.modifiers.length === 0) return;
+    if (!statMod) {
+      console.warn('⚠️ 玩家没有 StatModifier 组件');
+      return;
+    }
+    
+    if (statMod.modifiers.length === 0) return;
     
     // 应用到武器属性
     const weapon = player.getComponent<Weapon>('Weapon');
@@ -36,12 +41,30 @@ export class StatModifierSystem extends System {
       const weaponConfig = gameData.getWeapon(weapon.weaponId);
       if (weaponConfig) {
         // 计算最终属性
-        weapon.damage = calculateStat('damage', weaponConfig.damage, statMod.modifiers);
-        weapon.fireRate = calculateStat('fireRate', weaponConfig.fireRate, statMod.modifiers);
-        weapon.bulletSpeed = calculateStat('bulletSpeed', weaponConfig.bulletSpeed, statMod.modifiers);
-        weapon.bulletSize = calculateStat('bulletSize', weaponConfig.bulletSize, statMod.modifiers);
-        weapon.pierce = Math.floor(calculateStat('pierce', weaponConfig.pierce || 0, statMod.modifiers));
-        weapon.bounce = Math.floor(calculateStat('bounce', weaponConfig.bounce || 0, statMod.modifiers));
+        const newDamage = calculateStat('damage', weaponConfig.damage, statMod.modifiers);
+        const newFireRate = calculateStat('fireRate', weaponConfig.fireRate, statMod.modifiers);
+        const newBulletSpeed = calculateStat('bulletSpeed', weaponConfig.bulletSpeed, statMod.modifiers);
+        const newBulletSize = calculateStat('bulletSize', weaponConfig.bulletSize, statMod.modifiers);
+        const newPierce = Math.floor(calculateStat('pierce', weaponConfig.pierce || 0, statMod.modifiers));
+        const newBounce = Math.floor(calculateStat('bounce', weaponConfig.bounce || 0, statMod.modifiers));
+        
+        // 更新武器属性
+        weapon.damage = newDamage;
+        weapon.fireRate = newFireRate;
+        weapon.bulletSpeed = newBulletSpeed;
+        weapon.bulletSize = newBulletSize;
+        weapon.pierce = newPierce;
+        weapon.bounce = newBounce;
+        
+        // 调试输出（首次应用时）
+        if (statMod.modifiers.length > 0) {
+          console.log('⚙️ 应用修改器到武器:', {
+            damage: newDamage,
+            fireRate: newFireRate,
+            pierce: newPierce,
+            bounce: newBounce
+          });
+        }
       }
     }
     
