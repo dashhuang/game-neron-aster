@@ -131,13 +131,14 @@ export class UISystem extends System {
     
     // 玩家血量显示（飞机右上角，受伤时显示）
     this.hpDisplayText = new Text({
-      text: '❤️ 100%',
+      text: '❤ 100%',
       style: {
-        fontFamily: 'Courier New, monospace', // 像素风格字体
-        fontSize: 20,
+        fontFamily: '"Press Start 2P", "Courier New", "Consolas", monospace', // 像素风格字体
+        fontSize: 16,
         fill: 0xff5555,
-        fontWeight: 'bold',
-        stroke: { color: 0x000000, width: 3 },
+        fontWeight: 'normal',
+        stroke: { color: 0x000000, width: 4 },
+        letterSpacing: 1,
       }
     });
     this.hpDisplayText.visible = false;
@@ -261,7 +262,7 @@ export class UISystem extends System {
         this.hpDisplayTimer -= delta;
         
         const hpPercent = Math.round((playerHealth.current / playerHealth.max) * 100);
-        this.hpDisplayText.text = `❤️ ${hpPercent}%`;
+        this.hpDisplayText.text = `❤ ${hpPercent}%`;
         
         // 位置：玩家右上角
         if (playerTransform) {
