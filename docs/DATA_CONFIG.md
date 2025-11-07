@@ -262,6 +262,13 @@ createEnemyFromConfig(world, stage, x, y, enemyConfig);
 | FireRate | 1-2 | 3-5 | 7+ |
 | BulletSpeed | 400-600 | 800-1000 | 1200+ |
 
+### 说明：穿透（pierce）
+
+- 定义：子弹可额外穿过的敌人数。例如 `pierce=1` 表示命中第1个敌人后继续飞行并命中第2个敌人，然后销毁。
+- 实现细节：
+  - 子弹命中目标时会将该目标 `id` 记录到 `Projectile.hitSet`，避免因位置重叠在下一帧重复命中同一目标。
+  - 仅当穿透次数耗尽或到达生命周期终点时销毁。
+
 ---
 
 ## 🔄 热重载（开发中）

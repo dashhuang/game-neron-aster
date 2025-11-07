@@ -284,6 +284,14 @@ console.log(statMod.modifiers);
 
 ```javascript
 world.eventBus.emit('levelup', { level: 2 });
+### 验证穿透是否生效
+
+1. 在升级面板选择「穿透子弹」。
+2. 控制台应看到子弹创建日志：`{ pierce: 1, ... }`。
+3. 命中一排敌人时，控制台会输出：`💥 子弹穿透！剩余穿透次数: 0`。
+4. 视觉表现：子弹穿过第1个敌人继续命中第2个，再销毁。
+
+> 实现要点：`CollisionSystem` 只在需要销毁时才中止循环；`Projectile.hitSet` 记录已命中的敌人避免重复结算。
 ```
 
 ---

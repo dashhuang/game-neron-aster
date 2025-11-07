@@ -105,7 +105,7 @@ export const gameData = new DataLoader();
 | 组件 | 用途 | 数据 |
 |------|------|------|
 | `Weapon` | 武器 | weaponId, fireRate, cooldown, damage, bulletSpeed |
-| `Projectile` | 子弹属性 | damage, bulletType, pierce, bounce, homing |
+| `Projectile` | 子弹属性 | damage, bulletType, pierce, bounce, homing, hitSet |
 | `AI` | AI 行为 | behaviorId, state, targetId |
 | `XPShard` | 经验碎片 | amount, magnetRange, isMagnetized |
 | `PlayerXP` | 玩家经验 | current, level, nextLevelXP |
@@ -195,7 +195,11 @@ Engine 监听事件，创建子弹实体
   ↓
 MovementSystem 移动子弹
   ↓
-CollisionSystem 检测碰撞，发射 DAMAGE 事件
+CollisionSystem 检测碰撞：
+  - 首次命中：记录到 `Projectile.hitSet`，结算伤害，若 `pierce>0` 仅减少一次不销毁
+  - 重叠命中：若在同一目标上重复检测，因在 `hitSet` 中会被忽略
+  - 仅当需要销毁时才 `break` 跳出循环
+发射 DAMAGE 事件
   ↓
 HealthSystem 监听事件，扣除 HP
   ↓
