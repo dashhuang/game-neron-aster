@@ -134,11 +134,11 @@ export class UISystem extends System {
       text: '❤ 100%',
       style: {
         fontFamily: '"Press Start 2P", "Courier New", "Consolas", monospace', // 像素风格字体
-        fontSize: 16,
+        fontSize: 12,  // 缩小到 12px
         fill: 0xff5555,
         fontWeight: 'normal',
-        stroke: { color: 0x000000, width: 4 },
-        letterSpacing: 1,
+        stroke: { color: 0x000000, width: 3 },
+        letterSpacing: 0.5,
       }
     });
     this.hpDisplayText.visible = false;

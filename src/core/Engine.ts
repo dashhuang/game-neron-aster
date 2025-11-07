@@ -46,11 +46,15 @@ export class GameEngine {
   async init(): Promise<void> {
     console.log('🎮 游戏引擎初始化中...');
     
-    // 1. 加载配置数据
+    // 1. 预加载字体
+    console.log('🔤 加载像素字体...');
+    await this.loadFonts();
+    
+    // 2. 加载配置数据
     console.log('📦 加载游戏配置...');
     await gameData.loadAll();
     
-    // 2. 初始化 PixiJS
+    // 3. 初始化 PixiJS
     console.log('🎨 初始化渲染器...');
     await this.app.init({
       width: GAME_WIDTH,
@@ -167,6 +171,19 @@ export class GameEngine {
       console.log('Level Up!', data.level);
       // TODO: 显示升级面板
     });
+  }
+  
+  /**
+   * 预加载字体
+   */
+  private async loadFonts(): Promise<void> {
+    try {
+      // 预加载 Press Start 2P 字体
+      await document.fonts.load('12px "Press Start 2P"');
+      console.log('✅ 像素字体加载完成');
+    } catch (error) {
+      console.warn('⚠️ 像素字体加载失败，使用备用字体:', error);
+    }
   }
   
   /**
