@@ -147,7 +147,7 @@ export class UISystem extends System {
       }
     });
     this.hpDisplayHeart.x = 0;
-    this.hpDisplayHeart.y = 0;
+    this.hpDisplayHeart.y = -3;  // 往上移动，与数字齐平
     
     // 百分比数字
     this.hpDisplayPercent = new Text({
