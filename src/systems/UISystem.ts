@@ -20,8 +20,9 @@ export class UISystem extends System {
   private fpsText!: Text;
   private xpBar!: Graphics;
   private xpBarBg!: Graphics;
-  private hpBar!: Graphics;
-  private hpBarBg!: Graphics;
+  
+  private hpDisplayText!: Text;
+  private hpDisplayTimer: number = 0;
   
   private joystickOuter!: Graphics;
   private joystickInner!: Graphics;
@@ -60,6 +61,19 @@ export class UISystem extends System {
         setTimeout(() => {
           this.showGameOver();
         }, 500); // 0.5秒后显示
+      }
+    });
+    
+    // 监听玩家受伤事件
+    world.eventBus.on(Events.DAMAGE, (data: any) => {
+      // 检查是否玩家受伤
+      const target = world.entities.find(e => e.id === data.targetId);
+      if (!target) return;
+      
+      const tag = target.getComponent('Tag') as Tag | undefined;
+      if (tag && tag.value === EntityType.PLAYER) {
+        // 显示血量，2秒后自动隐藏
+        this.hpDisplayTimer = 2.0;
       }
     });
   }
@@ -115,15 +129,19 @@ export class UISystem extends System {
     this.xpBar = new Graphics();
     this.uiContainer.addChild(this.xpBar);
     
-    // 血量条背景
-    this.hpBarBg = new Graphics();
-    this.hpBarBg.rect(20, 80, 200, 12);
-    this.hpBarBg.fill({ color: 0x333333, alpha: 0.6 });
-    this.uiContainer.addChild(this.hpBarBg);
-    
-    // 血量条
-    this.hpBar = new Graphics();
-    this.uiContainer.addChild(this.hpBar);
+    // 玩家血量显示（飞机右上角，受伤时显示）
+    this.hpDisplayText = new Text({
+      text: '❤️ 100%',
+      style: {
+        fontFamily: 'Courier New, monospace', // 像素风格字体
+        fontSize: 20,
+        fill: 0xff5555,
+        fontWeight: 'bold',
+        stroke: { color: 0x000000, width: 3 },
+      }
+    });
+    this.hpDisplayText.visible = false;
+    this.uiContainer.addChild(this.hpDisplayText);
   }
   
   private createJoystick(): void {
@@ -218,8 +236,8 @@ export class UISystem extends System {
     const fps = Math.round(1 / avgDelta);
     this.fpsText.text = `FPS: ${fps}`;
     
-    // 更新等级、经验条和血量
-    const players = this.query(world, 'Tag', 'PlayerXP', 'Health').filter(e => {
+    // 更新等级、经验条和玩家跟随血量显示
+    const players = this.query(world, 'Tag', 'PlayerXP', 'Health', 'Transform').filter(e => {
       const tag = e.getComponent<Tag>('Tag');
       return tag && tag.value === 'player';
     });
@@ -228,6 +246,7 @@ export class UISystem extends System {
       const player = players[0];
       const playerXP = player.getComponent<PlayerXP>('PlayerXP')!;
       const playerHealth = player.getComponent<Health>('Health')!;
+      const playerTransform = player.getComponent('Transform') as any;
       
       this.levelText.text = `Lv.${playerXP.level}`;
       
@@ -237,15 +256,23 @@ export class UISystem extends System {
       this.xpBar.rect(20, 60, 200 * xpProgress, 8);
       this.xpBar.fill({ color: COLORS.UI_PROGRESS, alpha: 0.9 });
       
-      // 绘制血量条
-      const hpProgress = playerHealth.current / playerHealth.max;
-      const hpColor = hpProgress > 0.5 ? COLORS.UI_PROGRESS : 
-                      hpProgress > 0.25 ? COLORS.UI_WARNING : 
-                      COLORS.ENEMY_BOSS; // 低血量变红
-      
-      this.hpBar.clear();
-      this.hpBar.rect(20, 80, 200 * hpProgress, 12);
-      this.hpBar.fill({ color: hpColor, alpha: 0.9 });
+      // 更新玩家飞机右上角的血量显示
+      if (this.hpDisplayTimer > 0) {
+        this.hpDisplayTimer -= delta;
+        
+        const hpPercent = Math.round((playerHealth.current / playerHealth.max) * 100);
+        this.hpDisplayText.text = `❤️ ${hpPercent}%`;
+        
+        // 位置：玩家右上角
+        if (playerTransform) {
+          this.hpDisplayText.x = playerTransform.x + 30;
+          this.hpDisplayText.y = playerTransform.y - 40;
+        }
+        
+        this.hpDisplayText.visible = true;
+      } else {
+        this.hpDisplayText.visible = false;
+      }
     }
     
     // 虚拟摇杆已废弃，使用绝对跟随模式
