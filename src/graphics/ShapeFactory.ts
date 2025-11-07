@@ -43,11 +43,11 @@ export class ShapeFactory {
   }
   
   /**
-   * 创建箭头形状（更尖锐）
+   * 创建箭头形状（更尖锐）- 玩家飞机形状
    */
   static createArrow(size: number): Point[] {
     return [
-      new Point(0, -size),                  // 尖端
+      new Point(0, -size),                  // 尖端（顶部）
       new Point(-size * 0.4, size * 0.2),   // 左中
       new Point(-size * 0.3, size * 0.7),   // 左后
       new Point(size * 0.3, size * 0.7),    // 右后

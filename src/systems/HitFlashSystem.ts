@@ -40,7 +40,12 @@ export class HitFlashSystem extends System {
               points = ShapeFactory.createHexagon(hitFlash.size);
               break;
             case 'triangle':
-              points = ShapeFactory.createTriangle(hitFlash.size);
+              // 检查是否为玩家（总边数5=箭头）
+              if (hitFlash.totalEdges === 5) {
+                points = ShapeFactory.createArrow(hitFlash.size);
+              } else {
+                points = ShapeFactory.createTriangle(hitFlash.size);
+              }
               break;
             case 'diamond':
               points = ShapeFactory.createDiamond(hitFlash.size, hitFlash.size * 1.5);

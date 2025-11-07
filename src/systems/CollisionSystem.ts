@@ -106,12 +106,12 @@ export class CollisionSystem extends System {
             damage: 8,
           });
           
-          // 销毁敌人（简化，接触即死）并移除显示对象
-          const enemyRender = enemy.getComponent<Render>('Render');
-          if (enemyRender && enemyRender.sprite && enemyRender.sprite.parent) {
-            enemyRender.sprite.parent.removeChild(enemyRender.sprite);
-          }
-          enemy.destroy();
+          // 敌人撞到玩家也会死亡，触发死亡事件（播放爆炸特效）
+          world.eventBus.emit(Events.DAMAGE, {
+            targetId: enemy.id,
+            sourceId: player.id,
+            damage: 99999, // 足够大的伤害确保死亡
+          });
         }
       }
     }

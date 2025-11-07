@@ -32,18 +32,20 @@ export class HealthSystem extends System {
       
       target.destroy();
     } else {
-      // 敌人未死亡，添加受击闪烁效果
+      // 未死亡，添加受击闪烁效果
       const tag = target.getComponent<Tag>('Tag');
-      if (tag && tag.value === EntityType.ENEMY) {
+      const collider = target.getComponent<Collider>('Collider');
+      
+      if (!tag || !collider) return;
+      
+      // 移除旧的闪烁效果（如果存在）
+      if (target.hasComponent('HitFlash')) {
+        target.removeComponent('HitFlash');
+      }
+      
+      if (tag.value === EntityType.ENEMY) {
+        // 敌人受击效果
         const enemyColor = ENEMY_COLORS.get(target.id) || 0xffffff;
-        const collider = target.getComponent<Collider>('Collider');
-        
-        if (!collider) return;
-        
-        // 移除旧的闪烁效果（如果存在）
-        if (target.hasComponent('HitFlash')) {
-          target.removeComponent('HitFlash');
-        }
         
         // 根据颜色判断形状类型和边数
         let shape: 'hexagon' | 'triangle' = 'hexagon';
@@ -59,11 +61,17 @@ export class HealthSystem extends System {
           totalEdges = 3;
         }
         
-        // 使用实际的 size
+        const size = collider.radius;
+        target.addComponent(createHitFlash(0.08, enemyColor, totalEdges, shape, size));
+        
+      } else if (tag.value === EntityType.PLAYER) {
+        // 玩家受击效果
+        const playerColor = 0x00ff88; // 绿色
+        const shape: 'hexagon' | 'triangle' = 'triangle'; // 玩家是箭头形
+        const totalEdges = 5; // 箭头有5条边
         const size = collider.radius;
         
-        // 添加新的闪烁效果
-        target.addComponent(createHitFlash(0.08, enemyColor, totalEdges, shape, size));
+        target.addComponent(createHitFlash(0.08, playerColor, totalEdges, shape, size));
       }
     }
   }
