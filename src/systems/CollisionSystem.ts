@@ -49,6 +49,18 @@ export class CollisionSystem extends System {
         if (distance < minDistance) {
           // 获取子弹伤害（优先从 Projectile 组件）
           const projectile = bullet.getComponent<Projectile>('Projectile');
+
+          // 如果该子弹本次生命周期内已经命中过这个敌人，则跳过
+          if (projectile) {
+            if (!projectile.hitSet) {
+              projectile.hitSet = new Set<number>();
+            }
+            if (projectile.hitSet.has(enemy.id)) {
+              // 已处理过该目标，避免重复结算导致“看起来不穿透”
+              continue;
+            }
+            projectile.hitSet.add(enemy.id);
+          }
           const damage = projectile ? projectile.damage : 12;
           
           // 碰撞发生

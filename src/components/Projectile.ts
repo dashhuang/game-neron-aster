@@ -18,6 +18,11 @@ export interface Projectile extends Component {
     turnRate: number;       // 转向速率
     trackingRange: number;  // 追踪范围
   };
+  /**
+   * 记录已命中的目标，防止在下一帧仍处于重叠时重复结算，
+   * 使穿透子弹能够继续命中新目标。
+   */
+  hitSet?: Set<number>;
 }
 
 export function createProjectile(
@@ -36,6 +41,7 @@ export function createProjectile(
     bounce,
     maxBounce: bounce,
     homing,
+    hitSet: new Set<number>(),
   };
 }
 
