@@ -13,6 +13,8 @@ import { PlayerData } from '../components/PlayerData';
 import { gameData } from '../data/DataLoader';
 
 export class StatModifierSystem extends System {
+  private lastModifierCount: number = 0;
+  
   /**
    * 应用属性修改器到玩家和武器
    */
@@ -56,13 +58,16 @@ export class StatModifierSystem extends System {
         weapon.pierce = newPierce;
         weapon.bounce = newBounce;
         
-        // 调试输出（首次应用时）
-        if (statMod.modifiers.length > 0) {
+        // 调试输出（仅在修改器数量变化时）
+        if (statMod.modifiers.length !== this.lastModifierCount) {
+          this.lastModifierCount = statMod.modifiers.length;
           console.log('⚙️ 应用修改器到武器:', {
-            damage: newDamage,
-            fireRate: newFireRate,
-            pierce: newPierce,
-            bounce: newBounce
+            modifierCount: statMod.modifiers.length,
+            damage: `${weaponConfig.damage} → ${newDamage}`,
+            fireRate: `${weaponConfig.fireRate} → ${newFireRate}`,
+            pierce: `${weaponConfig.pierce || 0} → ${newPierce}`,
+            bounce: `${weaponConfig.bounce || 0} → ${newBounce}`,
+            bulletSize: `${weaponConfig.bulletSize} → ${newBulletSize}`
           });
         }
       }
