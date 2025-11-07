@@ -17,6 +17,7 @@ export class UpgradeSystem extends System {
   
   constructor(stage: any, upgradePanel: UpgradePanel) {
     super();
+    this.updateWhenPaused = true; // 暂停时也要处理升级选择
     this.upgradePanel = upgradePanel;
     stage.addChild(upgradePanel.getContainer());
   }
@@ -69,6 +70,9 @@ export class UpgradeSystem extends System {
     console.log('🎴 显示升级面板');
     this.isUpgrading = true;
     
+    // 暂停游戏
+    world.pause();
+    
     const upgrades = this.getRandomUpgrades(3);
     console.log('📋 升级选项:', upgrades.map(u => u.name));
     
@@ -77,6 +81,9 @@ export class UpgradeSystem extends System {
       this.applyUpgrade(world, selectedUpgrade);
       this.upgradePanel.hide();
       this.isUpgrading = false;
+      
+      // 恢复游戏
+      world.resume();
     });
   }
   

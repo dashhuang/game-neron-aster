@@ -44,6 +44,7 @@ export class UISystem extends System {
   
   constructor(stage: Container, _inputSystem: InputSystem, world: World) {
     super();
+    this.updateWhenPaused = true; // 暂停时也要更新 UI
     this.uiContainer = new Container();
     this.uiContainer.zIndex = 1000;
     stage.addChild(this.uiContainer);
@@ -252,8 +253,10 @@ export class UISystem extends System {
     // 如果游戏结束，不更新游戏时间
     if (this.isGameOver) return;
     
-    // 更新游戏时间
-    this.gameTime += delta;
+    // 更新游戏时间（暂停时不更新）
+    if (!world.paused) {
+      this.gameTime += delta;
+    }
     const minutes = Math.floor(this.gameTime / 60);
     const seconds = Math.floor(this.gameTime % 60);
     this.timerText.text = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
@@ -293,15 +296,15 @@ export class UISystem extends System {
       
       // 血量 ≤ 25% 时持续显示，否则受伤后显示2秒
       if (this.hpDisplayTimer > 0 || isLowHealth) {
-        // 仅在非低血量时倒计时
-        if (!isLowHealth && this.hpDisplayTimer > 0) {
+        // 仅在非低血量时倒计时（暂停时不倒计时）
+        if (!isLowHealth && this.hpDisplayTimer > 0 && !world.paused) {
           this.hpDisplayTimer -= delta;
         }
         
         this.hpDisplayPercent.text = `${hpPercent}%`;
         
-        // 低血量时爱心闪烁
-        if (isLowHealth) {
+        // 低血量时爱心闪烁（暂停时不更新）
+        if (isLowHealth && !world.paused) {
           this.heartBlinkTimer += delta;
           // 每0.5秒闪烁一次（2Hz频率）
           const blinkCycle = Math.floor(this.heartBlinkTimer / 0.5);

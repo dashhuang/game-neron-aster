@@ -45,6 +45,9 @@ export class Entity {
 
 // 系统抽象基类
 export abstract class System {
+  // 是否在游戏暂停时仍然更新（默认 false）
+  updateWhenPaused: boolean = false;
+  
   abstract update(world: World, delta: number): void;
   
   // 过滤具有特定组件的实体
@@ -96,6 +99,7 @@ export class World {
   entities: Entity[] = [];
   systems: System[] = [];
   eventBus: EventBus = new EventBus();
+  paused: boolean = false;
   
   private nextEntityId = 1;
   
@@ -123,6 +127,10 @@ export class World {
     
     // 更新所有系统
     for (const system of this.systems) {
+      // 如果游戏暂停，只更新标记为 updateWhenPaused 的系统
+      if (this.paused && !system.updateWhenPaused) {
+        continue;
+      }
       system.update(this, delta);
     }
   }
@@ -131,6 +139,16 @@ export class World {
     this.entities.forEach(e => e.destroy());
     this.entities = [];
     this.eventBus.clear();
+  }
+  
+  pause(): void {
+    this.paused = true;
+    console.log('⏸️  游戏已暂停');
+  }
+  
+  resume(): void {
+    this.paused = false;
+    console.log('▶️  游戏已恢复');
   }
 }
 

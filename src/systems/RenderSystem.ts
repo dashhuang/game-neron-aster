@@ -8,6 +8,11 @@ import { Transform } from '../components/Transform';
 import { Render } from '../components/Render';
 
 export class RenderSystem extends System {
+  constructor() {
+    super();
+    this.updateWhenPaused = true; // 暂停时也要渲染
+  }
+  
   update(world: World, _delta: number): void {
     const entities = this.query(world, 'Transform', 'Render');
     
