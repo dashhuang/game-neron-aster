@@ -9,8 +9,8 @@ export const PARTICLE_CONFIG = {
   // 爆炸效果
   EXPLOSION: {
     COUNT: 15,                        // 粒子数量（8-20 推荐）
-    SPEED_MIN: 200,                   // 最小速度（像素/秒）
-    SPEED_MAX: 400,                   // 最大速度（像素/秒）
+    SPEED_MIN: 150,                   // 最小速度（像素/秒）- 降低范围
+    SPEED_MAX: 300,                   // 最大速度（像素/秒）- 降低范围
     SIZE_MIN: 2 * SCALE_FACTOR,       // 粒子最小尺寸
     SIZE_MAX: 5 * SCALE_FACTOR,       // 粒子最大尺寸
     LINE_WIDTH: 2.5,                  // 线段粗细
