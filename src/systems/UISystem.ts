@@ -167,7 +167,7 @@ export class UISystem extends System {
       }
     });
     this.hpDisplayPercent.x = 26;  // 爱心右侧
-    this.hpDisplayPercent.y = 0;   // 与爱心对齐
+    this.hpDisplayPercent.y = -3;  // 与爱心对齐
     
     this.hpDisplayContainer.addChild(this.hpDisplayHeart);
     this.hpDisplayContainer.addChild(this.hpDisplayPercent);
