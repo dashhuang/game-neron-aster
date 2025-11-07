@@ -139,21 +139,14 @@ export class UISystem extends System {
       this.xpBar.fill({ color: COLORS.UI_PROGRESS, alpha: 0.9 });
     }
     
-    // 更新虚拟摇杆显示
-    const joystickData = this.inputSystem.getJoystickData();
-    if (joystickData) {
-      this.joystickOuter.visible = true;
-      this.joystickInner.visible = true;
-      
-      this.joystickOuter.x = joystickData.start.x;
-      this.joystickOuter.y = joystickData.start.y;
-      
-      this.joystickInner.x = joystickData.current.x;
-      this.joystickInner.y = joystickData.current.y;
-    } else {
-      this.joystickOuter.visible = false;
-      this.joystickInner.visible = false;
-    }
+    // 虚拟摇杆已废弃，使用绝对跟随模式
+    // 隐藏虚拟摇杆UI（可选：显示触摸点指示器）
+    this.joystickOuter.visible = false;
+    this.joystickInner.visible = false;
+    
+    // 未来可以添加触摸点指示器
+    // const touchPos = this.inputSystem.getTouchPosition();
+    // if (touchPos) { ... }
   }
 }
 
