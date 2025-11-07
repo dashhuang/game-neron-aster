@@ -21,7 +21,9 @@ export class UISystem extends System {
   private xpBar!: Graphics;
   private xpBarBg!: Graphics;
   
-  private hpDisplayText!: Text;
+  private hpDisplayContainer!: Container;
+  private hpDisplayHeart!: Text;
+  private hpDisplayPercent!: Text;
   private hpDisplayTimer: number = 0;
   
   private joystickOuter!: Graphics;
@@ -130,19 +132,41 @@ export class UISystem extends System {
     this.uiContainer.addChild(this.xpBar);
     
     // 玩家血量显示（飞机右上角，受伤时显示）
-    this.hpDisplayText = new Text({
-      text: '❤ 100%',
+    this.hpDisplayContainer = new Container();
+    this.hpDisplayContainer.visible = false;
+    
+    // 爱心符号（稍大）
+    this.hpDisplayHeart = new Text({
+      text: '❤',
       style: {
-        fontFamily: '"Press Start 2P", "Courier New", "Consolas", monospace', // 像素风格字体
-        fontSize: 12,  // 缩小到 12px
+        fontFamily: '"Press Start 2P", "Courier New", "Consolas", monospace',
+        fontSize: 16,  // 爱心稍大
+        fill: 0xff5555,
+        fontWeight: 'normal',
+        stroke: { color: 0x000000, width: 3 },
+      }
+    });
+    this.hpDisplayHeart.x = 0;
+    this.hpDisplayHeart.y = 0;
+    
+    // 百分比数字
+    this.hpDisplayPercent = new Text({
+      text: '100%',
+      style: {
+        fontFamily: '"Press Start 2P", "Courier New", "Consolas", monospace',
+        fontSize: 12,  // 数字正常大小
         fill: 0xff5555,
         fontWeight: 'normal',
         stroke: { color: 0x000000, width: 3 },
         letterSpacing: 0.5,
       }
     });
-    this.hpDisplayText.visible = false;
-    this.uiContainer.addChild(this.hpDisplayText);
+    this.hpDisplayPercent.x = 20;
+    this.hpDisplayPercent.y = 2;
+    
+    this.hpDisplayContainer.addChild(this.hpDisplayHeart);
+    this.hpDisplayContainer.addChild(this.hpDisplayPercent);
+    this.uiContainer.addChild(this.hpDisplayContainer);
   }
   
   private createJoystick(): void {
@@ -262,17 +286,17 @@ export class UISystem extends System {
         this.hpDisplayTimer -= delta;
         
         const hpPercent = Math.round((playerHealth.current / playerHealth.max) * 100);
-        this.hpDisplayText.text = `❤ ${hpPercent}%`;
+        this.hpDisplayPercent.text = `${hpPercent}%`;
         
         // 位置：玩家右上角
         if (playerTransform) {
-          this.hpDisplayText.x = playerTransform.x + 30;
-          this.hpDisplayText.y = playerTransform.y - 40;
+          this.hpDisplayContainer.x = playerTransform.x + 30;
+          this.hpDisplayContainer.y = playerTransform.y - 40;
         }
         
-        this.hpDisplayText.visible = true;
+        this.hpDisplayContainer.visible = true;
       } else {
-        this.hpDisplayText.visible = false;
+        this.hpDisplayContainer.visible = false;
       }
     }
     
