@@ -169,8 +169,14 @@ export class GameEngine {
       if (!weapon) return;
       
       // 使用修改后的武器属性创建子弹
+      const baseConfig = gameData.getWeapon(data.weaponId);
+      if (!baseConfig) {
+        console.error(`未找到武器配置: ${data.weaponId}`);
+        return;
+      }
+      
       const bulletConfig = {
-        ...gameData.getWeapon(data.weaponId),
+        ...baseConfig,
         damage: weapon.damage,
         bulletSpeed: weapon.bulletSpeed,
         bulletSize: weapon.bulletSize,
@@ -178,15 +184,22 @@ export class GameEngine {
         bounce: weapon.bounce,
       };
       
-      if (bulletConfig) {
-        createPlayerBulletFromWeapon(
-          this.world,
-          this.gameStage,
-          data.x,
-          data.y,
-          bulletConfig as any
-        );
+      // 调试输出（仅在有穿透或弹跳时）
+      if (weapon.pierce > 0 || weapon.bounce > 0) {
+        console.log('🔫 创建子弹:', {
+          pierce: weapon.pierce,
+          bounce: weapon.bounce,
+          damage: weapon.damage
+        });
       }
+      
+      createPlayerBulletFromWeapon(
+        this.world,
+        this.gameStage,
+        data.x,
+        data.y,
+        bulletConfig as any
+      );
     });
     
     // 监听升级事件
