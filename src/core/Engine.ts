@@ -26,6 +26,7 @@ import { PerformanceSystem } from '../systems/PerformanceSystem';
 import { HitFlashSystem } from '../systems/HitFlashSystem';
 import { AISystem } from '../systems/AISystem';
 import { ProjectileSystem } from '../systems/ProjectileSystem';
+import { ParticleSystem } from '../systems/ParticleSystem';
 import { gameData } from '../data/DataLoader';
 
 export class GameEngine {
@@ -131,6 +132,7 @@ export class GameEngine {
       .addSystem(new CollisionSystem())
       .addSystem(new HealthSystem())
       .addSystem(new PickupSystem())
+      .addSystem(new ParticleSystem())     // 粒子系统
       .addSystem(new LifetimeSystem())
       .addSystem(new CleanupSystem(this.gameStage))
       .addSystem(new PerformanceSystem())

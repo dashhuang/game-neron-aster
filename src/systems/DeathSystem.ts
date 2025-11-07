@@ -9,6 +9,8 @@ import { Transform } from '../components/Transform';
 import { Tag } from '../components/Tag';
 import { EntityType, GAME_CONFIG } from '../config/constants';
 import { createXPShardEntity } from '../entities/XPShard';
+import { createExplosion } from '../entities/ParticleEffect';
+import { ENEMY_COLORS } from '../entities/Enemy';
 
 export class DeathSystem extends System {
   private stage: Container;
@@ -31,12 +33,16 @@ export class DeathSystem extends System {
         
         if (!tag || !transform) return;
         
-        // 如果是敌人死亡，掉落经验
+        // 如果是敌人死亡，掉落经验和爆炸效果
         if (tag.value === EntityType.ENEMY) {
           const xpAmount = Math.random() > 0.5 ? GAME_CONFIG.HEX_XP : GAME_CONFIG.ARROW_XP;
           
           // 在敌人位置生成经验碎片
           createXPShardEntity(world, this.stage, transform.x, transform.y, xpAmount);
+          
+          // 生成爆炸粒子效果
+          const enemyColor = ENEMY_COLORS.get(entity.id) || 0xffffff;
+          createExplosion(world, this.stage, transform.x, transform.y, enemyColor, 15);
         }
         
         // 移除显示对象
