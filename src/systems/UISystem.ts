@@ -42,11 +42,8 @@ export class UISystem extends System {
   private fpsFrames: number[] = [];
   private isGameOver: boolean = false;
   
-  private inputSystem: InputSystem;
-  
-  constructor(stage: Container, inputSystem: InputSystem, world: World) {
+  constructor(stage: Container, _inputSystem: InputSystem, world: World) {
     super();
-    this.inputSystem = inputSystem;
     this.uiContainer = new Container();
     this.uiContainer.zIndex = 1000;
     stage.addChild(this.uiContainer);

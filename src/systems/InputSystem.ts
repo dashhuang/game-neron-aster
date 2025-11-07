@@ -61,7 +61,7 @@ export class InputSystem extends System {
     window.addEventListener('touchcancel', handleTouchEnd);
   }
   
-  update(world: World, delta: number): void {
+  update(world: World, _delta: number): void {
     // 找到玩家实体
     const players = this.query(world, 'Tag', 'Velocity', 'Transform').filter(e => {
       const tag = e.getComponent<Tag>('Tag');

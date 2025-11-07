@@ -53,6 +53,9 @@ export function createWeaponFromConfig(weaponId: string, fireRate: number, damag
     damage,
     bulletSpeed,
     bulletLifetime,
+    bulletSize: 6,
+    pierce: 0,
+    bounce: 0,
   };
 }
 

@@ -56,7 +56,6 @@ export class UpgradePanel {
     // 创建升级卡
     const cardCount = upgrades.length;
     const cardWidth = 180;
-    const cardHeight = 220;
     const cardSpacing = 20;
     const totalWidth = cardCount * cardWidth + (cardCount - 1) * cardSpacing;
     const startX = (GAME_WIDTH - totalWidth) / 2 + cardWidth / 2;

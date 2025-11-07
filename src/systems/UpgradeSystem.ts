@@ -3,7 +3,7 @@
  * 处理升级池、随机选择和升级应用
  */
 
-import { System, World, Events } from '../core/ECS';
+import { System, World } from '../core/ECS';
 import { UpgradeConfig } from '../data/types/UpgradeConfig';
 import { gameData } from '../data/DataLoader';
 import { UpgradePanel } from '../ui/UpgradePanel';
@@ -111,7 +111,7 @@ export class UpgradeSystem extends System {
     console.log(`📊 当前修改器数量: ${statMod.modifiers.length}`);
   }
   
-  update(world: World, delta: number): void {
+  update(_world: World, _delta: number): void {
     // 升级系统主要通过事件触发，这里不需要每帧更新
   }
   

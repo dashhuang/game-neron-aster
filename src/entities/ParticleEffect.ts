@@ -3,16 +3,15 @@
  * 创建各种粒子效果
  */
 
-import { Entity, World } from '../core/ECS';
+import { World } from '../core/ECS';
 import { Container, Graphics } from 'pixi.js';
 import { createTransform } from '../components/Transform';
 import { createVelocity } from '../components/Velocity';
 import { createRender } from '../components/Render';
 import { createParticle } from '../components/Particle';
 import { createTag } from '../components/Tag';
-import { LAYERS } from '../config/constants';
+import { LAYERS, SCALE_FACTOR } from '../config/constants';
 import { getExplosionConfig } from '../config/particleConfig';
-import { NeonRenderer } from '../graphics/NeonRenderer';
 
 /**
  * 创建爆炸粒子效果
