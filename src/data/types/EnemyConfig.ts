@@ -24,6 +24,12 @@ export interface EnemyConfig {
   // AI 行为
   aiType: string;                // AI 类型，如 "straight_down", "zigzag", "tracking"
   
+  // 死亡特效（可选）
+  deathEffect?: {
+    type: string;                // 特效类型，如 "explosion_small", "explosion_large"
+    particleCount?: number;      // 粒子数量（覆盖预设）
+  };
+  
   // 可选标签（用于分类、克制等）
   tags?: string[];               // 如 ["geometric", "basic", "fast"]
 }

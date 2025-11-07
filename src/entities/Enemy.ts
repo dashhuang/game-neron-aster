@@ -11,6 +11,7 @@ import { createCollider } from '../components/Collider';
 import { createRender } from '../components/Render';
 import { createTag } from '../components/Tag';
 import { createAI } from '../components/AI';
+import { createEnemyData } from '../components/EnemyData';
 import { EntityType, LAYERS } from '../config/constants';
 import { NeonRenderer } from '../graphics/NeonRenderer';
 import { EnemyConfig } from '../data/types/EnemyConfig';
@@ -64,6 +65,7 @@ export function createEnemyFromConfig(
   entity.addComponent(createCollider(config.size, 'enemy'));
   entity.addComponent(createRender(sprite, LAYERS.ENEMIES));
   entity.addComponent(createTag(EntityType.ENEMY));
+  entity.addComponent(createEnemyData(config.id)); // 存储配置ID
   
   // 添加 AI 组件
   entity.addComponent(createAI(config.aiType));

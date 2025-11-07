@@ -21,16 +21,8 @@ import { NeonRenderer } from '../graphics/NeonRenderer';
  * @param x 爆炸中心 X
  * @param y 爆炸中心 Y
  * @param color 粒子颜色
- * @param count 粒子数量
- * 
- * 可调参数说明：
- * - count: 粒子数量（默认12，推荐 8-20）
- * - speed: 飞溅速度（当前 200-400，越大越快）
- * - particleSize: 粒子大小（当前 2-5，越大越明显）
- * - lineWidth: 线段粗细（当前 2，越大越清晰）
- * - glowAlpha: 发光透明度（当前 0.2，越小越清晰）
- * - glowWidth: 发光宽度（当前 3，越小越清晰）
- * - lifetime: 持续时间（当前 0.3-0.5秒，越短越快消失）
+ * @param explosionType 爆炸类型：'explosion_small', 'explosion', 'explosion_large'
+ * @param count 粒子数量（可选，覆盖预设）
  */
 export function createExplosion(
   world: World,
@@ -38,10 +30,11 @@ export function createExplosion(
   x: number,
   y: number,
   color: number,
+  explosionType: string = 'explosion',
   count?: number
 ): void {
   // 使用配置
-  const config = getExplosionConfig();
+  const config = getExplosionConfig(explosionType);
   const particleCount = count || config.COUNT;
   
   for (let i = 0; i < particleCount; i++) {
