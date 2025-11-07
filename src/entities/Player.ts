@@ -13,6 +13,7 @@ import { createRender } from '../components/Render';
 import { createTag } from '../components/Tag';
 import { createPlayerXP } from '../components/XP';
 import { createPlayerData } from '../components/PlayerData';
+import { createStatModifier } from '../components/StatModifier';
 import { EntityType, LAYERS } from '../config/constants';
 import { NeonRenderer } from '../graphics/NeonRenderer';
 import { PlayerConfig } from '../data/types/PlayerConfig';
@@ -58,6 +59,7 @@ export function createPlayer(
   entity.addComponent(createTag(EntityType.PLAYER));
   entity.addComponent(createPlayerXP());
   entity.addComponent(createPlayerData(config.id)); // 存储配置ID
+  entity.addComponent(createStatModifier([])); // 初始化空的修改器列表
   
   return entity;
 }

@@ -5,4 +5,5 @@
 export * from './EnemyConfig';
 export * from './WeaponConfig';
 export * from './PlayerConfig';
+export * from './UpgradeConfig';
 

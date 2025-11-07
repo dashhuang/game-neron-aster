@@ -6,11 +6,13 @@
 import { EnemyConfig, EnemyConfigData } from './types/EnemyConfig';
 import { WeaponConfig, WeaponConfigData } from './types/WeaponConfig';
 import { PlayerConfig, PlayerConfigData } from './types/PlayerConfig';
+import { UpgradeConfig, UpgradeConfigData } from './types/UpgradeConfig';
 
 export class DataLoader {
   private enemies: Map<string, EnemyConfig> = new Map();
   private weapons: Map<string, WeaponConfig> = new Map();
   private players: Map<string, PlayerConfig> = new Map();
+  private upgrades: Map<string, UpgradeConfig> = new Map();
   
   private isLoaded = false;
   
@@ -28,6 +30,7 @@ export class DataLoader {
         this.loadEnemies(),
         this.loadWeapons(),
         this.loadPlayers(),
+        this.loadUpgrades(),
       ]);
       
       this.isLoaded = true;
@@ -35,6 +38,7 @@ export class DataLoader {
       console.log(`  - 敌人: ${this.enemies.size} 种`);
       console.log(`  - 武器: ${this.weapons.size} 种`);
       console.log(`  - 角色: ${this.players.size} 种`);
+      console.log(`  - 升级: ${this.upgrades.size} 种`);
     } catch (error) {
       console.error('❌ 数据加载失败:', error);
       throw error;
@@ -129,6 +133,43 @@ export class DataLoader {
    */
   getAllPlayers(): PlayerConfig[] {
     return Array.from(this.players.values());
+  }
+  
+  /**
+   * 加载升级配置
+   */
+  private async loadUpgrades(): Promise<void> {
+    const response = await fetch('/data/upgrades/upgrades.json');
+    if (!response.ok) {
+      throw new Error(`加载升级配置失败: ${response.statusText}`);
+    }
+    
+    const data: UpgradeConfigData = await response.json();
+    
+    for (const upgrade of data.upgrades) {
+      this.upgrades.set(upgrade.id, upgrade);
+    }
+  }
+  
+  /**
+   * 获取升级配置
+   */
+  getUpgrade(id: string): UpgradeConfig | undefined {
+    return this.upgrades.get(id);
+  }
+  
+  /**
+   * 获取所有升级配置
+   */
+  getAllUpgrades(): UpgradeConfig[] {
+    return Array.from(this.upgrades.values());
+  }
+  
+  /**
+   * 根据稀有度获取升级列表
+   */
+  getUpgradesByRarity(rarity: 'common' | 'rare' | 'epic'): UpgradeConfig[] {
+    return this.getAllUpgrades().filter(u => u.rarity === rarity);
   }
   
   /**

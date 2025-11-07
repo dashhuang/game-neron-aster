@@ -27,6 +27,9 @@ import { HitFlashSystem } from '../systems/HitFlashSystem';
 import { AISystem } from '../systems/AISystem';
 import { ProjectileSystem } from '../systems/ProjectileSystem';
 import { ParticleSystem } from '../systems/ParticleSystem';
+import { UpgradeSystem } from '../systems/UpgradeSystem';
+import { StatModifierSystem } from '../systems/StatModifierSystem';
+import { UpgradePanel } from '../ui/UpgradePanel';
 import { gameData } from '../data/DataLoader';
 
 export class GameEngine {
@@ -34,6 +37,7 @@ export class GameEngine {
   private world: World;
   private gameStage: Container;
   private inputSystem: InputSystem;
+  private upgradeSystem!: UpgradeSystem;
   
   constructor() {
     // 创建 PixiJS 应用
@@ -127,8 +131,13 @@ export class GameEngine {
   }
   
   private registerSystems(): void {
+    // 创建升级面板
+    const upgradePanel = new UpgradePanel();
+    this.upgradeSystem = new UpgradeSystem(this.app.stage, upgradePanel);
+    
     this.world
       .addSystem(this.inputSystem)
+      .addSystem(new StatModifierSystem()) // 属性修改器（最先执行）
       .addSystem(new AISystem())           // AI 行为在移动前执行
       .addSystem(new ProjectileSystem())   // 子弹行为（追踪、弹跳）
       .addSystem(new MovementSystem())
@@ -143,6 +152,7 @@ export class GameEngine {
       .addSystem(new EnemySpawnSystem(this.gameStage))
       .addSystem(new DeathSystem(this.gameStage))
       .addSystem(new HitFlashSystem())
+      .addSystem(this.upgradeSystem)       // 升级系统
       .addSystem(new RenderSystem())
       .addSystem(new UISystem(this.app.stage, this.inputSystem, this.world));
   }
@@ -169,7 +179,8 @@ export class GameEngine {
     // 监听升级事件
     this.world.eventBus.on(Events.LEVEL_UP, (data) => {
       console.log('Level Up!', data.level);
-      // TODO: 显示升级面板
+      // 显示升级面板
+      this.upgradeSystem.showUpgradePanel(this.world);
     });
   }
   
