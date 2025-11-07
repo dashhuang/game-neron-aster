@@ -161,8 +161,8 @@ export class UISystem extends System {
         letterSpacing: 0.5,
       }
     });
-    this.hpDisplayPercent.x = 20;
-    this.hpDisplayPercent.y = 2;
+    this.hpDisplayPercent.x = 24;  // 爱心右侧
+    this.hpDisplayPercent.y = 4;   // 垂直居中对齐
     
     this.hpDisplayContainer.addChild(this.hpDisplayHeart);
     this.hpDisplayContainer.addChild(this.hpDisplayPercent);
