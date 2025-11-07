@@ -11,8 +11,8 @@ export const PARTICLE_CONFIG = {
     COUNT: 15,                        // 粒子数量（8-20 推荐）
     SPEED_MIN: 150,                   // 最小速度（像素/秒）- 降低范围
     SPEED_MAX: 300,                   // 最大速度（像素/秒）- 降低范围
-    SIZE_MIN: 2 * SCALE_FACTOR,       // 粒子最小尺寸
-    SIZE_MAX: 5 * SCALE_FACTOR,       // 粒子最大尺寸
+    SIZE_MIN: 1.5 * SCALE_FACTOR,     // 粒子最小尺寸 - 缩小
+    SIZE_MAX: 3 * SCALE_FACTOR,       // 粒子最大尺寸 - 缩小
     LINE_WIDTH: 2.5,                  // 线段粗细
     LINE_LENGTH_MULTIPLIER: 3,        // 线段长度倍数
     GLOW_WIDTH: 3,                    // 发光宽度（越小越清晰）
