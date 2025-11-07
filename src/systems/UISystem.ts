@@ -3,13 +3,15 @@
  * 显示 HUD（等级、经验、计时器、FPS）和虚拟摇杆
  */
 
-import { System, World } from '../core/ECS';
+import { System, World, Events } from '../core/ECS';
 import { Container, Text, Graphics } from 'pixi.js';
-import { COLORS, GAME_WIDTH, SCALE_FACTOR } from '../config/constants';
+import { COLORS, GAME_WIDTH, GAME_HEIGHT, SCALE_FACTOR } from '../config/constants';
 import { PlayerXP } from '../components/XP';
+import { Health } from '../components/Health';
 import { Tag } from '../components/Tag';
 import { InputSystem } from './InputSystem';
 import { NeonRenderer } from '../graphics/NeonRenderer';
+import { EntityType } from '../config/constants';
 
 export class UISystem extends System {
   private uiContainer: Container;
@@ -18,16 +20,24 @@ export class UISystem extends System {
   private fpsText!: Text;
   private xpBar!: Graphics;
   private xpBarBg!: Graphics;
+  private hpBar!: Graphics;
+  private hpBarBg!: Graphics;
   
   private joystickOuter!: Graphics;
   private joystickInner!: Graphics;
   
+  private gameOverContainer!: Container;
+  private gameOverText!: Text;
+  private restartButton!: Graphics;
+  private restartText!: Text;
+  
   private gameTime: number = 0;
   private fpsFrames: number[] = [];
+  private isGameOver: boolean = false;
   
   private inputSystem: InputSystem;
   
-  constructor(stage: Container, inputSystem: InputSystem) {
+  constructor(stage: Container, inputSystem: InputSystem, world: World) {
     super();
     this.inputSystem = inputSystem;
     this.uiContainer = new Container();
@@ -37,6 +47,18 @@ export class UISystem extends System {
     // 创建 UI 元素
     this.createHUD();
     this.createJoystick();
+    this.createGameOverUI();
+    
+    // 监听玩家死亡事件
+    world.eventBus.on(Events.DEATH, (data) => {
+      const entity = data.entity;
+      if (!entity) return;
+      
+      const tag = entity.getComponent('Tag') as Tag | undefined;
+      if (tag && tag.value === EntityType.PLAYER) {
+        this.showGameOver();
+      }
+    });
   }
   
   private createHUD(): void {
@@ -89,6 +111,16 @@ export class UISystem extends System {
     // 经验条
     this.xpBar = new Graphics();
     this.uiContainer.addChild(this.xpBar);
+    
+    // 血量条背景
+    this.hpBarBg = new Graphics();
+    this.hpBarBg.rect(20, 80, 200, 12);
+    this.hpBarBg.fill({ color: 0x333333, alpha: 0.6 });
+    this.uiContainer.addChild(this.hpBarBg);
+    
+    // 血量条
+    this.hpBar = new Graphics();
+    this.uiContainer.addChild(this.hpBar);
   }
   
   private createJoystick(): void {
@@ -106,7 +138,68 @@ export class UISystem extends System {
     this.uiContainer.addChild(this.joystickInner);
   }
   
+  private createGameOverUI(): void {
+    this.gameOverContainer = new Container();
+    this.gameOverContainer.visible = false;
+    this.gameOverContainer.zIndex = 2000;
+    
+    // 半透明黑色背景
+    const bg = new Graphics();
+    bg.rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    bg.fill({ color: 0x000000, alpha: 0.8 });
+    this.gameOverContainer.addChild(bg);
+    
+    // Game Over 文字
+    this.gameOverText = new Text({
+      text: 'GAME OVER',
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 60,
+        fill: COLORS.ENEMY_BOSS,
+        fontWeight: 'bold',
+        align: 'center',
+      }
+    });
+    this.gameOverText.anchor.set(0.5);
+    this.gameOverText.x = GAME_WIDTH / 2;
+    this.gameOverText.y = GAME_HEIGHT / 2 - 100;
+    this.gameOverContainer.addChild(this.gameOverText);
+    
+    // 重新开始按钮
+    this.restartButton = new Graphics();
+    this.restartButton.roundRect(-100, -30, 200, 60, 10);
+    this.restartButton.fill({ color: COLORS.UI_PRIMARY, alpha: 0.8 });
+    this.restartButton.x = GAME_WIDTH / 2;
+    this.restartButton.y = GAME_HEIGHT / 2 + 50;
+    this.restartButton.eventMode = 'static';
+    this.restartButton.cursor = 'pointer';
+    
+    // 重新开始文字
+    this.restartText = new Text({
+      text: '重新开始',
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 28,
+        fill: 0x000000,
+        fontWeight: 'bold',
+      }
+    });
+    this.restartText.anchor.set(0.5);
+    this.restartButton.addChild(this.restartText);
+    
+    // 点击重新开始
+    this.restartButton.on('pointerdown', () => {
+      window.location.reload();
+    });
+    
+    this.gameOverContainer.addChild(this.restartButton);
+    this.uiContainer.addChild(this.gameOverContainer);
+  }
+  
   update(world: World, delta: number): void {
+    // 如果游戏结束，不更新游戏时间
+    if (this.isGameOver) return;
+    
     // 更新游戏时间
     this.gameTime += delta;
     const minutes = Math.floor(this.gameTime / 60);
@@ -122,21 +215,34 @@ export class UISystem extends System {
     const fps = Math.round(1 / avgDelta);
     this.fpsText.text = `FPS: ${fps}`;
     
-    // 更新等级和经验条
-    const players = this.query(world, 'Tag', 'PlayerXP').filter(e => {
+    // 更新等级、经验条和血量
+    const players = this.query(world, 'Tag', 'PlayerXP', 'Health').filter(e => {
       const tag = e.getComponent<Tag>('Tag');
       return tag && tag.value === 'player';
     });
     
     if (players.length > 0) {
-      const playerXP = players[0].getComponent<PlayerXP>('PlayerXP')!;
+      const player = players[0];
+      const playerXP = player.getComponent<PlayerXP>('PlayerXP')!;
+      const playerHealth = player.getComponent<Health>('Health')!;
+      
       this.levelText.text = `Lv.${playerXP.level}`;
       
       // 绘制经验条
-      const progress = playerXP.current / playerXP.nextLevelXP;
+      const xpProgress = playerXP.current / playerXP.nextLevelXP;
       this.xpBar.clear();
-      this.xpBar.rect(20, 60, 200 * progress, 8);
+      this.xpBar.rect(20, 60, 200 * xpProgress, 8);
       this.xpBar.fill({ color: COLORS.UI_PROGRESS, alpha: 0.9 });
+      
+      // 绘制血量条
+      const hpProgress = playerHealth.current / playerHealth.max;
+      const hpColor = hpProgress > 0.5 ? COLORS.UI_PROGRESS : 
+                      hpProgress > 0.25 ? COLORS.UI_WARNING : 
+                      COLORS.ENEMY_BOSS; // 低血量变红
+      
+      this.hpBar.clear();
+      this.hpBar.rect(20, 80, 200 * hpProgress, 12);
+      this.hpBar.fill({ color: hpColor, alpha: 0.9 });
     }
     
     // 虚拟摇杆已废弃，使用绝对跟随模式
@@ -147,6 +253,14 @@ export class UISystem extends System {
     // 未来可以添加触摸点指示器
     // const touchPos = this.inputSystem.getTouchPosition();
     // if (touchPos) { ... }
+  }
+  
+  /**
+   * 显示 Game Over 界面
+   */
+  showGameOver(): void {
+    this.isGameOver = true;
+    this.gameOverContainer.visible = true;
   }
 }
 

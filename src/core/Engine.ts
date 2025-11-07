@@ -140,7 +140,7 @@ export class GameEngine {
       .addSystem(new DeathSystem(this.gameStage))
       .addSystem(new HitFlashSystem())
       .addSystem(new RenderSystem())
-      .addSystem(new UISystem(this.app.stage, this.inputSystem));
+      .addSystem(new UISystem(this.app.stage, this.inputSystem, this.world));
   }
   
   private setupEventListeners(): void {
