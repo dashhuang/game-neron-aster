@@ -10,7 +10,8 @@ import { createVelocity } from '../components/Velocity';
 import { createRender } from '../components/Render';
 import { createParticle } from '../components/Particle';
 import { createTag } from '../components/Tag';
-import { LAYERS, SCALE_FACTOR } from '../config/constants';
+import { LAYERS } from '../config/constants';
+import { getExplosionConfig } from '../config/particleConfig';
 import { NeonRenderer } from '../graphics/NeonRenderer';
 
 /**
@@ -21,6 +22,15 @@ import { NeonRenderer } from '../graphics/NeonRenderer';
  * @param y 爆炸中心 Y
  * @param color 粒子颜色
  * @param count 粒子数量
+ * 
+ * 可调参数说明：
+ * - count: 粒子数量（默认12，推荐 8-20）
+ * - speed: 飞溅速度（当前 200-400，越大越快）
+ * - particleSize: 粒子大小（当前 2-5，越大越明显）
+ * - lineWidth: 线段粗细（当前 2，越大越清晰）
+ * - glowAlpha: 发光透明度（当前 0.2，越小越清晰）
+ * - glowWidth: 发光宽度（当前 3，越小越清晰）
+ * - lifetime: 持续时间（当前 0.3-0.5秒，越短越快消失）
  */
 export function createExplosion(
   world: World,
@@ -28,35 +38,44 @@ export function createExplosion(
   x: number,
   y: number,
   color: number,
-  count: number = 12
+  count?: number
 ): void {
-  for (let i = 0; i < count; i++) {
+  // 使用配置
+  const config = getExplosionConfig();
+  const particleCount = count || config.COUNT;
+  
+  for (let i = 0; i < particleCount; i++) {
     const entity = world.createEntity();
     
     // 随机方向
-    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.3;
-    const speed = 100 + Math.random() * 150; // 100-250 像素/秒
+    const angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.3;
+    const speed = config.SPEED_MIN + Math.random() * (config.SPEED_MAX - config.SPEED_MIN);
     const vx = Math.cos(angle) * speed;
     const vy = Math.sin(angle) * speed;
     
     // 创建粒子图形（小圆点或线段）
     const sprite = new Graphics();
-    const particleSize = (2 + Math.random() * 3) * SCALE_FACTOR; // 2-5 像素
+    const particleSize = config.SIZE_MIN + Math.random() * (config.SIZE_MAX - config.SIZE_MIN);
     
     if (Math.random() > 0.5) {
       // 实心圆粒子
-      NeonRenderer.drawFilledCircle(sprite, particleSize, color, true);
+      sprite.circle(0, 0, particleSize);
+      sprite.fill({ color, alpha: 1 });
+      
+      // 减少外发光（更清晰）
+      sprite.circle(0, 0, particleSize + 1);
+      sprite.stroke({ width: 2, color, alpha: 0.3 });
     } else {
       // 线段粒子（更有霓虹感）
-      const length = particleSize * 3;
+      const length = particleSize * config.LINE_LENGTH_MULTIPLIER;
       sprite.moveTo(0, 0);
       sprite.lineTo(Math.cos(angle) * length, Math.sin(angle) * length);
-      sprite.stroke({ width: 2, color, alpha: 1 });
+      sprite.stroke({ width: config.LINE_WIDTH, color, alpha: 1 });
       
-      // 发光
+      // 发光效果
       sprite.moveTo(0, 0);
       sprite.lineTo(Math.cos(angle) * length, Math.sin(angle) * length);
-      sprite.stroke({ width: 4, color, alpha: 0.5 });
+      sprite.stroke({ width: config.GLOW_WIDTH, color, alpha: config.GLOW_ALPHA });
     }
     
     stage.addChild(sprite);
@@ -65,7 +84,8 @@ export function createExplosion(
     entity.addComponent(createTransform(x, y, angle, 1));
     entity.addComponent(createVelocity(vx, vy));
     entity.addComponent(createRender(sprite, LAYERS.EFFECTS_FRONT));
-    entity.addComponent(createParticle(0.4 + Math.random() * 0.3, 1.0, true)); // 0.4-0.7 秒
+    const lifetime = config.LIFETIME_MIN + Math.random() * (config.LIFETIME_MAX - config.LIFETIME_MIN);
+    entity.addComponent(createParticle(lifetime, 1.0, true));
     entity.addComponent(createTag('particle' as any));
   }
 }
