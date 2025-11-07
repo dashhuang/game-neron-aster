@@ -63,6 +63,7 @@ export class CollisionSystem extends System {
           if (projectile && projectile.pierce > 0) {
             projectile.pierce--;
             shouldDestroy = false; // 还能穿透，不销毁
+            console.log(`💥 子弹穿透！剩余穿透次数: ${projectile.pierce}`);
           }
           
           // 销毁子弹或继续穿透
@@ -72,8 +73,10 @@ export class CollisionSystem extends System {
               bulletRender.sprite.parent.removeChild(bulletRender.sprite);
             }
             bullet.destroy();
-            break;
           }
+          
+          // 注意：不要 break，让子弹继续检测其他敌人（穿透效果）
+          if (shouldDestroy) break;
         }
       }
     }
