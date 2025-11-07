@@ -135,12 +135,12 @@ export class UISystem extends System {
     this.hpDisplayContainer = new Container();
     this.hpDisplayContainer.visible = false;
     
-    // 爱心符号（稍大）
+    // 爱心符号（大号）
     this.hpDisplayHeart = new Text({
       text: '❤',
       style: {
         fontFamily: '"Press Start 2P", "Courier New", "Consolas", monospace',
-        fontSize: 16,  // 爱心稍大
+        fontSize: 20,  // 爱心大号
         fill: 0xff5555,
         fontWeight: 'normal',
         stroke: { color: 0x000000, width: 3 },
