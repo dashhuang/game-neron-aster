@@ -35,11 +35,15 @@ public/data/
       "hp": 60,
       "speed": 40,
       "damage": 8,
-      "size": 16,
+      "size": 20.8,
       "color": 17886,
       "shape": "hexagon",
       "xpDrop": 2,
       "aiType": "straight_down",
+      "deathEffect": {
+        "type": "explosion",
+        "particleCount": 15
+      },
       "tags": ["geometric", "basic", "slow"]
     }
   ]
@@ -60,7 +64,20 @@ public/data/
 | `shape` | string | 形状类型 | `"hexagon"`, `"triangle"`, `"diamond"`, `"star"` |
 | `xpDrop` | number | 掉落经验值 | `2` |
 | `aiType` | string | AI 行为类型 | `"straight_down"` |
+| `deathEffect` | object | 死亡特效（可选） | 见下方说明 |
 | `tags` | string[] | 标签（可选） | `["geometric", "basic"]` |
+
+### 死亡特效配置（deathEffect）
+
+| 字段 | 类型 | 说明 | 示例 |
+|------|------|------|------|
+| `type` | string | 爆炸类型 | `"explosion_small"`, `"explosion"`, `"explosion_large"` |
+| `particleCount` | number | 粒子数量（可选，覆盖预设） | `15` |
+
+**爆炸类型说明**：
+- `explosion_small` - 小型爆炸（10粒子，速度120-250，适合小型敌人）
+- `explosion` - 普通爆炸（15粒子，速度150-300，适合标准敌人）
+- `explosion_large` - 大型爆炸（25粒子，速度200-450，适合精英/Boss）
 
 ### 颜色值转换
 

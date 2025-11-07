@@ -104,18 +104,21 @@ export const gameData = new DataLoader();
 
 | 组件 | 用途 | 数据 |
 |------|------|------|
-| `Weapon` | 武器 | fireRate, cooldown, damage, bulletSpeed |
+| `Weapon` | 武器 | weaponId, fireRate, cooldown, damage, bulletSpeed |
+| `Projectile` | 子弹属性 | damage, bulletType, pierce, bounce, homing |
+| `AI` | AI 行为 | behaviorId, state, targetId |
 | `XPShard` | 经验碎片 | amount, magnetRange, isMagnetized |
 | `PlayerXP` | 玩家经验 | current, level, nextLevelXP |
-| `HitFlash` | 受击闪烁 | duration, elapsed, originalColor, affectedEdges |
+| `EnemyData` | 敌人数据 | configId（引用配置） |
+| `HitFlash` | 受击闪烁 | duration, elapsed, originalColor, affectedEdges, shape, size |
+| `Particle` | 粒子效果 | lifetime, elapsed, initialAlpha, fadeOut |
 
 ### 未来组件（规划中）
 
-- `AI` - AI 行为组件
-- `Projectile` - 子弹属性（穿透/弹跳/追踪）
 - `StatModifier` - 属性修改器（升级效果）
-- `Shield` - 护盾
+- `Shield` - 护盾值
 - `Status` - 状态效果（减速/流血等）
+- `Acceleration` - 加速度（重力、摩擦）
 
 ---
 
@@ -140,21 +143,23 @@ export const gameData = new DataLoader();
    ↓
 8. PickupSystem         # 拾取经验
    ↓
-9. LifetimeSystem       # 生命周期
+9. ParticleSystem       # 粒子效果管理
    ↓
-10. CleanupSystem       # 清理超出屏幕实体
+10. LifetimeSystem      # 生命周期
    ↓
-11. PerformanceSystem   # 限制实体数量
+11. CleanupSystem       # 清理超出屏幕实体
    ↓
-12. EnemySpawnSystem    # 生成敌人
+12. PerformanceSystem   # 限制实体数量
    ↓
-13. DeathSystem         # 处理死亡
+13. EnemySpawnSystem    # 生成敌人
    ↓
-14. HitFlashSystem      # 受击特效
+14. DeathSystem         # 处理死亡
    ↓
-15. RenderSystem        # 同步渲染
+15. HitFlashSystem      # 受击特效
    ↓
-16. UISystem            # UI 更新
+16. RenderSystem        # 同步渲染
+   ↓
+17. UISystem            # UI 更新
 ```
 
 **顺序原则**：
