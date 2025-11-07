@@ -9,7 +9,9 @@ import { Collider } from '../components/Collider';
 import { Tag } from '../components/Tag';
 import { Render } from '../components/Render';
 import { Projectile } from '../components/Projectile';
+import { EnemyData } from '../components/EnemyData';
 import { EntityType } from '../config/constants';
+import { gameData } from '../data/DataLoader';
 
 export class CollisionSystem extends System {
   update(world: World, _delta: number): void {
@@ -99,11 +101,21 @@ export class CollisionSystem extends System {
         const minDistance = playerCollider.radius + enemyCollider.radius;
         
         if (distance < minDistance) {
+          // 获取敌人伤害值（从配置读取）
+          let enemyDamage = 8; // 默认值
+          const enemyData = enemy.getComponent('EnemyData') as EnemyData | undefined;
+          if (enemyData) {
+            const config = gameData.getEnemy(enemyData.configId);
+            if (config) {
+              enemyDamage = config.damage;
+            }
+          }
+          
           // 玩家受伤
           world.eventBus.emit(Events.DAMAGE, {
             targetId: player.id,
             sourceId: enemy.id,
-            damage: 8,
+            damage: enemyDamage,
           });
           
           // 敌人撞到玩家也会死亡，触发死亡事件（播放爆炸特效）
