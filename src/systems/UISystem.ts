@@ -145,29 +145,29 @@ export class UISystem extends System {
       text: '❤',
       style: {
         fontFamily: '"Press Start 2P", "Courier New", "Consolas", monospace',
-        fontSize: 24,  // 爱心大号
+        fontSize: 20,  // 爱心大号
         fill: 0xff5555,
         fontWeight: 'normal',
         stroke: { color: 0x000000, width: 3 },
       }
     });
     this.hpDisplayHeart.x = 0;
-    this.hpDisplayHeart.y = 0;
+    this.hpDisplayHeart.y = -3;  // 往上移动，与数字齐平
     
     // 百分比数字
     this.hpDisplayPercent = new Text({
       text: '100%',
       style: {
         fontFamily: '"Press Start 2P", "Courier New", "Consolas", monospace',
-        fontSize: 20,  // 数字大号
+        fontSize: 20,  // 数字与爱心同样大小
         fill: 0xff5555,
         fontWeight: 'normal',
         stroke: { color: 0x000000, width: 3 },
         letterSpacing: 0.5,
       }
     });
-    this.hpDisplayPercent.x = 28;  // 爱心右侧
-    this.hpDisplayPercent.y = 2;   // 垂直对齐
+    this.hpDisplayPercent.x = 26;  // 爱心右侧
+    this.hpDisplayPercent.y = 0;   // 与爱心对齐
     
     this.hpDisplayContainer.addChild(this.hpDisplayHeart);
     this.hpDisplayContainer.addChild(this.hpDisplayPercent);
