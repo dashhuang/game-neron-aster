@@ -50,7 +50,10 @@ export function createPlayer(
       weaponConfig.damage,
       weaponConfig.bulletSpeed,
       weaponConfig.bulletLifetime,
-      config.startWeapon  // 保存武器ID
+      config.startWeapon,  // 保存武器ID
+      weaponConfig.bulletSize,
+      weaponConfig.pierce || 0,
+      weaponConfig.bounce || 0
     ));
   }
   

@@ -5,6 +5,7 @@
 
 import { Application, Container, Graphics } from 'pixi.js';
 import { World, Events } from './ECS';
+import { Weapon } from '../components/Weapon';
 import { GAME_WIDTH, GAME_HEIGHT, COLORS } from '../config/constants';
 import { createPlayer } from '../entities/Player';
 import { createPlayerBulletFromWeapon } from '../entities/Projectile';
@@ -160,19 +161,31 @@ export class GameEngine {
   private setupEventListeners(): void {
     // 监听射击事件
     this.world.eventBus.on(Events.SHOOT, (data) => {
-      // 根据武器配置创建子弹
-      const weaponConfig = gameData.getWeapon(data.weaponId);
+      // 找到玩家，使用修改后的武器属性
+      const player = this.world.entities.find(e => e.id === data.ownerId);
+      if (!player) return;
       
-      if (weaponConfig) {
+      const weapon = player.getComponent<Weapon>('Weapon');
+      if (!weapon) return;
+      
+      // 使用修改后的武器属性创建子弹
+      const bulletConfig = {
+        ...gameData.getWeapon(data.weaponId),
+        damage: weapon.damage,
+        bulletSpeed: weapon.bulletSpeed,
+        bulletSize: weapon.bulletSize,
+        pierce: weapon.pierce,
+        bounce: weapon.bounce,
+      };
+      
+      if (bulletConfig) {
         createPlayerBulletFromWeapon(
           this.world,
           this.gameStage,
           data.x,
           data.y,
-          weaponConfig
+          bulletConfig as any
         );
-      } else {
-        console.error(`未找到武器配置: ${data.weaponId}`);
       }
     });
     

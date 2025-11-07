@@ -12,6 +12,9 @@ export interface Weapon extends Component {
   damage: number;
   bulletSpeed: number;
   bulletLifetime: number;
+  bulletSize: number;  // 子弹大小
+  pierce: number;      // 穿透次数
+  bounce: number;      // 弹跳次数
 }
 
 export function createWeapon(
@@ -19,7 +22,10 @@ export function createWeapon(
   damage: number = 12,
   bulletSpeed: number = 900,
   bulletLifetime: number = 2.0,
-  weaponId: string = 'cannon_basic'
+  weaponId: string = 'cannon_basic',
+  bulletSize: number = 6,
+  pierce: number = 0,
+  bounce: number = 0
 ): Weapon {
   return {
     type: 'Weapon',
@@ -29,6 +35,9 @@ export function createWeapon(
     damage,
     bulletSpeed,
     bulletLifetime,
+    bulletSize,
+    pierce,
+    bounce,
   };
 }
 

@@ -39,6 +39,9 @@ export class StatModifierSystem extends System {
         weapon.damage = calculateStat('damage', weaponConfig.damage, statMod.modifiers);
         weapon.fireRate = calculateStat('fireRate', weaponConfig.fireRate, statMod.modifiers);
         weapon.bulletSpeed = calculateStat('bulletSpeed', weaponConfig.bulletSpeed, statMod.modifiers);
+        weapon.bulletSize = calculateStat('bulletSize', weaponConfig.bulletSize, statMod.modifiers);
+        weapon.pierce = Math.floor(calculateStat('pierce', weaponConfig.pierce || 0, statMod.modifiers));
+        weapon.bounce = Math.floor(calculateStat('bounce', weaponConfig.bounce || 0, statMod.modifiers));
       }
     }
     
