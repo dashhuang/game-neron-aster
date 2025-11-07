@@ -66,6 +66,10 @@ export class GameEngine {
       appDiv.appendChild(this.app.canvas);
     }
     
+    // 禁用浏览器手势滚动与双指缩放干扰（移动端）
+    this.app.canvas.style.touchAction = 'none';
+    this.app.canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+    
     // 设置画布适配（保持长宽比）
     this.setupCanvasResize();
     

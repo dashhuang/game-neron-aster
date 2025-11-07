@@ -139,21 +139,9 @@ export class UISystem extends System {
       this.xpBar.fill({ color: COLORS.UI_PROGRESS, alpha: 0.9 });
     }
     
-    // 更新虚拟摇杆显示
-    const joystickData = this.inputSystem.getJoystickData();
-    if (joystickData) {
-      this.joystickOuter.visible = true;
-      this.joystickInner.visible = true;
-      
-      this.joystickOuter.x = joystickData.start.x;
-      this.joystickOuter.y = joystickData.start.y;
-      
-      this.joystickInner.x = joystickData.current.x;
-      this.joystickInner.y = joystickData.current.y;
-    } else {
-      this.joystickOuter.visible = false;
-      this.joystickInner.visible = false;
-    }
+    // 触摸板模式：隐藏虚拟摇杆
+    this.joystickOuter.visible = false;
+    this.joystickInner.visible = false;
   }
 }
 
