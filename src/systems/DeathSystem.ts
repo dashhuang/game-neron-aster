@@ -8,7 +8,8 @@ import { Container } from 'pixi.js';
 import { Transform } from '../components/Transform';
 import { Tag } from '../components/Tag';
 import { EnemyData } from '../components/EnemyData';
-import { EntityType, GAME_CONFIG } from '../config/constants';
+import { PlayerData } from '../components/PlayerData';
+import { EntityType, GAME_CONFIG, COLORS } from '../config/constants';
 import { createXPShardEntity } from '../entities/XPShard';
 import { createExplosion } from '../entities/ParticleEffect';
 import { ENEMY_COLORS } from '../entities/Enemy';
@@ -35,8 +36,8 @@ export class DeathSystem extends System {
         
         if (!tag || !transform) return;
         
-        // 如果是敌人死亡，掉落经验和爆炸效果
         if (tag.value === EntityType.ENEMY) {
+          // 敌人死亡：掉落经验和爆炸效果
           const xpAmount = Math.random() > 0.5 ? GAME_CONFIG.HEX_XP : GAME_CONFIG.ARROW_XP;
           
           // 在敌人位置生成经验碎片
@@ -59,6 +60,25 @@ export class DeathSystem extends System {
           }
           
           createExplosion(world, this.stage, transform.x, transform.y, enemyColor, explosionType, particleCount);
+          
+        } else if (tag.value === EntityType.PLAYER) {
+          // 玩家死亡：爆炸效果
+          const playerColor = COLORS.PLAYER; // 绿色
+          const playerData = entity.getComponent('PlayerData') as PlayerData | undefined;
+          
+          // 从配置读取爆炸效果
+          let explosionType = 'explosion'; // 默认
+          let particleCount: number | undefined;
+          
+          if (playerData) {
+            const config = gameData.getPlayer(playerData.configId);
+            if (config && config.deathEffect) {
+              explosionType = config.deathEffect.type;
+              particleCount = config.deathEffect.particleCount;
+            }
+          }
+          
+          createExplosion(world, this.stage, transform.x, transform.y, playerColor, explosionType, particleCount);
         }
         
         // 移除显示对象

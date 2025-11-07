@@ -56,7 +56,10 @@ export class UISystem extends System {
       
       const tag = entity.getComponent('Tag') as Tag | undefined;
       if (tag && tag.value === EntityType.PLAYER) {
-        this.showGameOver();
+        // 延迟显示 Game Over，让爆炸特效播放完
+        setTimeout(() => {
+          this.showGameOver();
+        }, 500); // 0.5秒后显示
       }
     });
   }

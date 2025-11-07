@@ -30,6 +30,12 @@ export interface PlayerConfig {
   // 成长属性（可选）
   levelUpXPBase?: number;        // 升级所需基础经验
   levelUpXPScale?: number;       // 升级经验倍率
+  
+  // 死亡特效（可选）
+  deathEffect?: {
+    type: string;                // 特效类型，如 "explosion", "explosion_large"
+    particleCount?: number;      // 粒子数量（覆盖预设）
+  };
 }
 
 /**

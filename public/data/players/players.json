@@ -14,7 +14,11 @@
       "color": 65416,
       "shape": "arrow",
       "levelUpXPBase": 10,
-      "levelUpXPScale": 1.5
+      "levelUpXPScale": 1.5,
+      "deathEffect": {
+        "type": "explosion",
+        "particleCount": 20
+      }
     }
   ]
 }

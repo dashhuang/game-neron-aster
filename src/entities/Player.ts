@@ -12,6 +12,7 @@ import { createCollider } from '../components/Collider';
 import { createRender } from '../components/Render';
 import { createTag } from '../components/Tag';
 import { createPlayerXP } from '../components/XP';
+import { createPlayerData } from '../components/PlayerData';
 import { EntityType, LAYERS } from '../config/constants';
 import { NeonRenderer } from '../graphics/NeonRenderer';
 import { PlayerConfig } from '../data/types/PlayerConfig';
@@ -56,6 +57,7 @@ export function createPlayer(
   entity.addComponent(createRender(sprite, LAYERS.PLAYER));
   entity.addComponent(createTag(EntityType.PLAYER));
   entity.addComponent(createPlayerXP());
+  entity.addComponent(createPlayerData(config.id)); // 存储配置ID
   
   return entity;
 }

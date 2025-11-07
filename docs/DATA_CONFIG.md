@@ -194,6 +194,7 @@ public/data/
 | `shape` | string | 形状 | `"arrow"`, `"triangle"` |
 | `levelUpXPBase` | number | 升级基础经验 | `10` |
 | `levelUpXPScale` | number | 升级经验倍率 | `1.5` |
+| `deathEffect` | object | 死亡特效（可选） | 同敌人配置 |
 
 ---
 
