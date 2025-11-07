@@ -25,6 +25,7 @@ export class UISystem extends System {
   private hpDisplayHeart!: Text;
   private hpDisplayPercent!: Text;
   private hpDisplayTimer: number = 0;
+  private heartBlinkTimer: number = 0;
   
   private joystickOuter!: Graphics;
   private joystickInner!: Graphics;
@@ -298,6 +299,18 @@ export class UISystem extends System {
         
         this.hpDisplayPercent.text = `${hpPercent}%`;
         
+        // 低血量时爱心闪烁
+        if (isLowHealth) {
+          this.heartBlinkTimer += delta;
+          // 每0.5秒闪烁一次（2Hz频率）
+          const blinkCycle = Math.floor(this.heartBlinkTimer / 0.5);
+          this.hpDisplayHeart.visible = blinkCycle % 2 === 0;
+        } else {
+          // 正常状态爱心始终显示
+          this.hpDisplayHeart.visible = true;
+          this.heartBlinkTimer = 0;
+        }
+        
         // 位置：玩家右上角
         if (playerTransform) {
           this.hpDisplayContainer.x = playerTransform.x + 30;
@@ -307,6 +320,7 @@ export class UISystem extends System {
         this.hpDisplayContainer.visible = true;
       } else {
         this.hpDisplayContainer.visible = false;
+        this.hpDisplayHeart.visible = true; // 重置爱心可见性
       }
     }
     
