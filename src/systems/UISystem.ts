@@ -35,6 +35,9 @@ export class UISystem extends System {
   private restartButton!: Graphics;
   private restartText!: Text;
   
+  private debugButton!: Graphics;
+  private debugText!: Text;
+  
   private gameTime: number = 0;
   private fpsFrames: number[] = [];
   private isGameOver: boolean = false;
@@ -52,6 +55,7 @@ export class UISystem extends System {
     this.createHUD();
     this.createJoystick();
     this.createGameOverUI();
+    this.createDebugButton(world);
     
     // 监听玩家死亡事件
     world.eventBus.on(Events.DEATH, (data) => {
@@ -332,6 +336,41 @@ export class UISystem extends System {
     // 未来可以添加触摸点指示器
     // const touchPos = this.inputSystem.getTouchPosition();
     // if (touchPos) { ... }
+  }
+  
+  /**
+   * 创建调试按钮
+   */
+  private createDebugButton(world: World): void {
+    this.debugButton = new Graphics();
+    this.debugButton.roundRect(0, 0, 120, 40, 8);
+    this.debugButton.fill({ color: 0xff00ff, alpha: 0.8 });
+    this.debugButton.x = GAME_WIDTH - 130;
+    this.debugButton.y = GAME_HEIGHT - 50;
+    this.debugButton.eventMode = 'static';
+    this.debugButton.cursor = 'pointer';
+    
+    this.debugText = new Text({
+      text: '测试升级',
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 16,
+        fill: 0xffffff,
+        fontWeight: 'bold',
+      }
+    });
+    this.debugText.anchor.set(0.5);
+    this.debugText.x = 60;
+    this.debugText.y = 20;
+    
+    // 点击触发升级事件
+    this.debugButton.on('pointerdown', () => {
+      console.log('🔧 调试：触发升级事件');
+      world.eventBus.emit(Events.LEVEL_UP, { level: 999 });
+    });
+    
+    this.debugButton.addChild(this.debugText);
+    this.uiContainer.addChild(this.debugButton);
   }
   
   /**
