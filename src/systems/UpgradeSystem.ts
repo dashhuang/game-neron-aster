@@ -70,21 +70,17 @@ export class UpgradeSystem extends System {
       nextLevel,
       maxLevel,
       tags: group.tags,
+      probability: undefined,
     };
   }
   
   /**
-   * 从所有升级组中按稀有度加权选择未满级的选项
+   * 获取所有未满级升级的下一等级选项及其权重
    */
-  /**
-   * 获取随机升级选项
-   */
-  getRandomUpgrades(world: World, count: number = 3): UpgradeOption[] {
+  private getEligibleOptions(world: World): Array<{ option: UpgradeOption; weight: number }> {
     const progress = this.getOrCreateProgress(world);
     const allGroups = gameData.getAllUpgrades();
-    
-    // 按稀有度加权随机
-    const pool: UpgradeOption[] = [];
+    const results: Array<{ option: UpgradeOption; weight: number }> = [];
     
     allGroups.forEach(group => {
       const currentLevel = progress.levels[group.id] ?? 0;
@@ -98,9 +94,24 @@ export class UpgradeSystem extends System {
       else if (group.rarity === 'epic') weight = 1;  // 5%
       
       const option = this.buildOption(group, currentLevel + 1);
-      
-      for (let i = 0; i < weight; i++) {
-        pool.push(option);
+      results.push({ option, weight });
+    });
+    
+    return results;
+  }
+  
+  /**
+   * 获取随机升级选项
+   */
+  getRandomUpgrades(world: World, count: number = 3): UpgradeOption[] {
+    const eligible = this.getEligibleOptions(world);
+    if (eligible.length === 0) return [];
+    
+    // 构造加权池
+    const pool: UpgradeOption[] = [];
+    eligible.forEach(entry => {
+      for (let i = 0; i < entry.weight; i++) {
+        pool.push(entry.option);
       }
     });
     
@@ -128,17 +139,35 @@ export class UpgradeSystem extends System {
   /**
    * 显示升级面板
    */
-  showUpgradePanel(world: World): void {
-    console.log('🎴 显示升级面板');
+  showUpgradePanel(world: World, debugMode: boolean = false): void {
+    console.log(debugMode ? '🎴 显示调试升级面板' : '🎴 显示升级面板');
     this.isUpgrading = true;
     
     // 暂停游戏
     world.pause();
     
-    const options = this.getRandomUpgrades(world, 3);
-    console.log('📋 升级选项:', options.map(o => o.displayName));
+    const options = debugMode ? this.getEligibleOptions(world) : null;
+    if (debugMode && options && options.length === 0) {
+      console.warn('⚠️ 所有升级已满级，调试面板无内容');
+      world.resume();
+      this.isUpgrading = false;
+      return;
+    }
     
-    this.upgradePanel.show(options, (selected) => {
+    let displayOptions: UpgradeOption[];
+    if (debugMode && options) {
+      const totalWeight = options.reduce((sum, entry) => sum + entry.weight, 0);
+      displayOptions = options.map(entry => ({
+        ...entry.option,
+        probability: totalWeight > 0 ? entry.weight / totalWeight : 0,
+      }));
+    } else {
+      displayOptions = this.getRandomUpgrades(world, 3);
+    }
+    
+    console.log('📋 升级选项:', displayOptions.map(o => o.displayName));
+    
+    this.upgradePanel.show(displayOptions, (selected) => {
       console.log('✨ 玩家选择:', selected.displayName);
       this.applyUpgradeOption(world, selected);
       this.upgradePanel.hide();
@@ -146,7 +175,7 @@ export class UpgradeSystem extends System {
       
       // 恢复游戏
       world.resume();
-    });
+    }, { debug: debugMode });
   }
   
   /**
@@ -215,5 +244,6 @@ export interface UpgradeOption {
   nextLevel: number;
   maxLevel: number;
   tags?: string[];
+  probability?: number;
 }
 

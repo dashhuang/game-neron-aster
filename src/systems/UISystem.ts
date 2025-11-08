@@ -363,10 +363,10 @@ export class UISystem extends System {
     this.debugText.x = 60;
     this.debugText.y = 20;
     
-    // 点击触发升级事件
+    // 点击触发升级事件（调试面板）
     this.debugButton.on('pointerdown', () => {
-      console.log('🔧 调试：触发升级事件');
-      world.eventBus.emit(Events.LEVEL_UP, { level: 999 });
+      console.log('🔧 调试：触发升级事件（调试面板）');
+      world.eventBus.emit(Events.LEVEL_UP, { level: 999, debug: true });
     });
     
     this.debugButton.addChild(this.debugText);

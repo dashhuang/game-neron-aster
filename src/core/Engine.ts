@@ -291,9 +291,9 @@ export class GameEngine {
     
     // 监听升级事件
     this.world.eventBus.on(Events.LEVEL_UP, (data) => {
-      console.log('Level Up!', data.level);
-      // 显示升级面板
-      this.upgradeSystem.showUpgradePanel(this.world);
+      console.log('Level Up!', data.level, data?.debug ? '(Debug Panel)' : '');
+      // 显示升级面板（调试按钮会打开调试面板）
+      this.upgradeSystem.showUpgradePanel(this.world, data?.debug === true);
     });
   }
   
