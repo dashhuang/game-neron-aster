@@ -70,53 +70,82 @@ export class CollisionSystem extends System {
             damage,
           });
           
-          // 处理穿透
+          // 处理穿透/连锁选择
           let shouldDestroy = true;
-          if (projectile && projectile.pierce > 0) {
-            projectile.pierce--;
-            shouldDestroy = false; // 还能穿透，不销毁
-            console.log(`💥 子弹穿透！剩余穿透次数: ${projectile.pierce}`);
-          }
-          
-          // 如果应销毁但具有连锁次数，则重定向到最近下一个敌人
-          if (shouldDestroy && projectile && projectile.chain > 0) {
-            // 找最近的另一个敌人（不是当前命中的这个）
-            let nearest: any = null;
-            let nearestDist = Number.MAX_VALUE;
-            for (const other of enemies) {
-              if (!other.active || other.id === enemy.id) continue;
-              const ot = other.getComponent<Transform>('Transform');
-              const oc = other.getComponent<Collider>('Collider');
-              if (!ot || !oc) continue;
-              const dx2 = ot.x - bulletTransform.x;
-              const dy2 = ot.y - bulletTransform.y;
-              const d2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-              if (d2 < nearestDist) {
-                nearestDist = d2;
-                nearest = other;
-              }
+          if (projectile) {
+            let preferredAction: 'pierce' | 'chain' | null = null;
+            const canPierce = projectile.pierce > 0;
+            const canChain = projectile.chain > 0;
+            
+            if (canPierce && canChain) {
+              preferredAction = Math.random() < 0.5 ? 'pierce' : 'chain';
+            } else if (canPierce) {
+              preferredAction = 'pierce';
+            } else if (canChain) {
+              preferredAction = 'chain';
             }
-            if (nearest) {
-              const nt = nearest.getComponent('Transform') as Transform | undefined;
-              if (nt) {
-                // 设置新的速度方向，保持当前速度大小
-                const vxvy = bullet.getComponent('Velocity') as any;
-                if (vxvy) {
-                  const speed = Math.sqrt(vxvy.vx * vxvy.vx + vxvy.vy * vxvy.vy) || 1;
-                  const ndx = nt.x - bulletTransform.x;
-                  const ndy = nt.y - bulletTransform.y;
-                  const ndist = Math.sqrt(ndx * ndx + ndy * ndy) || 1;
-                  vxvy.vx = (ndx / ndist) * speed;
-                  vxvy.vy = (ndy / ndist) * speed;
+            
+            const attemptChain = () => {
+              // 找最近的另一个敌人（不是当前命中的这个）
+              let nearest: any = null;
+              let nearestDist = Number.MAX_VALUE;
+              for (const other of enemies) {
+                if (!other.active || other.id === enemy.id) continue;
+                const ot = other.getComponent<Transform>('Transform');
+                const oc = other.getComponent<Collider>('Collider');
+                if (!ot || !oc) continue;
+                const dx2 = ot.x - bulletTransform.x;
+                const dy2 = ot.y - bulletTransform.y;
+                const d2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+                if (d2 < nearestDist) {
+                  nearestDist = d2;
+                  nearest = other;
                 }
-                // 递减连锁次数，并允许继续存活
-                projectile.chain--;
+              }
+              if (nearest) {
+                const nt = nearest.getComponent('Transform') as Transform | undefined;
+                if (nt) {
+                  const velocity = bullet.getComponent('Velocity') as any;
+                  if (velocity) {
+                    const speed = Math.sqrt(velocity.vx * velocity.vx + velocity.vy * velocity.vy) || 1;
+                    const ndx = nt.x - bulletTransform.x;
+                    const ndy = nt.y - bulletTransform.y;
+                    const ndist = Math.sqrt(ndx * ndx + ndy * ndy) || 1;
+                    velocity.vx = (ndx / ndist) * speed;
+                    velocity.vy = (ndy / ndist) * speed;
+                    bulletTransform.rotation = Math.atan2(velocity.vy, velocity.vx) + Math.PI / 2;
+                  }
+                  projectile.chain--;
+                  console.log(`⚡ 子弹弹射！剩余弹射次数: ${projectile.chain}`);
+                  return true;
+                }
+              }
+              return false;
+            };
+            
+            const applyPierce = () => {
+              projectile.pierce--;
+              console.log(`💥 子弹穿透！剩余穿透次数: ${projectile.pierce}`);
+              return true;
+            };
+            
+            if (preferredAction === 'chain') {
+              const chained = attemptChain();
+              if (chained) {
+                shouldDestroy = false;
+              } else if (canPierce) {
+                shouldDestroy = !applyPierce();
+              }
+            } else if (preferredAction === 'pierce') {
+              if (applyPierce()) {
                 shouldDestroy = false;
               }
+            } else if (preferredAction === null) {
+              shouldDestroy = true;
             }
           }
           
-          // 销毁子弹或继续（穿透/连锁）
+          // 销毁子弹或继续（穿透/弹射）
           if (shouldDestroy) {
             const bulletRender = bullet.getComponent<Render>('Render');
             if (bulletRender && bulletRender.sprite && bulletRender.sprite.parent) {

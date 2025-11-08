@@ -58,13 +58,13 @@
     },
     {
       "id": "chain_add",
-      "name": "连锁子弹",
+      "name": "弹射子弹",
       "rarity": "rare",
       "tags": ["attack", "chain"],
       "levels": [
-        { "level": 1, "description": "连锁 +1", "effects": [ { "stat": "chain", "operation": "add", "value": 1 } ] },
-        { "level": 2, "description": "连锁 +1", "effects": [ { "stat": "chain", "operation": "add", "value": 1 } ] },
-        { "level": 3, "description": "连锁 +1（Max）", "effects": [ { "stat": "chain", "operation": "add", "value": 1 } ] }
+        { "level": 1, "description": "弹射 +1", "effects": [ { "stat": "chain", "operation": "add", "value": 1 } ] },
+        { "level": 2, "description": "弹射 +1", "effects": [ { "stat": "chain", "operation": "add", "value": 1 } ] },
+        { "level": 3, "description": "弹射 +1（Max）", "effects": [ { "stat": "chain", "operation": "add", "value": 1 } ] }
       ]
     },
     {

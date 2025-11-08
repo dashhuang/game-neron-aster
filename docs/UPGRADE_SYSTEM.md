@@ -51,7 +51,7 @@
 | 疾速射击 | 射速 +15% | 普通 | 提升射击频率 |
 | 极速弹道 | 弹速 +20% | 普通 | 子弹飞得更快 |
 | 穿透子弹 | 穿透 +1 | 稀有 | 可穿透敌人 |
-| 连锁子弹 | 连锁 +1 | 稀有 | 命中后自动寻找最近敌人 |
+| 弹射子弹 | 弹射 +1 | 稀有 | 命中后自动寻找最近敌人 |
 
 ### 生存系（2种）
 
@@ -262,6 +262,7 @@ world.eventBus.emit('upgrade_applied', { id, nextLevel, maxLevel, effects });
 ## ✅ 已接线（生效）属性
 
 - 攻击/武器：`damage`、`fireRate`、`bulletSpeed`、`bulletSize`、`pierce`、`chain`
+- 当 `pierce` 与 `chain` 同时存在时，每次命中会随机选择弹射或穿透（如果弹射未找到目标，则回退为穿透）
 - 生存：`maxHP`
 - 机动：`moveSpeed`（`InputSystem` 读取 `PlayerStats.moveSpeedMultiplier`）
 - 吸附：`magnetRange`（`PickupSystem` 使用玩家与碎片范围的较大值）
