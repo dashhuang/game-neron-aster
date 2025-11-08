@@ -66,7 +66,7 @@ export class StatModifierSystem extends System {
         weapon.bulletSpeed = newBulletSpeed;
         weapon.bulletSize = newBulletSize;
         weapon.pierce = newPierce;
-        (weapon as any).chain = newChain;
+        weapon.chain = newChain;
         
         // 调试输出（仅在修改器数量变化时）
         if (statMod.modifiers.length !== this.lastModifierCount) {

@@ -47,6 +47,10 @@ export class GameEngine {
   private menuScreen?: MenuScreen;
   private talentScreen?: TalentScreen;
   private hasGameInitialized: boolean = false;
+  private readonly debugLogsEnabled: boolean = (() => {
+    const env = (import.meta as any)?.env ?? {};
+    return env.VITE_ENABLE_ENGINE_LOGS === 'true' || !!env.DEV;
+  })();
   
   constructor() {
     // 创建 PixiJS 应用
@@ -57,18 +61,18 @@ export class GameEngine {
   }
   
   async init(): Promise<void> {
-    console.log('🎮 游戏引擎初始化中...');
+    this.debug('🎮 游戏引擎初始化中...');
     
     // 1. 预加载字体
-    console.log('🔤 加载像素字体...');
+    this.debug('🔤 加载像素字体...');
     await this.loadFonts();
     
     // 2. 加载配置数据
-    console.log('📦 加载游戏配置...');
+    this.debug('📦 加载游戏配置...');
     await gameData.loadAll();
     
     // 3. 初始化 PixiJS
-    console.log('🎨 初始化渲染器...');
+    this.debug('🎨 初始化渲染器...');
     await this.app.init({
       width: GAME_WIDTH,
       height: GAME_HEIGHT,
@@ -108,7 +112,7 @@ export class GameEngine {
       this.update(delta);
     });
     
-    console.log('✅ 游戏引擎初始化完成！');
+    this.debug('✅ 游戏引擎初始化完成！');
   }
   
   private createBackground(): void {
@@ -148,7 +152,7 @@ export class GameEngine {
     this.registerSystems();
     
     // 创建玩家（使用默认配置）
-    console.log('✈️  创建玩家...');
+    this.debug('✈️  创建玩家...');
     const playerConfig = gameData.getPlayer('fighter_alpha');
     if (playerConfig) {
       createPlayer(this.world, this.gameStage, GAME_WIDTH / 2, GAME_HEIGHT - 200, playerConfig);
@@ -173,13 +177,13 @@ export class GameEngine {
     if (!this.menuScreen) {
       this.menuScreen = new MenuScreen({
         onStart: () => {
-          console.log('▶️ 点击：进入游戏');
+          this.debug('▶️ 点击：进入游戏');
           this.enterGame();
         },
         onOpenTalent: () => this.showTalent(),
         onSelectLevel: (_levelId: string) => {
           // 目前只有一个测试关卡，无需处理
-          console.log('🎯 选择关卡：测试关卡');
+          this.debug('🎯 选择关卡：测试关卡');
         }
       });
       this.app.stage.addChild(this.menuScreen.getContainer());
@@ -292,7 +296,18 @@ export class GameEngine {
         bulletSpeed: weapon.bulletSpeed,
         bulletSize: weapon.bulletSize,
         bulletLifetime: weapon.bulletLifetime,
+        pierce: weapon.pierce,
+        chain: weapon.chain,
       } as any;
+      
+      // 调试输出（仅在有穿透或弹射时）
+      if (weapon.pierce > 0 || weapon.chain > 0) {
+        console.log('🔫 创建子弹:', {
+          pierce: weapon.pierce,
+          chain: weapon.chain,
+          damage: weapon.damage
+        });
+      }
       
       createPlayerBulletFromWeapon(
         this.world,
@@ -308,7 +323,7 @@ export class GameEngine {
     
     // 监听升级事件
     this.world.eventBus.on(Events.LEVEL_UP, (data) => {
-      console.log('Level Up!', data.level, data?.debug ? '(Debug Panel)' : '');
+      this.debug('Level Up!', data.level, data?.debug ? '(Debug Panel)' : '');
       // 显示升级面板（调试按钮会打开调试面板）
       this.upgradeSystem.showUpgradePanel(this.world, data?.debug === true);
     });
@@ -321,7 +336,7 @@ export class GameEngine {
     try {
       // 预加载 Press Start 2P 字体
       await document.fonts.load('12px "Press Start 2P"');
-      console.log('✅ 像素字体加载完成');
+      this.debug('✅ 像素字体加载完成');
     } catch (error) {
       console.warn('⚠️ 像素字体加载失败，使用备用字体:', error);
     }
@@ -379,6 +394,12 @@ export class GameEngine {
   
   getApp(): Application {
     return this.app;
+  }
+
+  private debug(...args: unknown[]): void {
+    if (this.debugLogsEnabled) {
+      console.log(...args);
+    }
   }
 }
 
