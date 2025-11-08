@@ -18,6 +18,7 @@ export class WaveSystem extends System {
   private algorithmSpawnTimer: number = 0;
   private difficultyMultiplier: number = 1.0;
   private isLevelActive: boolean = false;
+  private world?: World;
   
   constructor(stage: Container) {
     super();
@@ -27,7 +28,7 @@ export class WaveSystem extends System {
   /**
    * 加载并启动关卡
    */
-  loadLevel(levelId: string): void {
+  loadLevel(levelId: string, world?: World): void {
     const level = gameData.getLevel(levelId);
     if (!level) {
       console.error(`未找到关卡配置: ${levelId}`);
@@ -40,14 +41,17 @@ export class WaveSystem extends System {
     this.algorithmSpawnTimer = 0;
     this.difficultyMultiplier = 1.0;
     this.isLevelActive = true;
+    this.world = world;
     
     console.log(`🎮 关卡加载: ${level.name} (${level.type})`);
     
     // 触发关卡开始事件
-    world.eventBus.emit('level_start', {
-      levelId: level.id,
-      name: level.name
-    });
+    if (world) {
+      world.eventBus.emit('level_start', {
+        levelId: level.id,
+        name: level.name
+      });
+    }
   }
   
   /**

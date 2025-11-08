@@ -167,7 +167,7 @@ export class GameEngine {
     this.setupEventListeners();
     
     // 加载默认关卡（测试关卡）
-    this.waveSystem.loadLevel('test_level');
+    this.waveSystem.loadLevel('test_level', this.world);
     
     // 隐藏菜单，开始游戏
     this.hideMenu();
