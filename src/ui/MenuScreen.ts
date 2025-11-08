@@ -16,7 +16,7 @@ export class MenuScreen {
   private callbacks: MenuCallbacks;
   private selectedLevelId: string = 'test_level';
   
-  constructor(callbacks: MenuCallbacks) {
+  constructor(private callbacks: MenuCallbacks) {
     this.container = new Container();
     this.container.zIndex = 2000;
     this.callbacks = callbacks;
