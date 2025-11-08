@@ -8,7 +8,6 @@ import { Projectile } from '../components/Projectile';
 import { Velocity } from '../components/Velocity';
 import { Transform } from '../components/Transform';
 import { Tag } from '../components/Tag';
-import { GAME_WIDTH, GAME_HEIGHT } from '../config/constants';
 
 export class ProjectileSystem extends System {
   update(world: World, delta: number): void {

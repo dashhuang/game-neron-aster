@@ -14,7 +14,6 @@ export class UpgradePanel {
   private onCancelCallback?: () => void;
   private titleText: Text;
   private cancelButton?: Graphics;
-  private cancelLabel?: Text;
   private debugMode: boolean = false;
   private static readonly CARD_WIDTH = 200;
   private static readonly CARD_HEIGHT = 230;
@@ -325,7 +324,6 @@ export class UpgradePanel {
       
       this.container.addChild(button);
       this.cancelButton = button;
-      this.cancelLabel = label;
     }
     this.setCancelVisible(show);
   }

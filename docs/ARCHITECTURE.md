@@ -104,18 +104,23 @@ export const gameData = new DataLoader();
 
 | 组件 | 用途 | 数据 |
 |------|------|------|
-| `Weapon` | 武器 | weaponId, fireRate, cooldown, damage, bulletSpeed |
-| `Projectile` | 子弹属性 | damage, bulletType, pierce, bounce, homing, hitSet |
+| `Weapon` | 武器 | weaponId, fireRate, cooldown, damage, bulletSpeed, pierce, chain |
+| `Projectile` | 子弹属性 | damage, bulletType, pierce, chain, homing, hitSet |
 | `AI` | AI 行为 | behaviorId, state, targetId |
 | `XPShard` | 经验碎片 | amount, magnetRange, isMagnetized |
 | `PlayerXP` | 玩家经验 | current, level, nextLevelXP |
 | `EnemyData` | 敌人数据 | configId（引用配置） |
+| `PlayerData` | 玩家数据 | configId（引用配置） |
 | `HitFlash` | 受击闪烁 | duration, elapsed, originalColor, affectedEdges, shape, size |
 | `Particle` | 粒子效果 | lifetime, elapsed, initialAlpha, fadeOut |
+| `StatModifier` | 属性修改器 | modifiers（升级效果列表） |
+| `UpgradeProgress` | 升级进度 | levels（各升级当前等级） |
+| `PlayerStats` | 玩家最终属性 | moveSpeedMultiplier, magnetRange, xpGainMultiplier |
+| `Companion` | 僚机 | ownerId, distance, angle, slot, 射击参数 |
+| `CompanionWeapon` | 僚机武器 | fireRate, damageRatio, bulletSpeed, bulletSize |
 
 ### 未来组件（规划中）
 
-- `StatModifier` - 属性修改器（升级效果）
 - `Shield` - 护盾值
 - `Status` - 状态效果（减速/流血等）
 - `Acceleration` - 加速度（重力、摩擦）
@@ -127,39 +132,47 @@ export const gameData = new DataLoader();
 系统按以下顺序每帧执行：
 
 ```
-1. InputSystem          # 处理输入
+1. InputSystem             # 处理输入
    ↓
-2. AISystem             # AI 行为（更新敌人移动策略）
+2. StatModifierSystem      # 属性修改器（最先计算最终属性）
    ↓
-3. ProjectileSystem     # 子弹行为（追踪、弹跳）
+3. AISystem                # AI 行为（更新敌人移动策略）
    ↓
-4. MovementSystem       # 更新位置
+4. ProjectileSystem        # 子弹行为（追踪）
    ↓
-5. WeaponSystem         # 处理射击
+5. MovementSystem          # 更新位置
    ↓
-6. CollisionSystem      # 碰撞检测
+6. CompanionSystem         # 僚机跟随
    ↓
-7. HealthSystem         # 处理伤害
+7. CompanionWeaponSystem   # 僚机射击
    ↓
-8. PickupSystem         # 拾取经验
+8. WeaponSystem            # 玩家武器射击
    ↓
-9. ParticleSystem       # 粒子效果管理
+9. CollisionSystem         # 碰撞检测（含弹射重定向）
    ↓
-10. LifetimeSystem      # 生命周期
+10. HealthSystem           # 处理伤害
    ↓
-11. CleanupSystem       # 清理超出屏幕实体
+11. PickupSystem           # 拾取经验
    ↓
-12. PerformanceSystem   # 限制实体数量
+12. ParticleSystem         # 粒子效果管理
    ↓
-13. EnemySpawnSystem    # 生成敌人
+13. LifetimeSystem         # 生命周期
    ↓
-14. DeathSystem         # 处理死亡
+14. CleanupSystem          # 清理超出屏幕实体
    ↓
-15. HitFlashSystem      # 受击特效
+15. PerformanceSystem      # 限制实体数量
    ↓
-16. RenderSystem        # 同步渲染
+16. EnemySpawnSystem       # 生成敌人
    ↓
-17. UISystem            # UI 更新
+17. DeathSystem            # 处理死亡
+   ↓
+18. HitFlashSystem         # 受击特效
+   ↓
+19. UpgradeSystem          # 升级管理
+   ↓
+20. RenderSystem           # 同步渲染
+   ↓
+21. UISystem               # UI 更新
 ```
 
 **顺序原则**：
@@ -309,6 +322,24 @@ System B/C/D 处理事件
 - 系统解耦
 - 易于扩展
 - 支持多个监听器
+
+---
+
+## 🧭 主菜单与天赋流程
+
+- **MenuScreen** (`src/ui/MenuScreen.ts`)
+  - 负责关卡选择、入口按钮，显示时调用 `World.pause()` 冻结世界
+  - 点击“进入游戏”后触发 `GameEngine.enterGame()`，初始化系统与玩家实体
+
+- **GameEngine** 状态切换
+  - `showMenu()` → `enterGame()` → `showTalent()` → `hideTalent()` 循环
+  - 天赋界面展示期间保持世界暂停，返回菜单后可再次进入关卡
+
+- **TalentScreen** (`src/ui/TalentScreen.ts`)
+  - 渲染天赋树节点、拖拽与缩放交互（桌面滚轮、移动端双指捏合）
+  - 数据驱动：节点定义来自 `src/data/talents/talentTree.ts`
+  - 使用 `TalentTooltip` (`src/ui/talent/TalentTooltip.ts`) 管理提示卡、按钮与布局自适应
+  - 激活/升级通过提示卡右下角按钮确认，点击空白区域关闭提示卡
 
 ---
 
