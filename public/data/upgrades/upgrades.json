@@ -103,7 +103,7 @@
     {
       "id": "xp_boost",
       "name": "经验加成",
-      "rarity": "rare",
+      "rarity": "common",
       "tags": ["growth", "xp"],
       "levels": [
         { "level": 1, "description": "经验获取 +20%", "effects": [ { "stat": "xpGain", "operation": "multiply", "value": 1.20 } ] },
