@@ -12,48 +12,64 @@ export class CompanionSystem extends System {
     this.updateWhenPaused = false;
   }
   
-  update(world: World, delta: number): void {
-    const companions = this.query(world, 'Companion', 'Transform', 'Render');
-    const spacing = Math.PI / 10; // 18°
-    const baseAngles = [
-      Math.PI - 1.5 * spacing,
-      Math.PI - 0.5 * spacing,
-      Math.PI + 0.5 * spacing,
-      Math.PI + 1.5 * spacing,
-    ];
+  update(world: World, _delta: number): void {
+    const entities = this.query(world, 'Companion', 'Transform', 'Render');
+    if (entities.length === 0) return;
     
-    for (const entity of companions) {
+    const spread = (160 * Math.PI) / 180;
+    const startAngleBase = Math.PI - spread / 2;
+    
+    const grouped = new Map<number, typeof entities>();
+    for (const entity of entities) {
       const companion = entity.getComponent<Companion>('Companion');
-      const transform = entity.getComponent<Transform>('Transform');
-      const render = entity.getComponent<Render>('Render');
-      if (!companion || !transform || !render) continue;
-      
-      const owner = world.entities.find(e => e.id === companion.ownerId && e.active);
+      if (!companion) continue;
+      if (!grouped.has(companion.ownerId)) {
+        grouped.set(companion.ownerId, []);
+      }
+      grouped.get(companion.ownerId)!.push(entity);
+    }
+    
+    for (const [ownerId, companions] of grouped) {
+      const owner = world.entities.find(e => e.id === ownerId && e.active);
       if (!owner) {
-        entity.destroy();
+        companions.forEach(entity => entity.destroy());
         continue;
       }
-      
       const ownerTransform = owner.getComponent<Transform>('Transform');
       if (!ownerTransform) continue;
       
-      const slot = companion.slot || 0;
-      const baseAngle = baseAngles[slot] ?? (Math.PI - 1.5 * spacing + slot * spacing);
-      companion.angle = baseAngle;
+      const count = companions.length;
+      const spacing = count > 1 ? spread / (count - 1) : 0;
       
-      const finalAngle = companion.angle + ownerTransform.rotation - Math.PI / 2;
-      const targetX = ownerTransform.x + Math.cos(finalAngle) * companion.distance;
-      const targetY = ownerTransform.y + Math.sin(finalAngle) * companion.distance;
-      
-      transform.x = targetX;
-      transform.y = targetY;
-      transform.rotation = finalAngle + Math.PI / 2;
-      
-      if (render.sprite) {
-        render.sprite.x = targetX;
-        render.sprite.y = targetY;
-        render.sprite.rotation = transform.rotation;
-      }
+      companions
+        .sort((a, b) => {
+          const ca = a.getComponent<Companion>('Companion');
+          const cb = b.getComponent<Companion>('Companion');
+          return (ca?.slot ?? 0) - (cb?.slot ?? 0);
+        })
+        .forEach((entity, index) => {
+          const companion = entity.getComponent<Companion>('Companion');
+          const transform = entity.getComponent<Transform>('Transform');
+          const render = entity.getComponent<Render>('Render');
+          if (!companion || !transform || !render) return;
+          
+          const targetAngle = startAngleBase + spacing * index;
+          companion.angle = targetAngle;
+          
+          const finalAngle = companion.angle + ownerTransform.rotation - Math.PI / 2;
+          const targetX = ownerTransform.x + Math.cos(finalAngle) * companion.distance;
+          const targetY = ownerTransform.y + Math.sin(finalAngle) * companion.distance;
+          
+          transform.x = targetX;
+          transform.y = targetY;
+          transform.rotation = finalAngle + Math.PI / 2;
+          
+          if (render.sprite) {
+            render.sprite.x = targetX;
+            render.sprite.y = targetY;
+            render.sprite.rotation = transform.rotation;
+          }
+        });
     }
   }
 }

@@ -261,28 +261,23 @@ export class UpgradeSystem extends System {
       return;
     }
     
-    const delta = Math.PI / 10; // 18° 间隔
-    const baseAngles = [
-      Math.PI - 1.5 * delta,
-      Math.PI - 0.5 * delta,
-      Math.PI + 0.5 * delta,
-      Math.PI + 1.5 * delta,
-    ];
-    const distance = 40 * SCALE_FACTOR;
+    const spread = (160 * Math.PI) / 180; // 160° 扇形
+    const startAngle = Math.PI - spread / 2; // 左侧起点
+    const spacing = spread / Math.max(1, desired - 1);
+    const distance = 32 * SCALE_FACTOR;
     const size = 9 * SCALE_FACTOR;
     const color = 0xffd44d;
     const orbitSpeed = 0;
     
     for (let i = existingCompanions.length; i < desired; i++) {
-      const slot = i;
-      const angle = baseAngles[slot] ?? (Math.PI - 1.5 * delta + slot * delta);
+      const angle = startAngle + spacing * i;
       createCompanionEntity(world, this.stage, player, {
         distance,
         angle,
         orbitSpeed,
         color,
         size,
-        slot,
+        slot: i,
       });
     }
   }
