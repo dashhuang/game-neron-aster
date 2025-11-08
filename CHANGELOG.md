@@ -4,6 +4,21 @@
 
 ---
 
+## [v0.3.2] - 2025-11-08
+
+### ✨ 新增
+
+- **升级时暂停游戏**：
+  - 进入升级界面时调用 `world.pause()`，仅 `RenderSystem/UISystem/UpgradeSystem` 继续更新
+  - 选择升级后 `world.resume()` 恢复游戏
+  - 新增 `System.updateWhenPaused` 控制系统在暂停时是否继续运行
+
+### 📖 文档
+
+- `ARCHITECTURE.md` 补充暂停机制说明与系统豁免策略
+
+---
+
 ## [v0.3.1] - 2025-11-07
 
 ### 🔧 修复

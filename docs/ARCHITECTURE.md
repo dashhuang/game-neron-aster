@@ -282,6 +282,17 @@ graphics.stroke({ width: 7, color, alpha: 0.3 });
 | `LEVEL_UP` | 升级 | { level } |
 | `SPAWN` | 生成实体 | { type, x, y } |
 
+### 暂停机制（Pause）
+
+- `World.paused: boolean`：全局暂停标记。暂停后，只有标记为 `updateWhenPaused = true` 的系统会继续更新。
+- `System.updateWhenPaused: boolean`：系统层级的暂停豁免标记。典型需要继续更新的系统：
+  - `RenderSystem`：仍需渲染升级面板、半透明遮罩等
+  - `UISystem`：需要响应升级选择、更新时间静止逻辑
+  - `UpgradeSystem`：处理升级卡选择的回调与应用
+- 触发流程：
+  - 升级事件 → `UpgradeSystem.showUpgradePanel()` → `world.pause()`
+  - 玩家选卡 → 应用效果 → `world.resume()`
+
 ### 事件流
 
 ```
