@@ -1,14 +1,14 @@
 /**
  * Companion 实体 - 玩家僚机
  */
-import { Container, Graphics } from 'pixi.js';
+import { Container } from 'pixi.js';
 import { World, Entity } from '../core/ECS';
-import { createTransform } from '../components/Transform';
+import { createTransform, Transform } from '../components/Transform';
 import { createRender } from '../components/Render';
 import { createTag } from '../components/Tag';
 import { createCompanionComponent } from '../components/Companion';
 import { createCompanionWeapon } from '../components/CompanionWeapon';
-import { EntityType, LAYERS, COLORS, SCALE_FACTOR } from '../config/constants';
+import { EntityType, LAYERS, SCALE_FACTOR } from '../config/constants';
 import { NeonRenderer } from '../graphics/NeonRenderer';
 
 interface CompanionOptions {
@@ -45,7 +45,7 @@ export function createCompanionEntity(
   const sprite = NeonRenderer.createCompanion(size, color);
   stage.addChild(sprite);
   
-  const ownerTransform = owner.getComponent('Transform');
+  const ownerTransform = owner.getComponent<Transform>('Transform');
   if (!ownerTransform) return null;
   const initialX = ownerTransform.x + Math.cos(angle) * distance;
   const initialY = ownerTransform.y + Math.sin(angle) * distance;
