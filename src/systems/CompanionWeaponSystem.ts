@@ -51,7 +51,7 @@ export class CompanionWeaponSystem extends System {
         damage,
         bulletSpeed: speed,
         bulletSize: size,
-        tag: EntityType.PLAYER_BULLET,
+        tag: EntityType.COMPANION_BULLET,
       });
     }
   }

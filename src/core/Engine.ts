@@ -6,7 +6,7 @@
 import { Application, Container, Graphics } from 'pixi.js';
 import { World, Events } from './ECS';
 import { Weapon } from '../components/Weapon';
-import { GAME_WIDTH, GAME_HEIGHT, COLORS } from '../config/constants';
+import { GAME_WIDTH, GAME_HEIGHT, COLORS, EntityType } from '../config/constants';
 import { createPlayer } from '../entities/Player';
 import { createPlayerBulletFromWeapon } from '../entities/Projectile';
 
@@ -37,7 +37,6 @@ import { TalentScreen } from '../ui/TalentScreen';
 import { CompanionSystem } from '../systems/CompanionSystem';
 import { CompanionWeaponSystem } from '../systems/CompanionWeaponSystem';
 import { createCompanionBullet } from '../entities/CompanionBullet';
-import { EntityType } from '../entities/Entity';
 
 export class GameEngine {
   private app: Application;
@@ -256,7 +255,19 @@ export class GameEngine {
     // 监听射击事件
     this.world.eventBus.on(Events.SHOOT, (data) => {
       if (data.companion) {
-        createCompanionBullet(this.world, this.gameStage, data);
+        const directionX = data.directionX ?? Math.cos((data.rotation ?? 0) - Math.PI / 2);
+        const directionY = data.directionY ?? Math.sin((data.rotation ?? 0) - Math.PI / 2);
+        createCompanionBullet(this.world, this.gameStage, {
+          ownerId: data.ownerId,
+          x: data.x,
+          y: data.y,
+          directionX,
+          directionY,
+          damage: data.damage,
+          bulletSpeed: data.bulletSpeed,
+          bulletSize: data.bulletSize,
+          tag: data.tag ?? EntityType.COMPANION_BULLET,
+        });
         return;
       }
       // 找到玩家，使用修改后的武器属性
@@ -266,45 +277,32 @@ export class GameEngine {
       const weapon = player.getComponent<Weapon>('Weapon');
       if (!weapon) return;
       
-      // 使用修改后的武器属性创建子弹
       const baseConfig = gameData.getWeapon(data.weaponId);
       if (!baseConfig) {
         console.error(`未找到武器配置: ${data.weaponId}`);
         return;
       }
       
+      const directionX = Math.cos((data.rotation ?? 0) - Math.PI / 2);
+      const directionY = Math.sin((data.rotation ?? 0) - Math.PI / 2);
+      
       const bulletConfig = {
         ...baseConfig,
         damage: weapon.damage,
         bulletSpeed: weapon.bulletSpeed,
         bulletSize: weapon.bulletSize,
-        pierce: weapon.pierce,
-        chain: (weapon as any).chain ?? 0,
-      };
-      
-      // 调试输出（仅在有穿透或弹跳时）
-      if (weapon.pierce > 0 || (weapon as any).chain > 0) {
-        console.log('🔫 创建子弹:', {
-          pierce: weapon.pierce,
-          chain: (weapon as any).chain ?? 0,
-          damage: weapon.damage
-        });
-      }
+        bulletLifetime: weapon.bulletLifetime,
+      } as any;
       
       createPlayerBulletFromWeapon(
         this.world,
         this.gameStage,
         data.x,
         data.y,
-        {
-          ...bulletConfig,
-          damage: baseConfig.damage * (data.damageMultiplier ?? 1),
-          bulletSpeed: data.bulletSpeed ?? weapon.bulletSpeed,
-          bulletSize: data.bulletSize ?? weapon.bulletSize,
-        } as any,
-        data.directionX,
-        data.directionY,
-        data.tag ?? EntityType.PLAYER_BULLET
+        bulletConfig,
+        directionX,
+        directionY,
+        EntityType.PLAYER_BULLET
       );
     });
     

@@ -20,7 +20,7 @@ export class CollisionSystem extends System {
     // 玩家子弹 vs 敌人
     const playerBullets = entities.filter(e => {
       const tag = e.getComponent<Tag>('Tag');
-      return tag && tag.value === EntityType.PLAYER_BULLET;
+      return tag && (tag.value === EntityType.PLAYER_BULLET || tag.value === EntityType.COMPANION_BULLET);
     });
     
     const enemies = entities.filter(e => {
