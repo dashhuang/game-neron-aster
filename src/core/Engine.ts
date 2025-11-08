@@ -36,6 +36,7 @@ import { UpgradePanel } from '../ui/UpgradePanel';
 import { gameData } from '../data/DataLoader';
 import { MenuScreen } from '../ui/MenuScreen';
 import { TalentScreen } from '../ui/TalentScreen';
+import { LevelSelectScreen } from '../ui/LevelSelectScreen';
 import { CompanionSystem } from '../systems/CompanionSystem';
 import { CompanionWeaponSystem } from '../systems/CompanionWeaponSystem';
 import { createCompanionBullet } from '../entities/CompanionBullet';
@@ -49,6 +50,8 @@ export class GameEngine {
   private waveSystem!: WaveSystem;
   private menuScreen?: MenuScreen;
   private talentScreen?: TalentScreen;
+  private levelSelectScreen?: LevelSelectScreen;
+  private selectedLevelId: string = 'test_level';
   private hasGameInitialized: boolean = false;
   private readonly debugLogsEnabled: boolean = (() => {
     const env = (import.meta as any)?.env ?? {};
@@ -166,8 +169,8 @@ export class GameEngine {
     // 注册事件监听
     this.setupEventListeners();
     
-    // 加载默认关卡（测试关卡）
-    this.waveSystem.loadLevel('test_level', this.world);
+    // 加载选择的关卡
+    this.waveSystem.loadLevel(this.selectedLevelId, this.world);
     
     // 隐藏菜单，开始游戏
     this.hideMenu();
@@ -228,6 +231,42 @@ export class GameEngine {
   private hideTalent(): void {
     if (this.talentScreen) {
       this.talentScreen.getContainer().visible = false;
+    }
+  }
+  
+  /**
+   * 显示关卡选择界面
+   */
+  private showLevelSelect(): void {
+    if (!this.levelSelectScreen) {
+      this.levelSelectScreen = new LevelSelectScreen({
+        onSelect: (levelId: string) => {
+          console.log(`✅ 选择关卡: ${levelId}`);
+          this.selectedLevelId = levelId;
+          this.hideLevelSelect();
+          this.showMenu();
+          
+          // 更新菜单显示的关卡名称
+          const level = gameData.getLevel(levelId);
+          if (level) {
+            console.log(`📋 当前关卡: ${level.name}`);
+          }
+        },
+        onBack: () => {
+          this.hideLevelSelect();
+          this.showMenu();
+        }
+      });
+      this.app.stage.addChild(this.levelSelectScreen.getContainer());
+    }
+    
+    this.hideMenu();
+    this.levelSelectScreen.show();
+  }
+  
+  private hideLevelSelect(): void {
+    if (this.levelSelectScreen) {
+      this.levelSelectScreen.hide();
     }
   }
   

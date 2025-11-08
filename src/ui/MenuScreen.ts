@@ -65,8 +65,7 @@ export class MenuScreen {
     levelLabel.y = 220;
     this.container.addChild(levelLabel);
     
-    const levelButton = this.createButton('测试关卡', () => {
-      this.selectedLevelId = 'test_level';
+    const levelButton = this.createButton('选择关卡', () => {
       this.callbacks.onSelectLevel(this.selectedLevelId);
     }, 220 + 40);
     this.container.addChild(levelButton);
