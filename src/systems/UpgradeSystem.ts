@@ -261,17 +261,18 @@ export class UpgradeSystem extends System {
     }
     
     const slotAngles = [
-      Math.PI - (160 * Math.PI / 180) / 2,          // 左外侧
-      Math.PI - (160 * Math.PI / 180) / 6,          // 左内侧
-      Math.PI + (160 * Math.PI / 180) / 6,          // 右内侧
-      Math.PI + (160 * Math.PI / 180) / 2,          // 右外侧
+      Math.PI - (160 * Math.PI / 180) / 2,
+      Math.PI - (160 * Math.PI / 180) / 6,
+      Math.PI + (160 * Math.PI / 180) / 6,
+      Math.PI + (160 * Math.PI / 180) / 2,
     ];
+    const slotSequence = [1, 2, 0, 3];
     const distance = 32 * SCALE_FACTOR;
     const size = 9 * SCALE_FACTOR;
     const color = 0xffd44d;
     const orbitSpeed = 0;
     
-    // 先标准化已有僚机的数据（保持槽位不变）
+    const existingSlots = new Set<number>();
     existingCompanions.forEach(entity => {
       const companion = entity.getComponent<Companion>('Companion');
       if (!companion) return;
@@ -279,17 +280,22 @@ export class UpgradeSystem extends System {
       companion.slot = slot;
       companion.distance = distance;
       companion.angle = slotAngles[slot];
+      existingSlots.add(slot);
     });
     
-    for (let slot = existingCompanions.length; slot < desired && slot < slotAngles.length; slot++) {
-      createCompanionEntity(world, this.stage, player, {
-        distance,
-        angle: slotAngles[slot],
-        orbitSpeed,
-        color,
-        size,
-        slot,
-      });
+    for (const slot of slotSequence) {
+      if (existingSlots.size >= desired) break;
+      if (!existingSlots.has(slot) && slot < slotAngles.length) {
+        createCompanionEntity(world, this.stage, player, {
+          distance,
+          angle: slotAngles[slot],
+          orbitSpeed,
+          color,
+          size,
+          slot,
+        });
+        existingSlots.add(slot);
+      }
     }
   }
   

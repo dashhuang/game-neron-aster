@@ -23,49 +23,37 @@ export class CompanionSystem extends System {
     const entities = this.query(world, 'Companion', 'Transform', 'Render');
     if (entities.length === 0) return;
     
-    const grouped = new Map<number, typeof entities>();
     for (const entity of entities) {
       const companion = entity.getComponent<Companion>('Companion');
-      if (!companion) continue;
-      if (!grouped.has(companion.ownerId)) {
-        grouped.set(companion.ownerId, []);
-      }
-      grouped.get(companion.ownerId)!.push(entity);
-    }
-    
-    for (const [ownerId, companions] of grouped) {
-      const owner = world.entities.find(e => e.id === ownerId && e.active);
+      const transform = entity.getComponent<Transform>('Transform');
+      const render = entity.getComponent<Render>('Render');
+      if (!companion || !transform || !render) continue;
+      
+      const owner = world.entities.find(e => e.id === companion.ownerId && e.active);
       if (!owner) {
-        companions.forEach(entity => entity.destroy());
+        entity.destroy();
         continue;
       }
       const ownerTransform = owner.getComponent<Transform>('Transform');
       if (!ownerTransform) continue;
       
-      companions.forEach(entity => {
-        const companion = entity.getComponent<Companion>('Companion');
-        const transform = entity.getComponent<Transform>('Transform');
-        const render = entity.getComponent<Render>('Render');
-        if (!companion || !transform || !render) return;
-        
-        const slotIndex = Math.max(0, Math.min(SLOT_ANGLES.length - 1, companion.slot || 0));
-        const angle = SLOT_ANGLES[slotIndex];
-        companion.angle = angle;
-        
-        const finalAngle = companion.angle + ownerTransform.rotation - Math.PI / 2;
-        const targetX = ownerTransform.x + Math.cos(finalAngle) * companion.distance;
-        const targetY = ownerTransform.y + Math.sin(finalAngle) * companion.distance;
-        
-        transform.x = targetX;
-        transform.y = targetY;
-        transform.rotation = finalAngle + Math.PI / 2;
-        
-        if (render.sprite) {
-          render.sprite.x = targetX;
-          render.sprite.y = targetY;
-          render.sprite.rotation = transform.rotation;
-        }
-      });
+      const slot = Math.max(0, Math.min(SLOT_ANGLES.length - 1, companion.slot || 0));
+      const angle = SLOT_ANGLES[slot];
+      companion.angle = angle;
+      
+      const finalAngle = companion.angle + ownerTransform.rotation - Math.PI / 2;
+      const targetX = ownerTransform.x + Math.cos(finalAngle) * companion.distance;
+      const targetY = ownerTransform.y + Math.sin(finalAngle) * companion.distance;
+      
+      transform.x = targetX;
+      transform.y = targetY;
+      transform.rotation = finalAngle + Math.PI / 2;
+      
+      if (render.sprite) {
+        render.sprite.x = targetX;
+        render.sprite.y = targetY;
+        render.sprite.rotation = transform.rotation;
+      }
     }
   }
 }
