@@ -116,7 +116,7 @@ export class CollisionSystem extends System {
                     bulletTransform.rotation = Math.atan2(velocity.vy, velocity.vx) + Math.PI / 2;
                   }
                   projectile.chain--;
-                  console.log(`⚡ 子弹弹射！剩余弹射次数: ${projectile.chain}`);
+                  // console.log(`⚡ 子弹弹射！剩余: ${projectile.chain}`); // 高频日志已禁用
                   return true;
                 }
               }
@@ -125,7 +125,7 @@ export class CollisionSystem extends System {
             
             const applyPierce = () => {
               projectile.pierce--;
-              console.log(`💥 子弹穿透！剩余穿透次数: ${projectile.pierce}`);
+              // console.log(`💥 子弹穿透！剩余: ${projectile.pierce}`); // 高频日志已禁用
               return true;
             };
             

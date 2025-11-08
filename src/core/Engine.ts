@@ -300,14 +300,10 @@ export class GameEngine {
         chain: weapon.chain,
       } as any;
       
-      // 调试输出（仅在有穿透或弹射时）
-      if (weapon.pierce > 0 || weapon.chain > 0) {
-        console.log('🔫 创建子弹:', {
-          pierce: weapon.pierce,
-          chain: weapon.chain,
-          damage: weapon.damage
-        });
-      }
+      // 调试输出已移除（高频日志影响性能）
+      // if (weapon.pierce > 0 || weapon.chain > 0) {
+      //   console.log('🔫 创建子弹:', { pierce: weapon.pierce, chain: weapon.chain });
+      // }
       
       createPlayerBulletFromWeapon(
         this.world,
