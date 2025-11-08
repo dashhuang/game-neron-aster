@@ -259,6 +259,16 @@ world.eventBus.emit('upgrade_applied', { id, nextLevel, maxLevel, effects });
 
 ---
 
+## ✅ 已接线（生效）属性
+
+- 攻击/武器：`damage`、`fireRate`、`bulletSpeed`、`bulletSize`、`pierce`、`bounce`
+- 生存：`maxHP`
+- 机动：`moveSpeed`（`InputSystem` 读取 `PlayerStats.moveSpeedMultiplier`）
+- 吸附：`magnetRange`（`PickupSystem` 使用玩家与碎片范围的较大值）
+- 成长：`xpGain`（`PickupSystem` 在拾取时按倍率累加经验）
+
+---
+
 ## 🚀 扩展方向
 
 ### 未来可添加

@@ -4,6 +4,25 @@
 
 ---
 
+## [v0.3.3] - 2025-11-08
+
+### ✨ 新增
+
+- **主菜单与导航**
+  - 启动先显示主菜单，顶部“关卡选择”（当前：测试关卡）
+  - “进入游戏”按钮：隐藏菜单并进入测试关卡（初始化/恢复世界）
+  - “天赋升级”按钮：进入天赋树占位界面，可返回主菜单
+  - 菜单/天赋界面使用 PixiJS UI（霓虹风格按钮）
+- **引擎流转**
+  - `GameEngine` 新增菜单/天赋显示与切换逻辑
+  - 菜单/天赋时通过 `world.pause()` 冻结系统更新
+
+### 📖 文档
+
+- `README.md` 新增“3.1 启动与主菜单”
+
+---
+
 ## [v0.3.2] - 2025-11-08
 
 ### ✨ 新增
@@ -18,6 +37,24 @@
 - `ARCHITECTURE.md` 补充暂停机制说明与系统豁免策略
  - `UPGRADE_SYSTEM.md`/`DATA_CONFIG.md`：新增“分级升级（Levels）”配置与选择逻辑说明
  - `upgrades.json` 升级为 v1.1.0（分级结构，满级过滤）
+
+---
+## [v0.3.3] - 2025-11-08
+
+### ✨ 新增（接线生效）
+
+- `moveSpeed`：新增 `PlayerStats.moveSpeedMultiplier`，`InputSystem` 按倍率应用移动速度
+- `magnetRange`：新增 `PlayerStats.magnetRange`，`PickupSystem` 取玩家与碎片范围较大值作为磁吸范围
+- `xpGain`：新增 `PlayerStats.xpGainMultiplier`，`PickupSystem` 拾取经验时按倍率累计
+
+### 🧱 技术
+
+- 新增组件：`PlayerStats`（汇总最终玩家属性，供多系统读取）
+- `StatModifierSystem` 计算并写入 `PlayerStats`（兼顾 `maxHP` 已有逻辑）
+
+### 📖 文档
+
+- `UPGRADE_SYSTEM.md`：新增“已接线（生效）属性”小节
 
 ---
 

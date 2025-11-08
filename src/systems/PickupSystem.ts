@@ -10,6 +10,7 @@ import { Render } from '../components/Render';
 import { XPShard, PlayerXP } from '../components/XP';
 import { Tag } from '../components/Tag';
 import { EntityType, GAME_CONFIG, SCALE_FACTOR } from '../config/constants';
+import { PlayerStats } from '../components/PlayerStats';
 
 export class PickupSystem extends System {
   update(world: World, _delta: number): void {
@@ -24,6 +25,7 @@ export class PickupSystem extends System {
     const player = players[0];
     const playerTransform = player.getComponent<Transform>('Transform')!;
     const playerXP = player.getComponent<PlayerXP>('PlayerXP');
+    const playerStats = player.getComponent<PlayerStats>('PlayerStats');
     
     // 找到所有经验碎片
     const xpShards = this.query(world, 'Tag', 'Transform', 'XPShard', 'Velocity').filter(e => {
@@ -40,8 +42,11 @@ export class PickupSystem extends System {
       const dy = playerTransform.y - shardTransform.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       
+      // 计算有效磁吸范围：考虑玩家升级后的 magnetRange
+      const effectiveMagnetRange = Math.max(shardData.magnetRange, playerStats ? playerStats.magnetRange || 0 : shardData.magnetRange);
+      
       // 磁吸范围内
-      if (distance < shardData.magnetRange) {
+      if (distance < effectiveMagnetRange) {
         shardData.isMagnetized = true;
         
         // 朝向玩家移动
@@ -56,7 +61,9 @@ export class PickupSystem extends System {
       const pickupDistance = 20 * SCALE_FACTOR;
       if (distance < pickupDistance) {
         if (playerXP) {
-          playerXP.current += shardData.amount;
+          const xpMul = playerStats ? playerStats.xpGainMultiplier || 1 : 1;
+          const gained = Math.max(1, Math.round(shardData.amount * xpMul));
+          playerXP.current += gained;
           
           // 检查升级
           if (playerXP.current >= playerXP.nextLevelXP) {

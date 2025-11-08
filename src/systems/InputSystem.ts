@@ -9,6 +9,7 @@ import { Velocity } from '../components/Velocity';
 import { Transform } from '../components/Transform';
 import { Tag } from '../components/Tag';
 import { GAME_CONFIG, SCALE_FACTOR } from '../config/constants';
+import { PlayerStats } from '../components/PlayerStats';
 
 export class InputSystem extends System {
   private keys: Set<string> = new Set();
@@ -125,9 +126,11 @@ export class InputSystem extends System {
       vy /= magnitude;
     }
     
-    // 应用速度
-    velocity.vx = vx * GAME_CONFIG.PLAYER_SPEED;
-    velocity.vy = vy * GAME_CONFIG.PLAYER_SPEED;
+    // 应用速度（含升级后的移动速度倍率）
+    const playerStats = player.getComponent<PlayerStats>('PlayerStats');
+    const speedMul = playerStats ? playerStats.moveSpeedMultiplier || 1 : 1;
+    velocity.vx = vx * GAME_CONFIG.PLAYER_SPEED * speedMul;
+    velocity.vy = vy * GAME_CONFIG.PLAYER_SPEED * speedMul;
   }
   
   // 获取触摸位置（供UI显示，已废弃虚拟摇杆）

@@ -11,6 +11,7 @@ import { Tag } from '../components/Tag';
 import { EntityType } from '../config/constants';
 import { PlayerData } from '../components/PlayerData';
 import { gameData } from '../data/DataLoader';
+import { PlayerStats, createPlayerStats } from '../components/PlayerStats';
 
 export class StatModifierSystem extends System {
   private lastModifierCount: number = 0;
@@ -36,6 +37,13 @@ export class StatModifierSystem extends System {
     }
     
     if (statMod.modifiers.length === 0) return;
+    
+    // 获取或创建 PlayerStats（供其它系统读取最终值）
+    let playerStats = player.getComponent<PlayerStats>('PlayerStats');
+    if (!playerStats) {
+      playerStats = createPlayerStats();
+      player.addComponent(playerStats);
+    }
     
     // 应用到武器属性
     const weapon = player.getComponent<Weapon>('Weapon');
@@ -88,6 +96,18 @@ export class StatModifierSystem extends System {
         }
         
         health.max = newMaxHP;
+        
+        // 移动速度倍率（默认 1.0）
+        const moveSpeedMultiplier = calculateStat('moveSpeed', 1.0, statMod.modifiers);
+        playerStats.moveSpeedMultiplier = moveSpeedMultiplier;
+        
+        // 磁吸范围（以配置为基础值）
+        const newMagnetRange = calculateStat('magnetRange', playerConfig.magnetRange, statMod.modifiers);
+        playerStats.magnetRange = newMagnetRange;
+        
+        // 经验获取倍率（默认 1.0）
+        const xpGainMultiplier = calculateStat('xpGain', 1.0, statMod.modifiers);
+        playerStats.xpGainMultiplier = xpGainMultiplier;
       }
     }
     
