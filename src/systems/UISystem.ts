@@ -18,6 +18,8 @@ export class UISystem extends System {
   private levelText!: Text;
   private timerText!: Text;
   private fpsText!: Text;
+  private dpsText!: Text;
+  private xpRateText!: Text;
   private xpBar!: Graphics;
   private xpBarBg!: Graphics;
   
@@ -41,6 +43,9 @@ export class UISystem extends System {
   private gameTime: number = 0;
   private fpsFrames: number[] = [];
   private isGameOver: boolean = false;
+  
+  private damageEvents: { time: number; damage: number }[] = [];
+  private xpEvents: { time: number; amount: number }[] = [];
   
   constructor(stage: Container, _inputSystem: InputSystem, world: World) {
     super();
@@ -83,6 +88,22 @@ export class UISystem extends System {
       if (tag && tag.value === EntityType.PLAYER) {
         // 显示血量，2秒后自动隐藏
         this.hpDisplayTimer = 2.0;
+      } else if (tag && tag.value === EntityType.ENEMY) {
+        // 记录对敌人造成的伤害（用于 DPS 统计）
+        this.damageEvents.push({
+          time: this.gameTime,
+          damage: data.damage || 0
+        });
+      }
+    });
+    
+    // 监听经验拾取事件
+    world.eventBus.on(Events.PICKUP, (data: any) => {
+      if (data.type === 'xp') {
+        this.xpEvents.push({
+          time: this.gameTime,
+          amount: data.amount || 0
+        });
       }
     });
   }
@@ -127,6 +148,32 @@ export class UISystem extends System {
     this.fpsText.x = GAME_WIDTH - 100;
     this.fpsText.y = 50;
     this.uiContainer.addChild(this.fpsText);
+    
+    // DPS 显示
+    this.dpsText = new Text({
+      text: 'DPS: 0',
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 14,
+        fill: COLORS.UI_WARNING,
+      }
+    });
+    this.dpsText.x = GAME_WIDTH - 100;
+    this.dpsText.y = 72;
+    this.uiContainer.addChild(this.dpsText);
+    
+    // 经验收益显示
+    this.xpRateText = new Text({
+      text: 'XP/10s: 0',
+      style: {
+        fontFamily: 'Arial',
+        fontSize: 14,
+        fill: COLORS.XP_SHARD,
+      }
+    });
+    this.xpRateText.x = GAME_WIDTH - 100;
+    this.xpRateText.y = 94;
+    this.uiContainer.addChild(this.xpRateText);
     
     // 经验条背景
     this.xpBarBg = new Graphics();
@@ -269,6 +316,20 @@ export class UISystem extends System {
     const avgDelta = this.fpsFrames.reduce((a, b) => a + b, 0) / this.fpsFrames.length;
     const fps = Math.round(1 / avgDelta);
     this.fpsText.text = `FPS: ${fps}`;
+    
+    // 计算 DPS（最近1秒）
+    const dpsWindow = 1.0;
+    this.damageEvents = this.damageEvents.filter(e => this.gameTime - e.time <= dpsWindow);
+    const totalDamage = this.damageEvents.reduce((sum, e) => sum + e.damage, 0);
+    const dps = Math.round(totalDamage / dpsWindow);
+    this.dpsText.text = `DPS: ${dps}`;
+    
+    // 计算经验收益（最近10秒）
+    const xpWindow = 10.0;
+    this.xpEvents = this.xpEvents.filter(e => this.gameTime - e.time <= xpWindow);
+    const totalXP = this.xpEvents.reduce((sum, e) => sum + e.amount, 0);
+    const xpRate = Math.round(totalXP);
+    this.xpRateText.text = `XP/10s: ${xpRate}`;
     
     // 更新等级、经验条和玩家跟随血量显示
     const players = this.query(world, 'Tag', 'PlayerXP', 'Health', 'Transform').filter(e => {

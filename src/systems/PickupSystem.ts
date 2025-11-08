@@ -65,6 +65,12 @@ export class PickupSystem extends System {
           const gained = Math.max(1, Math.round(shardData.amount * xpMul));
           playerXP.current += gained;
           
+          // 触发拾取事件（用于统计）
+          world.eventBus.emit(Events.PICKUP, {
+            type: 'xp',
+            amount: gained
+          });
+          
           // 检查升级
           if (playerXP.current >= playerXP.nextLevelXP) {
             playerXP.level += 1;
