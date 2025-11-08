@@ -31,11 +31,11 @@ export class CompanionSystem extends System {
       if (!ownerTransform) continue;
       
       const slot = companion.slot || 0;
-      const baseAngles = [Math.PI / 2, -Math.PI / 2, Math.PI / 2 + Math.PI / 8, -Math.PI / 2 - Math.PI / 8];
-      const baseAngle = baseAngles[slot] ?? (Math.PI / 2 + slot * (Math.PI / 12));
+      const baseAngles = [Math.PI + Math.PI / 6, Math.PI - Math.PI / 6, Math.PI + Math.PI / 3.5, Math.PI - Math.PI / 3.5];
+      const baseAngle = baseAngles[slot] ?? (Math.PI + Math.PI / 8 + slot * (Math.PI / 10));
       companion.angle = baseAngle;
       
-      const finalAngle = ownerTransform.rotation - Math.PI / 2 + companion.angle;
+      const finalAngle = companion.angle + ownerTransform.rotation - Math.PI / 2;
       const targetX = ownerTransform.x + Math.cos(finalAngle) * companion.distance;
       const targetY = ownerTransform.y + Math.sin(finalAngle) * companion.distance;
       
