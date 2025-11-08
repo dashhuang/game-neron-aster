@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "levels": [
+    {
+      "id": "tutorial_01",
+      "name": "新手训练",
+      "type": "timed",
+      "duration": 180,
+      "difficulty": 1,
+      "spawnMode": "wave_script",
+      "description": "熟悉基础操作，击败敌人并升级",
+      "waves": [
+        { "time": 0, "enemies": ["hex_basic"], "count": 5, "formation": "line" },
+        { "time": 20, "enemies": ["arrow_fast"], "count": 8, "formation": "v_shape" },
+        { "time": 40, "enemies": ["hex_basic"], "count": 6, "formation": "random" },
+        { "time": 70, "enemies": ["hex_basic", "arrow_fast"], "count": 10, "formation": "wave" },
+        { "time": 120, "enemies": ["hex_basic"], "count": 12, "formation": "circle" },
+        { "time": 150, "enemies": ["arrow_fast"], "count": 15, "formation": "line" }
+      ],
+      "objective": {
+        "type": "survive",
+        "description": "生存 3 分钟"
+      }
+    },
+    {
+      "id": "endless_chaos",
+      "name": "混沌无尽",
+      "type": "endless",
+      "difficulty": 3,
+      "spawnMode": "algorithm",
+      "description": "挑战你的极限，看能坚持多久",
+      "difficultyScale": 1.05,
+      "enemyPool": [
+        { "id": "hex_basic", "weight": 5, "minTime": 0 },
+        { "id": "arrow_fast", "weight": 3, "minTime": 0 }
+      ],
+      "objective": {
+        "type": "survive",
+        "description": "尽可能长时间生存"
+      }
+    },
+    {
+      "id": "test_level",
+      "name": "测试关卡",
+      "type": "timed",
+      "duration": 600,
+      "difficulty": 2,
+      "spawnMode": "algorithm",
+      "description": "当前测试用关卡",
+      "difficultyScale": 1.03,
+      "enemyPool": [
+        { "id": "hex_basic", "weight": 5 },
+        { "id": "arrow_fast", "weight": 5 }
+      ]
+    }
+  ]
+}
+

@@ -7,12 +7,16 @@ import { EnemyConfig, EnemyConfigData } from './types/EnemyConfig';
 import { WeaponConfig, WeaponConfigData } from './types/WeaponConfig';
 import { PlayerConfig, PlayerConfigData } from './types/PlayerConfig';
 import { UpgradeConfigData, UpgradeGroup } from './types/UpgradeConfig';
+import { LevelConfig, LevelConfigData } from './types/LevelConfig';
+import { BossEnemyConfig, BossConfigData } from './types/BossConfig';
 
 export class DataLoader {
   private enemies: Map<string, EnemyConfig> = new Map();
   private weapons: Map<string, WeaponConfig> = new Map();
   private players: Map<string, PlayerConfig> = new Map();
   private upgrades: Map<string, UpgradeGroup> = new Map();
+  private levels: Map<string, LevelConfig> = new Map();
+  private bosses: Map<string, BossEnemyConfig> = new Map();
   
   private isLoaded = false;
   
@@ -31,6 +35,8 @@ export class DataLoader {
         this.loadWeapons(),
         this.loadPlayers(),
         this.loadUpgrades(),
+        this.loadLevels(),
+        this.loadBosses(),
       ]);
       
       this.isLoaded = true;
@@ -39,6 +45,8 @@ export class DataLoader {
       console.log(`  - 武器: ${this.weapons.size} 种`);
       console.log(`  - 角色: ${this.players.size} 种`);
       console.log(`  - 升级: ${this.upgrades.size} 种`);
+      console.log(`  - 关卡: ${this.levels.size} 个`);
+      console.log(`  - Boss: ${this.bosses.size} 个`);
     } catch (error) {
       console.error('❌ 数据加载失败:', error);
       throw error;
@@ -177,6 +185,66 @@ export class DataLoader {
    */
   getUpgradesByRarity(rarity: 'common' | 'rare' | 'epic'): UpgradeGroup[] {
     return this.getAllUpgrades().filter(u => u.rarity === rarity);
+  }
+  
+  /**
+   * 加载关卡配置
+   */
+  private async loadLevels(): Promise<void> {
+    const response = await fetch('/data/levels/levels.json');
+    if (!response.ok) {
+      throw new Error(`加载关卡配置失败: ${response.statusText}`);
+    }
+    
+    const data: LevelConfigData = await response.json();
+    
+    for (const level of data.levels) {
+      this.levels.set(level.id, level);
+    }
+  }
+  
+  /**
+   * 获取关卡配置
+   */
+  getLevel(id: string): LevelConfig | undefined {
+    return this.levels.get(id);
+  }
+  
+  /**
+   * 获取所有关卡配置
+   */
+  getAllLevels(): LevelConfig[] {
+    return Array.from(this.levels.values());
+  }
+  
+  /**
+   * 加载 Boss 配置
+   */
+  private async loadBosses(): Promise<void> {
+    const response = await fetch('/data/bosses/bosses.json');
+    if (!response.ok) {
+      throw new Error(`加载 Boss 配置失败: ${response.statusText}`);
+    }
+    
+    const data: BossConfigData = await response.json();
+    
+    for (const boss of data.bosses) {
+      this.bosses.set(boss.id, boss);
+    }
+  }
+  
+  /**
+   * 获取 Boss 配置
+   */
+  getBoss(id: string): BossEnemyConfig | undefined {
+    return this.bosses.get(id);
+  }
+  
+  /**
+   * 获取所有 Boss 配置
+   */
+  getAllBosses(): BossEnemyConfig[] {
+    return Array.from(this.bosses.values());
   }
   
   /**

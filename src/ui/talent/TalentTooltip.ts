@@ -29,8 +29,10 @@ export interface TalentTooltipTheme {
 export interface TalentTooltipData {
   title: string;
   description: string;
-  statusText: string;
-  statusColor: number;
+  cost?: {
+    amount: number;
+    color: number;
+  };
 }
 
 export interface TalentTooltipAction {
@@ -93,7 +95,9 @@ export class TalentTooltip {
   private background: Graphics;
   private title: Text;
   private description: Text;
-  private status: Text;
+  private costRow: Container;
+  private costIcon: Graphics;
+  private costAmount: Text;
   private actionButton: Container;
   private actionBackground: Graphics;
   private actionLabel: Text;
@@ -132,14 +136,24 @@ export class TalentTooltip {
     });
     this.container.addChild(this.description);
 
-    this.status = new Text({
+    this.costRow = new Container();
+    this.costRow.visible = false;
+    
+    this.costIcon = new Graphics();
+    this.costRow.addChild(this.costIcon);
+    
+    this.costAmount = new Text({
       text: '',
       style: {
         ...theme.statusStyle,
-        wordWrapWidth: theme.width - theme.paddingX * 2
+        wordWrap: false
       }
     });
-    this.container.addChild(this.status);
+    this.costAmount.x = 32;
+    this.costAmount.y = -6;
+    this.costRow.addChild(this.costAmount);
+    
+    this.container.addChild(this.costRow);
 
     this.actionButton = new Container();
     this.actionButton.eventMode = 'static';
@@ -184,8 +198,16 @@ export class TalentTooltip {
   show(data: TalentTooltipData, action?: TalentTooltipAction): void {
     this.title.text = data.title;
     this.description.text = data.description;
-    this.status.text = data.statusText;
-    this.status.style.fill = data.statusColor;
+    
+    // 配置代价显示
+    if (data.cost) {
+      this.costRow.visible = true;
+      this.drawCostIcon(data.cost.color);
+      this.costAmount.text = `× ${data.cost.amount}`;
+      this.costAmount.style.fill = data.cost.color;
+    } else {
+      this.costRow.visible = false;
+    }
 
     if (action) {
       this.configureAction(action);
@@ -236,6 +258,15 @@ export class TalentTooltip {
     this.actionBackground.stroke({ width: 3, color: enabled ? color : theme.buttonDisabledColor, alpha: enabled ? 1 : 0.6 });
   }
 
+  private drawCostIcon(color: number): void {
+    this.costIcon.clear();
+    // 绘制圆角方形图标
+    this.costIcon.roundRect(0, -8, 24, 16, 5);
+    this.costIcon.fill({ color, alpha: 0.9 });
+    this.costIcon.roundRect(0, -8, 24, 16, 5);
+    this.costIcon.stroke({ width: 2, color, alpha: 1 });
+  }
+
   private layout(): void {
     const theme = this.theme;
     const paddingX = theme.paddingX;
@@ -248,12 +279,16 @@ export class TalentTooltip {
     this.description.x = paddingX;
     this.description.y = this.title.y + this.title.height + spacing;
 
-    this.status.x = paddingX;
-    this.status.y = this.description.y + this.description.height + spacing;
+    let nextY = this.description.y + this.description.height + spacing;
+    if (this.costRow.visible) {
+      this.costRow.x = paddingX;
+      this.costRow.y = nextY;
+      nextY = this.costRow.y + 24 + theme.buttonPadding;
+    }
 
     let panelHeight = Math.max(
       theme.minHeight,
-      this.status.y + this.status.height + theme.buttonPadding
+      nextY
     );
 
     if (this.actionButton.visible) {

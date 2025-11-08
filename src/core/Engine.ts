@@ -20,6 +20,8 @@ import { PickupSystem } from '../systems/PickupSystem';
 import { RenderSystem } from '../systems/RenderSystem';
 import { LifetimeSystem } from '../systems/LifetimeSystem';
 import { EnemySpawnSystem } from '../systems/EnemySpawnSystem';
+import { WaveSystem } from '../systems/WaveSystem';
+import { BossSystem } from '../systems/BossSystem';
 import { DeathSystem } from '../systems/DeathSystem';
 import { UISystem } from '../systems/UISystem';
 import { CleanupSystem } from '../systems/CleanupSystem';
@@ -44,6 +46,7 @@ export class GameEngine {
   private gameStage: Container;
   private inputSystem: InputSystem;
   private upgradeSystem!: UpgradeSystem;
+  private waveSystem!: WaveSystem;
   private menuScreen?: MenuScreen;
   private talentScreen?: TalentScreen;
   private hasGameInitialized: boolean = false;
@@ -163,6 +166,9 @@ export class GameEngine {
     // 注册事件监听
     this.setupEventListeners();
     
+    // 加载默认关卡（测试关卡）
+    this.waveSystem.loadLevel('test_level');
+    
     // 隐藏菜单，开始游戏
     this.hideMenu();
     this.hideTalent();
@@ -231,6 +237,9 @@ export class GameEngine {
     this.app.stage.addChild(upgradePanel.getContainer());
     this.upgradeSystem = new UpgradeSystem(this.gameStage, upgradePanel);
     
+    // 创建波次系统
+    this.waveSystem = new WaveSystem(this.gameStage);
+    
     this.world
       .addSystem(this.inputSystem)
       .addSystem(new StatModifierSystem()) // 属性修改器（最先执行）
@@ -247,7 +256,8 @@ export class GameEngine {
       .addSystem(new LifetimeSystem())
       .addSystem(new CleanupSystem(this.gameStage))
       .addSystem(new PerformanceSystem())
-      .addSystem(new EnemySpawnSystem(this.gameStage))
+      .addSystem(this.waveSystem)          // 波次系统（替代 EnemySpawnSystem）
+      .addSystem(new BossSystem())         // Boss 系统
       .addSystem(new DeathSystem(this.gameStage))
       .addSystem(new HitFlashSystem())
       .addSystem(this.upgradeSystem)       // 升级系统

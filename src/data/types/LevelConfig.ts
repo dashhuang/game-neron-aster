@@ -1,0 +1,106 @@
+/**
+ * 关卡配置接口
+ * 定义关卡的波次、敌人生成规则
+ */
+
+export interface LevelConfig {
+  // 基础信息
+  id: string;                    // 唯一标识符，如 "tutorial_01"
+  name: string;                  // 显示名称，如 "新手训练"
+  type: 'timed' | 'endless' | 'boss' | 'survival'; // 关卡类型
+  duration?: number;             // 固定时长（秒），endless 无需
+  difficulty: number;            // 难度等级（1-10）
+  
+  // 生成模式
+  spawnMode: 'wave_script' | 'algorithm' | 'boss_only';
+  waves?: WaveConfig[];          // 脚本化波次（固定时间轴）
+  enemyPool?: EnemyPoolEntry[];  // 算法生成池（无尽模式）
+  difficultyScale?: number;      // 难度增长倍率（无尽模式，如 1.05）
+  
+  // Boss 配置
+  boss?: BossConfig;
+  
+  // 目标条件
+  objective?: {
+    type: 'survive' | 'kill_count' | 'boss_defeat';
+    target?: number;             // 目标值（击杀数量等）
+    description?: string;        // 描述文本
+  };
+  
+  // 元数据
+  description?: string;          // 关卡描述
+  unlockCondition?: string;      // 解锁条件
+  rewards?: {                    // 奖励
+    xp?: number;
+    coins?: number;
+  };
+}
+
+/**
+ * 波次配置（脚本化生成）
+ */
+export interface WaveConfig {
+  time: number;                  // 触发时间（秒）
+  enemies: string[];             // 敌人ID列表
+  count: number;                 // 数量
+  formation?: string;            // 编队类型：'line' | 'v_shape' | 'circle' | 'wave' | 'random'
+  position?: 'top' | 'sides' | 'around'; // 生成位置
+  interval?: number;             // 敌人间隔（秒，用于依次生成）
+  
+  // 可选参数
+  formation_params?: {           // 编队自定义参数
+    spacing?: number;            // 间距
+    radius?: number;             // 半径（圆形编队）
+    angle?: number;              // 角度（V字编队）
+  };
+}
+
+/**
+ * 敌人池条目（算法生成）
+ */
+export interface EnemyPoolEntry {
+  id: string;                    // 敌人ID
+  weight: number;                // 抽取权重（越大越常见）
+  minTime?: number;              // 最早出现时间（秒）
+  maxTime?: number;              // 最晚出现时间（秒）
+  minDifficulty?: number;        // 最低难度倍率
+}
+
+/**
+ * Boss 配置
+ */
+export interface BossConfig {
+  id: string;                    // Boss ID
+  spawnTime?: number;            // 出现时间（秒，默认关卡开始）
+  phases: BossPhase[];           // 阶段配置
+  addWaves?: WaveConfig[];       // Boss 战期间的小怪波次
+}
+
+/**
+ * Boss 阶段
+ */
+export interface BossPhase {
+  name?: string;                 // 阶段名称
+  hpThreshold: number;           // HP 阈值（0-1），如 0.5 表示 50% HP
+  aiPattern: string;             // AI 模式ID
+  attackPattern?: string;        // 攻击模式ID
+  moveSpeed?: number;            // 移动速度
+  fireRate?: number;             // 射速
+  specialAbility?: string;       // 特殊技能ID
+  
+  // 阶段触发时的效果
+  onEnter?: {
+    summonEnemies?: string[];    // 召唤敌人
+    playEffect?: string;         // 播放特效
+    announcement?: string;       // 公告文本
+  };
+}
+
+/**
+ * 关卡配置集合
+ */
+export interface LevelConfigData {
+  version: string;
+  levels: LevelConfig[];
+}
+

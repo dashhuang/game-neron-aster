@@ -102,20 +102,20 @@ export class TalentScreen {
     this.initialScale = 1;
     this.currentScale = 1;
 
+    // 初始化所有节点等级
     TALENT_NODES.forEach(node => {
       const initial = node.initialLevel ?? 0;
       this.nodeLevels.set(node.id, initial);
-      if (initial > 0 || node.id === 'core_origin') {
+      
+      // 只有已激活的节点才添加到可访问集合并展开周围
+      if (initial > 0) {
         this.accessibleNodes.add(node.id);
         this.revealNeighbors(node.id);
       }
     });
 
-    if (!this.accessibleNodes.has('core_origin')) {
-      this.accessibleNodes.add('core_origin');
-      this.nodeLevels.set('core_origin', 1);
-      this.revealNeighbors('core_origin');
-    }
+    // 核心回路总是可见（但未激活）
+    this.accessibleNodes.add('core_origin');
 
     this.selectedNodeId = 'core_origin';
     this.updateResourcePanel();
@@ -373,8 +373,21 @@ export class TalentScreen {
     const config = this.nodeConfigs.get(nodeId);
     if (!config) return;
 
+    // 激活节点后，周围节点变为可见（可以点击查看 Tips）
     config.connections.forEach(targetId => {
       this.accessibleNodes.add(targetId);
+      
+      // 同时显示这些节点的下游问号节点
+      const targetConfig = this.nodeConfigs.get(targetId);
+      if (targetConfig) {
+        targetConfig.connections.forEach(nextId => {
+          // 只有未激活的节点才显示为问号
+          const nextLevel = this.nodeLevels.get(nextId) ?? 0;
+          if (nextLevel === 0 && nextId !== nodeId) {
+            this.accessibleNodes.add(nextId);
+          }
+        });
+      }
     });
   }
 
@@ -427,19 +440,34 @@ export class TalentScreen {
     const level = this.nodeLevels.get(nodeId) ?? 0;
     const maxLevel = config.maxLevel ?? 1;
 
+    // 已满级
     if (level >= maxLevel) return 'maxed';
 
-    const accessible = this.accessibleNodes.has(nodeId) || level > 0;
-    if (!accessible && nodeId !== 'core_origin') return 'hidden';
+    // 未在可访问集合中，隐藏
+    if (!this.accessibleNodes.has(nodeId)) return 'hidden';
+
+    // 核心回路特殊处理：总是可以激活（它是起点）
+    const isCoreOrigin = nodeId === 'core_origin';
+
+    // 检查是否有任何前置节点已激活
+    const hasActivatedParent = isCoreOrigin || config.connections.some(connId => {
+      const connLevel = this.nodeLevels.get(connId) ?? 0;
+      return connLevel > 0;
+    });
 
     const resource = this.resources[config.resource];
     if (!resource) return 'hidden';
     const enough = resource.current >= config.cost;
 
+    // 未激活状态
     if (level === 0) {
+      // 没有已激活的前置节点，显示为问号（不可操作）
+      if (!hasActivatedParent) return 'locked';
+      // 有已激活的前置节点（或是核心回路），可以激活
       return enough ? 'available' : 'locked';
     }
 
+    // 已激活，可继续升级
     return enough ? 'upgradeable' : 'locked';
   }
 
@@ -469,20 +497,60 @@ export class TalentScreen {
     shape.roundRect(-34, -34, 68, 68, 14);
     shape.fill({ color: 0x0e0f1d, alpha: 0.85 });
 
-    if (state === 'available') {
+    // 检查是否有已激活的前置节点
+    const hasActivatedParent = config.connections.some(connId => {
+      const connLevel = this.nodeLevels.get(connId) ?? 0;
+      return connLevel > 0;
+    });
+
+    if (state === 'locked' && level === 0 && !hasActivatedParent) {
+      // 问号状态：前置未激活，显示为问号，不可点击
       shape.roundRect(-32, -32, 64, 64, 14);
-      shape.fill({ color: 0x101226, alpha: 0.6 });
+      shape.fill({ color: 0x0f1020, alpha: 0.5 });
       shape.roundRect(-32, -32, 64, 64, 14);
-      shape.stroke({ width: 2, color: 0x3a415c, alpha: 0.9 });
+      shape.stroke({ width: 2, color: 0x2e3248, alpha: 0.7 });
       label.text = '?';
       label.style.fontFamily = '"Press Start 2P", Arial';
       label.style.fontSize = 18;
-      label.style.fill = 0x7e85a5;
+      label.style.fill = 0x50556a;
       label.style.align = 'center';
       label.style.wordWrap = false;
       levelText.text = '';
       badge.visible = false;
-    } else if (state === 'locked') {
+      container.cursor = 'default';
+    } else if (state === 'available') {
+      // 可激活状态：前置已激活，资源足够
+      shape.roundRect(-32, -32, 64, 64, 14);
+      shape.fill({ color: 0x101226, alpha: 0.6 });
+      shape.roundRect(-32, -32, 64, 64, 14);
+      shape.stroke({ width: 2, color: resource.color, alpha: 0.9 });
+      label.text = config.shortLabel;
+      label.style.fontFamily = '"Press Start 2P", Arial';
+      label.style.fontSize = 12;
+      label.style.fill = resource.color;
+      label.style.align = 'center';
+      label.style.wordWrap = true;
+      label.style.wordWrapWidth = 60;
+      levelText.text = '';
+      badge.visible = false;
+    } else if (state === 'locked' && level === 0 && hasActivatedParent) {
+      // 资源不足状态：前置已激活，但资源不够
+      shape.roundRect(-32, -32, 64, 64, 14);
+      shape.fill({ color: 0x191328, alpha: 0.75 });
+      shape.roundRect(-32, -32, 64, 64, 14);
+      shape.stroke({ width: 2, color: 0x5e2a3f, alpha: 0.9 });
+      label.text = config.shortLabel;
+      label.style.fontFamily = '"Press Start 2P", Arial';
+      label.style.fontSize = 12;
+      label.style.fill = 0xb97388;
+      label.style.align = 'center';
+      label.style.wordWrap = true;
+      label.style.wordWrapWidth = 60;
+      levelText.text = '';
+      badge.roundRect(-18, -28, 36, 12, 5);
+      badge.fill({ color: resource.color, alpha: 0.35 });
+    } else if (state === 'locked' && level > 0) {
+      // 已激活但资源不足升级
       shape.roundRect(-32, -32, 64, 64, 14);
       shape.fill({ color: 0x191328, alpha: 0.75 });
       shape.roundRect(-32, -32, 64, 64, 14);
@@ -565,22 +633,32 @@ export class TalentScreen {
     }
 
     const state = this.getNodeState(nodeId);
-    if (state === 'hidden') {
+    const level = this.nodeLevels.get(nodeId) ?? 0;
+    
+    // 问号节点（前置未激活）不显示 Tips
+    const hasActivatedParent = config.connections.some(connId => {
+      const connLevel = this.nodeLevels.get(connId) ?? 0;
+      return connLevel > 0;
+    });
+    
+    if (state === 'hidden' || (state === 'locked' && level === 0 && !hasActivatedParent)) {
       this.tooltip.hide();
       return;
     }
 
     const resource = TALENT_RESOURCE_META[config.resource];
-    const level = this.nodeLevels.get(nodeId) ?? 0;
-    const statusColor = this.resolveStatusColor(state, resource.color);
-    const statusText = this.buildStatusText(state, config, resource.label, level);
     const action = this.buildTooltipAction(nodeId, state, resource.color);
+    
+    // 构建代价信息（仅传递数量和颜色，让 Tooltip 绘制图标）
+    const costInfo = config.cost > 0 ? {
+      amount: config.cost,
+      color: resource.color
+    } : undefined;
 
     const tooltipData: TalentTooltipData = {
       title: config.title,
       description: config.description,
-      statusText,
-      statusColor
+      cost: costInfo
     };
 
     this.tooltip.show(tooltipData, action);
@@ -621,41 +699,6 @@ export class TalentScreen {
       color: resourceColor,
       onClick: enabled ? () => this.tryUpgradeNode(nodeId) : undefined
     };
-  }
-
-  private buildStatusText(
-    state: TalentVisualState,
-    config: TalentNodeConfig,
-    resourceLabel: string,
-    level: number
-  ): string {
-    const costText = `消耗 ${resourceLabel} × ${config.cost}`;
-    switch (state) {
-      case 'available':
-        return `状态：可激活 · ${costText}`;
-      case 'upgradeable':
-        return `状态：可升级 · 等级 ${level}/${config.maxLevel} · ${costText}`;
-      case 'locked':
-        return `状态：资源不足 · 需要 ${resourceLabel} × ${config.cost}`;
-      case 'maxed':
-        return `状态：已满级 (${level}/${config.maxLevel})`;
-      default:
-        return '状态：未知';
-    }
-  }
-
-  private resolveStatusColor(state: TalentVisualState, resourceColor: number): number {
-    switch (state) {
-      case 'available':
-      case 'upgradeable':
-        return resourceColor;
-      case 'locked':
-        return 0xff6b8a;
-      case 'maxed':
-        return 0x7fe8a5;
-      default:
-        return 0xbdd3ff;
-    }
   }
 
   private positionTooltip(nodeId: string): void {

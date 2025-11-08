@@ -1,0 +1,48 @@
+{
+  "version": "1.0.0",
+  "bosses": [
+    {
+      "id": "boss_omega_red",
+      "name": "Omega 红核心",
+      "hp": 1000,
+      "damage": 20,
+      "speed": 40,
+      "size": 50,
+      "color": 16724804,
+      "shape": "star",
+      "xpDrop": 100,
+      "phases": [
+        {
+          "name": "阶段1：警戒",
+          "hpThreshold": 1.0,
+          "aiPattern": "straight_down",
+          "moveSpeed": 40
+        },
+        {
+          "name": "阶段2：狂暴",
+          "hpThreshold": 0.5,
+          "aiPattern": "zigzag",
+          "moveSpeed": 60,
+          "onEnter": {
+            "announcement": "Boss 进入狂暴状态！"
+          }
+        },
+        {
+          "name": "阶段3：绝命",
+          "hpThreshold": 0.2,
+          "aiPattern": "tracking",
+          "moveSpeed": 80,
+          "onEnter": {
+            "announcement": "Boss 最后的反扑！"
+          }
+        }
+      ],
+      "deathEffect": {
+        "type": "explosion_large",
+        "particleCount": 50
+      },
+      "tags": ["boss", "elite"]
+    }
+  ]
+}
+

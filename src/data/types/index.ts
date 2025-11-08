@@ -6,4 +6,7 @@ export * from './EnemyConfig';
 export * from './WeaponConfig';
 export * from './PlayerConfig';
 export * from './UpgradeConfig';
+export * from './LevelConfig';
+export * from './BossConfig';
+export * from './FormationConfig';
 
