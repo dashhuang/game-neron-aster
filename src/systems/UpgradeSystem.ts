@@ -175,7 +175,15 @@ export class UpgradeSystem extends System {
       
       // 恢复游戏
       world.resume();
-    }, { debug: debugMode });
+    }, {
+      debug: debugMode,
+      onCancel: () => {
+        console.log('❌ 调试升级面板取消');
+        this.upgradePanel.hide();
+        this.isUpgrading = false;
+        world.resume();
+      }
+    });
   }
   
   /**

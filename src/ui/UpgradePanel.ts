@@ -11,7 +11,10 @@ export class UpgradePanel {
   private container: Container;
   private cards: Container[] = [];
   private onSelectCallback?: (upgrade: UpgradeOption) => void;
+  private onCancelCallback?: () => void;
   private titleText: Text;
+  private cancelButton?: Graphics;
+  private cancelLabel?: Text;
   private debugMode: boolean = false;
   private static readonly CARD_WIDTH = 200;
   private static readonly CARD_HEIGHT = 230;
@@ -57,9 +60,10 @@ export class UpgradePanel {
   show(
     upgrades: UpgradeOption[],
     onSelect: (upgrade: UpgradeOption) => void,
-    options?: { debug?: boolean }
+    options?: { debug?: boolean; onCancel?: () => void }
   ): void {
     this.onSelectCallback = onSelect;
+    this.onCancelCallback = options?.onCancel;
     this.debugMode = options?.debug ?? false;
     this.titleText.text = this.debugMode ? '调试：升级概率' : '选择升级';
     
@@ -72,6 +76,8 @@ export class UpgradePanel {
     } else {
       this.renderStandardCards(upgrades);
     }
+    
+    this.setupCancelButton(this.debugMode && typeof this.onCancelCallback === 'function');
     
     this.container.visible = true;
   }
@@ -122,6 +128,7 @@ export class UpgradePanel {
    */
   hide(): void {
     this.container.visible = false;
+    this.setCancelVisible(false);
   }
   
   /**
@@ -281,6 +288,52 @@ export class UpgradePanel {
       case 'rare': return '稀有';
       case 'epic': return '史诗';
       default: return '';
+    }
+  }
+  
+  /**
+   * 创建/显示取消按钮（仅调试面板）
+   */
+  private setupCancelButton(show: boolean): void {
+    if (!this.cancelButton) {
+      const button = new Graphics();
+      button.roundRect(0, 0, 140, 48, 12);
+      button.fill({ color: 0x333333, alpha: 0.9 });
+      button.x = GAME_WIDTH - 160;
+      button.y = GAME_HEIGHT - 80;
+      button.eventMode = 'static';
+      button.cursor = 'pointer';
+      
+      const label = new Text({
+        text: '取消',
+        style: {
+          fontFamily: '"Press Start 2P", Arial',
+          fontSize: 16,
+          fill: 0xffffff,
+        }
+      });
+      label.anchor.set(0.5);
+      label.x = 70;
+      label.y = 24;
+      button.addChild(label);
+      
+      button.on('pointerdown', () => {
+        if (this.onCancelCallback) {
+          this.onCancelCallback();
+        }
+      });
+      
+      this.container.addChild(button);
+      this.cancelButton = button;
+      this.cancelLabel = label;
+    }
+    this.setCancelVisible(show);
+  }
+  
+  private setCancelVisible(visible: boolean): void {
+    if (this.cancelButton) {
+      this.cancelButton.visible = visible;
+      this.cancelButton.eventMode = visible ? 'static' : 'none';
     }
   }
   
