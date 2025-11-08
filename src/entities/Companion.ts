@@ -25,12 +25,12 @@ export function createCompanionEntity(
   owner: Entity,
   options: CompanionOptions = {}
 ): Entity | null {
-  const distance = options.distance ?? 60 * SCALE_FACTOR;
+  const distance = options.distance ?? 75 * SCALE_FACTOR;
   const angle = options.angle ?? 0;
   const orbitSpeed = options.orbitSpeed ?? 0;
   const slot = options.slot ?? 0;
   const color = options.color ?? 0xffd44d;
-  const size = options.size ?? 10 * SCALE_FACTOR;
+  const size = options.size ?? 9 * SCALE_FACTOR;
   
   const entity = world.createEntity();
   const sprite = new Graphics();
@@ -38,6 +38,7 @@ export function createCompanionEntity(
   stage.addChild(sprite);
   
   const ownerTransform = owner.getComponent('Transform');
+  if (!ownerTransform) return null;
   const initialX = ownerTransform.x + Math.cos(angle) * distance;
   const initialY = ownerTransform.y + Math.sin(angle) * distance;
   

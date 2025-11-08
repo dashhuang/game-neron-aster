@@ -30,10 +30,12 @@ export class CompanionSystem extends System {
       const ownerTransform = owner.getComponent<Transform>('Transform');
       if (!ownerTransform) continue;
       
-      const orbitSpeed = companion.orbitSpeed || 0;
-      companion.angle += orbitSpeed * delta;
-      const finalAngle = companion.angle + ownerTransform.rotation - Math.PI / 2;
+      const slot = companion.slot || 0;
+      const baseAngles = [Math.PI / 2, -Math.PI / 2, Math.PI / 2 + Math.PI / 8, -Math.PI / 2 - Math.PI / 8];
+      const baseAngle = baseAngles[slot] ?? (Math.PI / 2 + slot * (Math.PI / 12));
+      companion.angle = baseAngle;
       
+      const finalAngle = ownerTransform.rotation - Math.PI / 2 + companion.angle;
       const targetX = ownerTransform.x + Math.cos(finalAngle) * companion.distance;
       const targetY = ownerTransform.y + Math.sin(finalAngle) * companion.distance;
       
