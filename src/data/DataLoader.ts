@@ -6,13 +6,13 @@
 import { EnemyConfig, EnemyConfigData } from './types/EnemyConfig';
 import { WeaponConfig, WeaponConfigData } from './types/WeaponConfig';
 import { PlayerConfig, PlayerConfigData } from './types/PlayerConfig';
-import { UpgradeConfig, UpgradeConfigData } from './types/UpgradeConfig';
+import { UpgradeConfigData, UpgradeGroup } from './types/UpgradeConfig';
 
 export class DataLoader {
   private enemies: Map<string, EnemyConfig> = new Map();
   private weapons: Map<string, WeaponConfig> = new Map();
   private players: Map<string, PlayerConfig> = new Map();
-  private upgrades: Map<string, UpgradeConfig> = new Map();
+  private upgrades: Map<string, UpgradeGroup> = new Map();
   
   private isLoaded = false;
   
@@ -145,30 +145,37 @@ export class DataLoader {
     }
     
     const data: UpgradeConfigData = await response.json();
-    
-    for (const upgrade of data.upgrades) {
-      this.upgrades.set(upgrade.id, upgrade);
+    for (const group of data.upgrades) {
+      // 兼容：若无 levels 而有 effects，则转换为单级
+      if (!group.levels && (group as any).effects) {
+        const legacyEffects = (group as any).effects;
+        (group as any).levels = [
+          { level: 1, description: group.description, effects: legacyEffects }
+        ];
+        delete (group as any).effects;
+      }
+      this.upgrades.set(group.id, group);
     }
   }
   
   /**
    * 获取升级配置
    */
-  getUpgrade(id: string): UpgradeConfig | undefined {
+  getUpgrade(id: string): UpgradeGroup | undefined {
     return this.upgrades.get(id);
   }
   
   /**
    * 获取所有升级配置
    */
-  getAllUpgrades(): UpgradeConfig[] {
+  getAllUpgrades(): UpgradeGroup[] {
     return Array.from(this.upgrades.values());
   }
   
   /**
    * 根据稀有度获取升级列表
    */
-  getUpgradesByRarity(rarity: 'common' | 'rare' | 'epic'): UpgradeConfig[] {
+  getUpgradesByRarity(rarity: 'common' | 'rare' | 'epic'): UpgradeGroup[] {
     return this.getAllUpgrades().filter(u => u.rarity === rarity);
   }
   

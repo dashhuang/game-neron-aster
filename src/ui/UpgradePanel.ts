@@ -5,7 +5,7 @@
 
 import { Container, Graphics, Text } from 'pixi.js';
 import { GAME_WIDTH, GAME_HEIGHT, COLORS } from '../config/constants';
-import { UpgradeConfig } from '../data/types/UpgradeConfig';
+import { UpgradeOption } from '../systems/UpgradeSystem';
 
 export class UpgradePanel {
   private container: Container;
@@ -46,7 +46,7 @@ export class UpgradePanel {
   /**
    * 显示升级选择面板
    */
-  show(upgrades: UpgradeConfig[], onSelect: (upgrade: UpgradeConfig) => void): void {
+  show(upgrades: UpgradeOption[], onSelect: (upgrade: UpgradeOption) => void): void {
     this.onSelectCallback = onSelect;
     
     // 清除旧卡片
@@ -82,7 +82,7 @@ export class UpgradePanel {
   /**
    * 创建升级卡
    */
-  private createCard(upgrade: UpgradeConfig): Container {
+  private createCard(upgrade: UpgradeOption): Container {
     const card = new Container();
     const cardWidth = 180;
     const cardHeight = 220;
@@ -121,7 +121,7 @@ export class UpgradePanel {
     
     // 升级名称
     const nameText = new Text({
-      text: upgrade.name,
+      text: upgrade.displayName,
       style: {
         fontFamily: '"Press Start 2P", Arial',
         fontSize: 14,
