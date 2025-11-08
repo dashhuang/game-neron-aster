@@ -25,7 +25,6 @@ export class UpgradeSystem extends System {
     this.updateWhenPaused = true; // 暂停时也要处理升级选择
     this.upgradePanel = upgradePanel;
     this.stage = stage;
-    stage.addChild(upgradePanel.getContainer());
   }
   
   private getOrCreateProgress(world: World): UpgradeProgress {

@@ -34,6 +34,7 @@ import { UpgradePanel } from '../ui/UpgradePanel';
 import { gameData } from '../data/DataLoader';
 import { MenuScreen } from '../ui/MenuScreen';
 import { TalentScreen } from '../ui/TalentScreen';
+import { CompanionSystem } from '../systems/CompanionSystem';
 
 export class GameEngine {
   private app: Application;
@@ -221,7 +222,8 @@ export class GameEngine {
   private registerSystems(): void {
     // 创建升级面板
     const upgradePanel = new UpgradePanel();
-    this.upgradeSystem = new UpgradeSystem(this.app.stage, upgradePanel);
+    this.app.stage.addChild(upgradePanel.getContainer());
+    this.upgradeSystem = new UpgradeSystem(this.gameStage, upgradePanel);
     
     this.world
       .addSystem(this.inputSystem)
@@ -229,6 +231,7 @@ export class GameEngine {
       .addSystem(new AISystem())           // AI 行为在移动前执行
       .addSystem(new ProjectileSystem())   // 子弹行为（追踪、弹跳）
       .addSystem(new MovementSystem())
+      .addSystem(new CompanionSystem())    // 僚机跟随
       .addSystem(new WeaponSystem())
       .addSystem(new CollisionSystem())
       .addSystem(new HealthSystem())
