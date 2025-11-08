@@ -10,11 +10,10 @@ import { gameData } from '../data/DataLoader';
 import { UpgradePanel } from '../ui/UpgradePanel';
 import { StatModifier, addModifier, createStatModifier } from '../components/StatModifier';
 import { Tag } from '../components/Tag';
-import { EntityType } from '../config/constants';
+import { EntityType, SCALE_FACTOR } from '../config/constants';
 import { UpgradeProgress, createUpgradeProgress } from '../components/UpgradeProgress';
 import { createCompanionEntity } from '../entities/Companion';
 import { Companion } from '../components/Companion';
-import { SCALE_FACTOR } from '../config/constants';
 
 export class UpgradeSystem extends System {
   private upgradePanel: UpgradePanel;
@@ -261,23 +260,35 @@ export class UpgradeSystem extends System {
       return;
     }
     
-    const spread = (160 * Math.PI) / 180; // 160° 扇形
-    const startAngle = Math.PI - spread / 2; // 左侧起点
-    const spacing = spread / Math.max(1, desired - 1);
+    const slotAngles = [
+      Math.PI - (160 * Math.PI / 180) / 2,          // 左外侧
+      Math.PI - (160 * Math.PI / 180) / 6,          // 左内侧
+      Math.PI + (160 * Math.PI / 180) / 6,          // 右内侧
+      Math.PI + (160 * Math.PI / 180) / 2,          // 右外侧
+    ];
     const distance = 32 * SCALE_FACTOR;
     const size = 9 * SCALE_FACTOR;
     const color = 0xffd44d;
     const orbitSpeed = 0;
     
-    for (let i = existingCompanions.length; i < desired; i++) {
-      const angle = startAngle + spacing * i;
+    // 先标准化已有僚机的数据（保持槽位不变）
+    existingCompanions.forEach(entity => {
+      const companion = entity.getComponent<Companion>('Companion');
+      if (!companion) return;
+      const slot = Math.max(0, Math.min(slotAngles.length - 1, companion.slot || 0));
+      companion.slot = slot;
+      companion.distance = distance;
+      companion.angle = slotAngles[slot];
+    });
+    
+    for (let slot = existingCompanions.length; slot < desired && slot < slotAngles.length; slot++) {
       createCompanionEntity(world, this.stage, player, {
         distance,
-        angle,
+        angle: slotAngles[slot],
         orbitSpeed,
         color,
         size,
-        slot: i,
+        slot,
       });
     }
   }
