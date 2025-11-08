@@ -9,6 +9,7 @@ import { LevelConfig, WaveConfig, EnemyPoolEntry } from '../data/types/LevelConf
 import { gameData } from '../data/DataLoader';
 import { createEnemyFromConfig } from '../entities/Enemy';
 import { FormationFactory } from '../formations/FormationFactory';
+import { GAME_WIDTH } from '../config/constants';
 
 export class WaveSystem extends System {
   private stage: Container;
