@@ -14,7 +14,7 @@ export interface Weapon extends Component {
   bulletLifetime: number;
   bulletSize: number;  // 子弹大小
   pierce: number;      // 穿透次数
-  bounce: number;      // 弹跳次数
+  chain: number;       // 连锁次数（命中后可自动寻找下一个目标的次数）
 }
 
 export function createWeapon(
@@ -25,7 +25,7 @@ export function createWeapon(
   weaponId: string = 'cannon_basic',
   bulletSize: number = 6,
   pierce: number = 0,
-  bounce: number = 0
+  chain: number = 0
 ): Weapon {
   return {
     type: 'Weapon',
@@ -37,7 +37,7 @@ export function createWeapon(
     bulletLifetime,
     bulletSize,
     pierce,
-    bounce,
+    chain,
   };
 }
 
@@ -55,7 +55,7 @@ export function createWeaponFromConfig(weaponId: string, fireRate: number, damag
     bulletLifetime,
     bulletSize: 6,
     pierce: 0,
-    bounce: 0,
+    chain: 0,
   };
 }
 

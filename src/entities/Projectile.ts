@@ -45,7 +45,7 @@ export function createPlayerBulletFromWeapon(
     weaponConfig.damage,
     weaponConfig.bulletType,
     weaponConfig.pierce || 0,
-    weaponConfig.bounce || 0,
+    (weaponConfig as any).chain ?? (weaponConfig as any).bounce ?? 0,
     weaponConfig.homing
   ));
   

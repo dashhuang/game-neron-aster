@@ -32,6 +32,8 @@ import { UpgradeSystem } from '../systems/UpgradeSystem';
 import { StatModifierSystem } from '../systems/StatModifierSystem';
 import { UpgradePanel } from '../ui/UpgradePanel';
 import { gameData } from '../data/DataLoader';
+import { MenuScreen } from '../ui/MenuScreen';
+import { TalentScreen } from '../ui/TalentScreen';
 
 export class GameEngine {
   private app: Application;
@@ -39,6 +41,9 @@ export class GameEngine {
   private gameStage: Container;
   private inputSystem: InputSystem;
   private upgradeSystem!: UpgradeSystem;
+  private menuScreen?: MenuScreen;
+  private talentScreen?: TalentScreen;
+  private hasGameInitialized: boolean = false;
   
   constructor() {
     // 创建 PixiJS 应用
@@ -70,6 +75,11 @@ export class GameEngine {
       autoDensity: true,
     });
     
+    // 启用指针事件（Pixi v8）
+    this.app.stage.eventMode = 'static';
+    // 设置舞台命中区域，确保全屏可接收指针事件
+    this.app.stage.hitArea = this.app.screen;
+    
     // 挂载到 DOM
     const appDiv = document.getElementById('app');
     if (appDiv) {
@@ -83,23 +93,11 @@ export class GameEngine {
     this.gameStage.sortableChildren = true;
     this.app.stage.addChild(this.gameStage);
     
-    // 创建背景
+    // 创建背景（菜单与游戏共用）
     this.createBackground();
     
-    // 注册系统
-    this.registerSystems();
-    
-    // 创建玩家（使用默认配置）
-    console.log('✈️  创建玩家...');
-    const playerConfig = gameData.getPlayer('fighter_alpha');
-    if (playerConfig) {
-      createPlayer(this.world, this.gameStage, GAME_WIDTH / 2, GAME_HEIGHT - 200, playerConfig);
-    } else {
-      console.error('未找到玩家配置: fighter_alpha');
-    }
-    
-    // 注册事件监听
-    this.setupEventListeners();
+    // 显示主菜单（默认先进入菜单）
+    this.showMenu();
     
     // 启动游戏循环
     this.app.ticker.add((ticker) => {
@@ -129,6 +127,95 @@ export class GameEngine {
     
     bg.zIndex = -1;
     this.gameStage.addChild(bg);
+  }
+  
+  /**
+   * 初始化并进入游戏关卡（测试关卡）
+   */
+  private enterGame(): void {
+    if (this.hasGameInitialized) {
+      // 已经初始化过系统与玩家，仅隐藏菜单
+      this.hideMenu();
+      this.hideTalent();
+      this.world.resume();
+      return;
+    }
+    
+    // 注册系统
+    this.registerSystems();
+    
+    // 创建玩家（使用默认配置）
+    console.log('✈️  创建玩家...');
+    const playerConfig = gameData.getPlayer('fighter_alpha');
+    if (playerConfig) {
+      createPlayer(this.world, this.gameStage, GAME_WIDTH / 2, GAME_HEIGHT - 200, playerConfig);
+    } else {
+      console.error('未找到玩家配置: fighter_alpha');
+    }
+    
+    // 注册事件监听
+    this.setupEventListeners();
+    
+    // 隐藏菜单，开始游戏
+    this.hideMenu();
+    this.hideTalent();
+    this.world.resume();
+    this.hasGameInitialized = true;
+  }
+  
+  /**
+   * 显示主菜单
+   */
+  private showMenu(): void {
+    if (!this.menuScreen) {
+      this.menuScreen = new MenuScreen({
+        onStart: () => {
+          console.log('▶️ 点击：进入游戏');
+          this.enterGame();
+        },
+        onOpenTalent: () => this.showTalent(),
+        onSelectLevel: (_levelId: string) => {
+          // 目前只有一个测试关卡，无需处理
+          console.log('🎯 选择关卡：测试关卡');
+        }
+      });
+      this.app.stage.addChild(this.menuScreen.getContainer());
+    }
+    this.menuScreen.getContainer().visible = true;
+    // 菜单显示时暂停世界更新（若已初始化）
+    this.world.pause();
+  }
+  
+  private hideMenu(): void {
+    if (this.menuScreen) {
+      this.menuScreen.getContainer().visible = false;
+    }
+  }
+  
+  /**
+   * 显示天赋树占位界面
+   */
+  private showTalent(): void {
+    if (!this.talentScreen) {
+      this.talentScreen = new TalentScreen({
+        onBack: () => {
+          this.hideTalent();
+          this.showMenu();
+        }
+      });
+      this.app.stage.addChild(this.talentScreen.getContainer());
+    }
+    this.talentScreen.reset();
+    this.hideMenu();
+    this.talentScreen.getContainer().visible = true;
+    // 停止游戏世界
+    this.world.pause();
+  }
+  
+  private hideTalent(): void {
+    if (this.talentScreen) {
+      this.talentScreen.getContainer().visible = false;
+    }
   }
   
   private registerSystems(): void {
@@ -181,14 +268,14 @@ export class GameEngine {
         bulletSpeed: weapon.bulletSpeed,
         bulletSize: weapon.bulletSize,
         pierce: weapon.pierce,
-        bounce: weapon.bounce,
+        chain: (weapon as any).chain ?? 0,
       };
       
       // 调试输出（仅在有穿透或弹跳时）
-      if (weapon.pierce > 0 || weapon.bounce > 0) {
+      if (weapon.pierce > 0 || (weapon as any).chain > 0) {
         console.log('🔫 创建子弹:', {
           pierce: weapon.pierce,
-          bounce: weapon.bounce,
+          chain: (weapon as any).chain ?? 0,
           damage: weapon.damage
         });
       }
@@ -269,6 +356,7 @@ export class GameEngine {
   }
   
   private update(delta: number): void {
+    // 仅在未暂停时更新世界（World 内部已处理 paused）
     this.world.update(delta);
   }
   

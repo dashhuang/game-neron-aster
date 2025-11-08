@@ -26,10 +26,7 @@ export class ProjectileSystem extends System {
         this.handleHoming(entity, world, delta);
       }
       
-      // 处理弹跳（屏幕边界）
-      if (projectile.bounce > 0) {
-        this.handleBounce(entity, world);
-      }
+      // 弹跳已被连锁替代；边界行为交由 CleanupSystem 处理
       
       // 穿透逻辑在 CollisionSystem 中处理
     }
@@ -103,36 +100,6 @@ export class ProjectileSystem extends System {
     }
   }
   
-  /**
-   * 处理弹跳（屏幕边界）
-   */
-  private handleBounce(entity: any, _world: World): void {
-    const transform = entity.getComponent('Transform') as Transform | undefined;
-    const velocity = entity.getComponent('Velocity') as Velocity | undefined;
-    const projectile = entity.getComponent('Projectile') as Projectile | undefined;
-    
-    if (!transform || !velocity || !projectile) return;
-    
-    let bounced = false;
-    
-    // 左右边界
-    if (transform.x <= 0 || transform.x >= GAME_WIDTH) {
-      velocity.vx *= -1;
-      transform.x = Math.max(0, Math.min(GAME_WIDTH, transform.x));
-      bounced = true;
-    }
-    
-    // 上下边界
-    if (transform.y <= 0 || transform.y >= GAME_HEIGHT) {
-      velocity.vy *= -1;
-      transform.y = Math.max(0, Math.min(GAME_HEIGHT, transform.y));
-      bounced = true;
-    }
-    
-    if (bounced) {
-      projectile.bounce--;
-      // 弹跳次数用完后，下次碰撞边界会被 CleanupSystem 清理
-    }
-  }
+  // 过去的弹跳逻辑已移除
 }
 

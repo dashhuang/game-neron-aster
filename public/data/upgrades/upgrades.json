@@ -57,14 +57,14 @@
       ]
     },
     {
-      "id": "bounce_add",
-      "name": "弹跳子弹",
+      "id": "chain_add",
+      "name": "连锁子弹",
       "rarity": "rare",
-      "tags": ["attack", "bounce"],
+      "tags": ["attack", "chain"],
       "levels": [
-        { "level": 1, "description": "弹跳 +1", "effects": [ { "stat": "bounce", "operation": "add", "value": 1 } ] },
-        { "level": 2, "description": "弹跳 +1", "effects": [ { "stat": "bounce", "operation": "add", "value": 1 } ] },
-        { "level": 3, "description": "弹跳 +1（Max）", "effects": [ { "stat": "bounce", "operation": "add", "value": 1 } ] }
+        { "level": 1, "description": "连锁 +1", "effects": [ { "stat": "chain", "operation": "add", "value": 1 } ] },
+        { "level": 2, "description": "连锁 +1", "effects": [ { "stat": "chain", "operation": "add", "value": 1 } ] },
+        { "level": 3, "description": "连锁 +1（Max）", "effects": [ { "stat": "chain", "operation": "add", "value": 1 } ] }
       ]
     },
     {

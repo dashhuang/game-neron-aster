@@ -56,7 +56,9 @@ export class StatModifierSystem extends System {
         const newBulletSpeed = calculateStat('bulletSpeed', weaponConfig.bulletSpeed, statMod.modifiers);
         const newBulletSize = calculateStat('bulletSize', weaponConfig.bulletSize, statMod.modifiers);
         const newPierce = Math.floor(calculateStat('pierce', weaponConfig.pierce || 0, statMod.modifiers));
-        const newBounce = Math.floor(calculateStat('bounce', weaponConfig.bounce || 0, statMod.modifiers));
+        // 兼容：chain 优先，其次使用旧的 bounce 值
+        const baseChain = (weaponConfig as any).chain ?? (weaponConfig as any).bounce ?? 0;
+        const newChain = Math.floor(calculateStat('chain', baseChain, statMod.modifiers));
         
         // 更新武器属性
         weapon.damage = newDamage;
@@ -64,7 +66,7 @@ export class StatModifierSystem extends System {
         weapon.bulletSpeed = newBulletSpeed;
         weapon.bulletSize = newBulletSize;
         weapon.pierce = newPierce;
-        weapon.bounce = newBounce;
+        (weapon as any).chain = newChain;
         
         // 调试输出（仅在修改器数量变化时）
         if (statMod.modifiers.length !== this.lastModifierCount) {
@@ -74,7 +76,7 @@ export class StatModifierSystem extends System {
             damage: `${weaponConfig.damage} → ${newDamage}`,
             fireRate: `${weaponConfig.fireRate} → ${newFireRate}`,
             pierce: `${weaponConfig.pierce || 0} → ${newPierce}`,
-            bounce: `${weaponConfig.bounce || 0} → ${newBounce}`,
+            chain: `${baseChain} → ${newChain}`,
             bulletSize: `${weaponConfig.bulletSize} → ${newBulletSize}`
           });
         }

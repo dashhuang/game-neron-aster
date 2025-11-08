@@ -78,7 +78,45 @@ export class CollisionSystem extends System {
             console.log(`💥 子弹穿透！剩余穿透次数: ${projectile.pierce}`);
           }
           
-          // 销毁子弹或继续穿透
+          // 如果应销毁但具有连锁次数，则重定向到最近下一个敌人
+          if (shouldDestroy && projectile && projectile.chain > 0) {
+            // 找最近的另一个敌人（不是当前命中的这个）
+            let nearest: any = null;
+            let nearestDist = Number.MAX_VALUE;
+            for (const other of enemies) {
+              if (!other.active || other.id === enemy.id) continue;
+              const ot = other.getComponent<Transform>('Transform');
+              const oc = other.getComponent<Collider>('Collider');
+              if (!ot || !oc) continue;
+              const dx2 = ot.x - bulletTransform.x;
+              const dy2 = ot.y - bulletTransform.y;
+              const d2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+              if (d2 < nearestDist) {
+                nearestDist = d2;
+                nearest = other;
+              }
+            }
+            if (nearest) {
+              const nt = nearest.getComponent('Transform') as Transform | undefined;
+              if (nt) {
+                // 设置新的速度方向，保持当前速度大小
+                const vxvy = bullet.getComponent('Velocity') as any;
+                if (vxvy) {
+                  const speed = Math.sqrt(vxvy.vx * vxvy.vx + vxvy.vy * vxvy.vy) || 1;
+                  const ndx = nt.x - bulletTransform.x;
+                  const ndy = nt.y - bulletTransform.y;
+                  const ndist = Math.sqrt(ndx * ndx + ndy * ndy) || 1;
+                  vxvy.vx = (ndx / ndist) * speed;
+                  vxvy.vy = (ndy / ndist) * speed;
+                }
+                // 递减连锁次数，并允许继续存活
+                projectile.chain--;
+                shouldDestroy = false;
+              }
+            }
+          }
+          
+          // 销毁子弹或继续（穿透/连锁）
           if (shouldDestroy) {
             const bulletRender = bullet.getComponent<Render>('Render');
             if (bulletRender && bulletRender.sprite && bulletRender.sprite.parent) {
@@ -87,7 +125,7 @@ export class CollisionSystem extends System {
             bullet.destroy();
           }
           
-          // 注意：不要 break，让子弹继续检测其他敌人（穿透效果）
+          // 注意：不要 break，让子弹继续检测其他敌人（穿透/连锁效果）
           if (shouldDestroy) break;
         }
       }
