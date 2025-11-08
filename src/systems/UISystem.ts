@@ -427,6 +427,21 @@ export class UISystem extends System {
     // 点击触发升级事件（调试面板）
     this.debugButton.on('pointerdown', () => {
       console.log('🔧 调试：触发升级事件（调试面板）');
+      
+      // 找到玩家并提升等级
+      const players = this.query(world, 'Tag', 'PlayerXP').filter(e => {
+        const tag = e.getComponent<Tag>('Tag');
+        return tag && tag.value === EntityType.PLAYER;
+      });
+      
+      if (players.length > 0) {
+        const playerXP = players[0].getComponent<PlayerXP>('PlayerXP');
+        if (playerXP) {
+          playerXP.level += 1;
+          console.log(`📈 玩家等级提升: Lv.${playerXP.level}`);
+        }
+      }
+      
       world.eventBus.emit(Events.LEVEL_UP, { level: 999, debug: true });
     });
     
