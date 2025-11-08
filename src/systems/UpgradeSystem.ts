@@ -47,16 +47,24 @@ export class UpgradeSystem extends System {
     const maxLevel = group.levels && group.levels.length ? group.levels.length : 1;
     const levelDef: UpgradeLevel | undefined =
       group.levels && group.levels.length >= nextLevel ? group.levels[nextLevel - 1] : undefined;
-    const displayName = nextLevel >= maxLevel
-      ? `${group.name} Lv. ${nextLevel}`
-      : `${group.name} Lv. ${nextLevel}`;
+    // 显示规则：
+    // - nextLevel === 1 -> “名称 New”
+    // - 1 < nextLevel < maxLevel -> “名称 Lv. N”
+    // - nextLevel >= maxLevel -> “名称 Max”
+    let displayName: string;
+    if (nextLevel === 1) {
+      displayName = `${group.name} New`;
+    } else if (nextLevel >= maxLevel) {
+      displayName = `${group.name} Max`;
+    } else {
+      displayName = `${group.name} Lv. ${nextLevel}`;
+    }
     const description = levelDef?.description ?? group.description ?? '';
     const effects: StatEffect[] = levelDef?.effects ?? (group as any).effects ?? [];
-    const isMaxAfterPick = nextLevel >= maxLevel;
     return {
       id: group.id,
       rarity: group.rarity,
-      displayName: isMaxAfterPick ? `${group.name} Max` : displayName,
+      displayName,
       description,
       effects,
       nextLevel,
