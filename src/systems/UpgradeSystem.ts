@@ -14,6 +14,7 @@ import { EntityType } from '../config/constants';
 import { UpgradeProgress, createUpgradeProgress } from '../components/UpgradeProgress';
 import { createCompanionEntity } from '../entities/Companion';
 import { Companion } from '../components/Companion';
+import { SCALE_FACTOR } from '../config/constants';
 
 export class UpgradeSystem extends System {
   private upgradePanel: UpgradePanel;
@@ -237,12 +238,12 @@ export class UpgradeSystem extends System {
   }
   
   private handleSpecialUpgrade(world: World, option: UpgradeOption, progress: UpgradeProgress): void {
-    if (option.id === 'companion_drone' && progress.levels[option.id] === 1) {
-      this.spawnCompanion(world);
+    if (option.id === 'companion_drone') {
+      this.spawnCompanions(world, progress.levels[option.id]);
     }
   }
   
-  private spawnCompanion(world: World): void {
+  private spawnCompanions(world: World, count: number): void {
     const players = world.entities.filter(e => {
       const tag = e.getComponent<Tag>('Tag');
       return tag && tag.value === EntityType.PLAYER && e.active;
@@ -250,21 +251,34 @@ export class UpgradeSystem extends System {
     if (players.length === 0) return;
     const player = players[0];
     
-    const existing = world.entities.find(entity => {
+    const existingCompanions = world.entities.filter(entity => {
       const companion = entity.getComponent<Companion>('Companion');
       return companion && companion.ownerId === player.id;
     });
-    if (existing) {
+    
+    const desired = Math.min(4, count);
+    if (existingCompanions.length >= desired) {
       return;
     }
     
-    createCompanionEntity(world, this.stage, player, {
-      distance: 70,
-      angle: Math.PI / 6,
-      orbitSpeed: 0,
-      color: 0xffd44d,
-      size: 10,
-    });
+    const baseAngles = [Math.PI / 6, -Math.PI / 6, Math.PI / 2.5, -Math.PI / 2.5];
+    const distance = 80 * SCALE_FACTOR;
+    const size = 10 * SCALE_FACTOR;
+    const color = 0xffd44d;
+    const orbitSpeed = 0.4;
+    
+    for (let i = existingCompanions.length; i < desired; i++) {
+      const slot = i;
+      const angle = baseAngles[slot] ?? (Math.PI / 4 + slot * (Math.PI / 6));
+      createCompanionEntity(world, this.stage, player, {
+        distance,
+        angle,
+        orbitSpeed: slot % 2 === 0 ? orbitSpeed : -orbitSpeed,
+        color,
+        size,
+        slot,
+      });
+    }
   }
   
   update(_world: World, _delta: number): void {

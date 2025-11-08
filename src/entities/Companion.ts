@@ -25,9 +25,6 @@ export function createCompanionEntity(
   owner: Entity,
   options: CompanionOptions = {}
 ): Entity | null {
-  const ownerTransform = owner.getComponent('Transform');
-  if (!ownerTransform) return null;
-  
   const distance = options.distance ?? 60 * SCALE_FACTOR;
   const angle = options.angle ?? 0;
   const orbitSpeed = options.orbitSpeed ?? 0;
@@ -40,6 +37,7 @@ export function createCompanionEntity(
   NeonRenderer.drawFilledCircle(sprite, size, color);
   stage.addChild(sprite);
   
+  const ownerTransform = owner.getComponent('Transform');
   const initialX = ownerTransform.x + Math.cos(angle) * distance;
   const initialY = ownerTransform.y + Math.sin(angle) * distance;
   
