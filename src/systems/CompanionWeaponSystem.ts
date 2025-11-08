@@ -38,14 +38,14 @@ export class CompanionWeaponSystem extends System {
       const damage = ownerWeapon.damage * weapon.damageRatio;
       const speed = weapon.bulletSpeed || ownerWeapon.bulletSpeed;
       const size = weapon.bulletSize || ownerWeapon.bulletSize;
-      const directionX = Math.cos(transform.rotation - Math.PI / 2);
-      const directionY = Math.sin(transform.rotation - Math.PI / 2);
+      const directionX = 0;
+      const directionY = -1;
       
       world.eventBus.emit(Events.SHOOT, {
         companion: true,
         ownerId: entity.id,
-        x: transform.x + directionX * size,
-        y: transform.y + directionY * size,
+        x: transform.x,
+        y: transform.y - size,
         directionX,
         directionY,
         damage,

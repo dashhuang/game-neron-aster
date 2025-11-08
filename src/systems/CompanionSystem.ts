@@ -47,7 +47,7 @@ export class CompanionSystem extends System {
       
       transform.x = targetX;
       transform.y = targetY;
-      transform.rotation = finalAngle + Math.PI / 2;
+      transform.rotation = 0;
       
       if (render.sprite) {
         render.sprite.x = targetX;

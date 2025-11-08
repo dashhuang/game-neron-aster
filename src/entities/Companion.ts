@@ -42,8 +42,7 @@ export function createCompanionEntity(
   const bulletSize = options.bulletSize ?? 6;
   
   const entity = world.createEntity();
-  const sprite = new Graphics();
-  NeonRenderer.drawFilledCircle(sprite, size, color);
+  const sprite = NeonRenderer.createCompanion(size, color);
   stage.addChild(sprite);
   
   const ownerTransform = owner.getComponent('Transform');
@@ -51,7 +50,7 @@ export function createCompanionEntity(
   const initialX = ownerTransform.x + Math.cos(angle) * distance;
   const initialY = ownerTransform.y + Math.sin(angle) * distance;
   
-  entity.addComponent(createTransform(initialX, initialY, angle, 1));
+  entity.addComponent(createTransform(initialX, initialY, 0, 1));
   entity.addComponent(createRender(sprite, LAYERS.PLAYER));
   entity.addComponent(createTag(EntityType.PLAYER_COMPANION));
   entity.addComponent(createCompanionComponent(owner.id, distance, angle, orbitSpeed, slot, fireRate, damageRatio, bulletSpeed, bulletSize));

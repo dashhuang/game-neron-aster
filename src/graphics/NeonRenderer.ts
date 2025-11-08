@@ -183,5 +183,14 @@ export class NeonRenderer {
     
     return { outer, inner };
   }
+  
+  /**
+   * 创建僚机（小箭头）
+   */
+  static createCompanion(size: number, color: number = 0xffd44d): Graphics {
+    const graphics = new Graphics();
+    const points = ShapeFactory.createArrow(size);
+    return this.drawPolygon(graphics, points, color);
+  }
 }
 
