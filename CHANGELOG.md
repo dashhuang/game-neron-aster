@@ -16,6 +16,8 @@
 ### 📖 文档
 
 - `ARCHITECTURE.md` 补充暂停机制说明与系统豁免策略
+ - `UPGRADE_SYSTEM.md`/`DATA_CONFIG.md`：新增“分级升级（Levels）”配置与选择逻辑说明
+ - `upgrades.json` 升级为 v1.1.0（分级结构，满级过滤）
 
 ---
 

@@ -198,6 +198,41 @@ public/data/
 
 ---
 
+## 🪪 升级配置（upgrades.json）
+
+### 位置
+`public/data/upgrades/upgrades.json`
+
+### 版本
+- v1.0.0：单级结构（每条升级只有 `effects`）
+- v1.1.0：分级结构（推荐），支持 `levels`、满级过滤和每级自定义描述/效果
+
+### 分级结构（推荐）
+```json
+{
+  "version": "1.1.0",
+  "upgrades": [
+    {
+      "id": "damage_boost",
+      "name": "火力提升",
+      "rarity": "common",
+      "levels": [
+        { "level": 1, "description": "伤害 +10%", "effects": [ { "stat": "damage", "operation": "multiply", "value": 1.10 } ] },
+        { "level": 2, "description": "伤害 +15%", "effects": [ { "stat": "damage", "operation": "multiply", "value": 1.15 } ] },
+        { "level": 3, "description": "伤害 +20%（Max）", "effects": [ { "stat": "damage", "operation": "multiply", "value": 1.20 } ] }
+      ]
+    }
+  ]
+}
+```
+
+### 兼容说明
+- 若某项只有 `effects` 而无 `levels`，会被自动视为 1 级（向后兼容）。
+- 每级 `effects` 为“增量效果”；选择该级时仅新增这一层，不回溯重算。
+- 可在 `levels[].extra` 写入自定义功能数据，配合事件 `upgrade_applied` 实现高级效果。
+
+---
+
 ## 🎮 如何添加新敌人
 
 ### 步骤 1：编辑配置文件

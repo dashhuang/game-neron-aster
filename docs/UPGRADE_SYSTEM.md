@@ -115,6 +115,32 @@ interface StatModifier {
 }
 ```
 
+### 分级配置格式（Levels）
+为支持“Lv. N / Max / 满级过滤 / 每级自定义效果”，升级配置已支持分级结构（兼容旧格式）：
+
+```json
+{
+  "version": "1.1.0",
+  "upgrades": [
+    {
+      "id": "damage_boost",
+      "name": "火力提升",
+      "rarity": "common",
+      "levels": [
+        { "level": 1, "description": "伤害 +10%", "effects": [ { "stat": "damage", "operation": "multiply", "value": 1.10 } ] },
+        { "level": 2, "description": "伤害 +15%", "effects": [ { "stat": "damage", "operation": "multiply", "value": 1.15 } ] },
+        { "level": 3, "description": "伤害 +20%（Max）", "effects": [ { "stat": "damage", "operation": "multiply", "value": 1.20 } ] }
+      ]
+    }
+  ]
+}
+```
+
+实现要点：
+- 旧格式（仅 `effects`）自动视为 1 级（向后兼容）。
+- 每级的 `effects` 表示“增量效果”，选到该级时仅新增这一层，不回溯重算。
+- `levels[].extra` 可用于扩展非数值功能（例如 Max 级的特殊被动），由相关系统监听事件并实现。
+
 ---
 
 ## 🎨 UI 设计
@@ -210,19 +236,26 @@ multiplyValue = 1.1 × 1.1 = 1.21
 
 ---
 
-## 🎯 平衡建议
+## 🧠 选择逻辑与满级过滤
 
-### 数值设计原则
+- 权重：按稀有度加权（普通×7、稀有×2、史诗×1）。
+- 满级：当某升级组的当前等级 ≥ 最大等级，该组不会进入随机池。
+- 展示名：显示为 “名称 Lv. N”；当选到最后一级时展示 “名称 Max”。
+- 应用：按“增量”原则应用当前级别的 effects，不需要回溯计算。
 
-1. **普通升级**：10-15% 提升
-2. **稀有升级**：20-30% 提升或特殊效果
-3. **史诗升级**：50%+ 提升或变革性效果
+---
 
-### 叠加上限
+## 🧩 自定义每级功能
 
-建议设置软上限，避免数值爆炸：
-- 同一属性选择 3-5 次后边际收益递减
-- 或者出现次数限制（maxStacks）
+- 在 `levels[].extra` 中写入自定义数据：
+```json
+{ "level": 3, "description": "Max：命中时小概率爆炸", "effects": [], "extra": { "onHitExplosionChance": 0.15 } }
+```
+- `UpgradeSystem` 在应用后会广播事件：
+```ts
+world.eventBus.emit('upgrade_applied', { id, nextLevel, maxLevel, effects });
+```
+- 建议在对应系统监听该事件，并读取玩家的 `UpgradeProgress` 来启用/禁用功能。
 
 ---
 
@@ -247,7 +280,7 @@ multiplyValue = 1.1 × 1.1 = 1.21
 
 ## 📚 配置字段参考
 
-### UpgradeConfig
+### UpgradeConfig（旧版，已兼容）
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
@@ -257,6 +290,26 @@ multiplyValue = 1.1 × 1.1 = 1.21
 | `rarity` | string | 稀有度：common/rare/epic |
 | `effects` | StatEffect[] | 效果列表 |
 | `tags` | string[] | 标签（可选） |
+
+### UpgradeGroup（新版，推荐）
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | string | 升级组ID（如 `damage_boost`） |
+| `name` | string | 组名 |
+| `rarity` | string | 稀有度：common/rare/epic |
+| `levels` | UpgradeLevel[] | 分级配置（每级 effects/extra） |
+| `tags` | string[] | 标签（可选） |
+
+### UpgradeLevel
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `level` | number | 等级（从1开始） |
+| `name` | string | 可覆盖显示名（可选） |
+| `description` | string | 该级描述（可选） |
+| `effects` | StatEffect[] | 该级“增量”效果 |
+| `extra` | any | 自定义扩展（Max 特殊功能等） |
 
 ### StatEffect
 
@@ -284,6 +337,8 @@ console.log(statMod.modifiers);
 
 ```javascript
 world.eventBus.emit('levelup', { level: 2 });
+```
+
 ### 验证穿透是否生效
 
 1. 在升级面板选择「穿透子弹」。
@@ -292,10 +347,9 @@ world.eventBus.emit('levelup', { level: 2 });
 4. 视觉表现：子弹穿过第1个敌人继续命中第2个，再销毁。
 
 > 实现要点：`CollisionSystem` 只在需要销毁时才中止循环；`Projectile.hitSet` 记录已命中的敌人避免重复结算。
-```
 
 ---
 
-**版本**: 1.0  
-**更新日期**: 2025-11-06
+**版本**: 1.1  
+**更新日期**: 2025-11-08
 
