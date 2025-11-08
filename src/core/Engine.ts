@@ -186,13 +186,13 @@ export class GameEngine {
     if (!this.menuScreen) {
       this.menuScreen = new MenuScreen({
         onStart: () => {
-          this.debug('▶️ 点击：进入游戏');
+          console.log('▶️ 点击：进入游戏');
           this.enterGame();
         },
         onOpenTalent: () => this.showTalent(),
         onSelectLevel: (_levelId: string) => {
-          // 目前只有一个测试关卡，无需处理
-          this.debug('🎯 选择关卡：测试关卡');
+          console.log('🎯 打开关卡选择');
+          this.showLevelSelect();
         }
       });
       this.app.stage.addChild(this.menuScreen.getContainer());
