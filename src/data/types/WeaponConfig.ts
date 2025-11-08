@@ -20,7 +20,8 @@ export interface WeaponConfig {
   
   // 弹道属性（可选）
   pierce?: number;               // 穿透次数（0 = 无穿透）
-  bounce?: number;               // 弹跳次数（0 = 无弹跳）
+  chain?: number;                // 连锁次数（0 = 无连锁）
+  bounce?: number;               // （兼容字段）旧的弹跳次数，将被视为 chain
   spreadCount?: number;          // 散射数量（1 = 单发）
   spreadAngle?: number;          // 散射角度（度）
   

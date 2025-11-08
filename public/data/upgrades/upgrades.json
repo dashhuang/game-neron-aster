@@ -110,6 +110,15 @@
         { "level": 2, "description": "经验获取 +30%", "effects": [ { "stat": "xpGain", "operation": "multiply", "value": 1.30 } ] },
         { "level": 3, "description": "经验获取 +40%（Max）", "effects": [ { "stat": "xpGain", "operation": "multiply", "value": 1.40 } ] }
       ]
+    },
+    {
+      "id": "companion_drone",
+      "name": "僚机支援",
+      "rarity": "epic",
+      "tags": ["support", "drone"],
+      "levels": [
+        { "level": 1, "description": "召唤一架金色僚机，紧贴玩家作战", "effects": [] }
+      ]
     }
   ]
 }

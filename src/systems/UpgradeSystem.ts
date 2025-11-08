@@ -4,6 +4,7 @@
  */
 
 import { System, World } from '../core/ECS';
+import { Container } from 'pixi.js';
 import { UpgradeGroup, UpgradeLevel, StatEffect } from '../data/types/UpgradeConfig';
 import { gameData } from '../data/DataLoader';
 import { UpgradePanel } from '../ui/UpgradePanel';
@@ -11,15 +12,19 @@ import { StatModifier, addModifier, createStatModifier } from '../components/Sta
 import { Tag } from '../components/Tag';
 import { EntityType } from '../config/constants';
 import { UpgradeProgress, createUpgradeProgress } from '../components/UpgradeProgress';
+import { createCompanionEntity } from '../entities/Companion';
+import { Companion } from '../components/Companion';
 
 export class UpgradeSystem extends System {
   private upgradePanel: UpgradePanel;
   private isUpgrading: boolean = false;
+  private stage: Container;
   
-  constructor(stage: any, upgradePanel: UpgradePanel) {
+  constructor(stage: Container, upgradePanel: UpgradePanel) {
     super();
     this.updateWhenPaused = true; // 暂停时也要处理升级选择
     this.upgradePanel = upgradePanel;
+    this.stage = stage;
     stage.addChild(upgradePanel.getContainer());
   }
   
@@ -228,6 +233,39 @@ export class UpgradeSystem extends System {
     
     console.log(`✅ 升级应用: ${option.displayName}`);
     console.log(`📊 当前修改器数量: ${statMod.modifiers.length}，${option.id} 等级 ${prevLevel} → ${prevLevel + 1}`);
+    
+    this.handleSpecialUpgrade(world, option, progress);
+  }
+  
+  private handleSpecialUpgrade(world: World, option: UpgradeOption, progress: UpgradeProgress): void {
+    if (option.id === 'companion_drone' && progress.levels[option.id] === 1) {
+      this.spawnCompanion(world);
+    }
+  }
+  
+  private spawnCompanion(world: World): void {
+    const players = world.entities.filter(e => {
+      const tag = e.getComponent<Tag>('Tag');
+      return tag && tag.value === EntityType.PLAYER && e.active;
+    });
+    if (players.length === 0) return;
+    const player = players[0];
+    
+    const existing = world.entities.find(entity => {
+      const companion = entity.getComponent<Companion>('Companion');
+      return companion && companion.ownerId === player.id;
+    });
+    if (existing) {
+      return;
+    }
+    
+    createCompanionEntity(world, this.stage, player, {
+      distance: 70,
+      angle: Math.PI / 6,
+      orbitSpeed: 0,
+      color: 0xffd44d,
+      size: 10,
+    });
   }
   
   update(_world: World, _delta: number): void {

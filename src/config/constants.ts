@@ -118,6 +118,7 @@ export enum EntityType {
   ENEMY_BULLET = 'enemy_bullet',
   XP_SHARD = 'xp_shard',
   PICKUP = 'pickup',
+  PLAYER_COMPANION = 'player_companion',
 }
 
 // 性能检测
