@@ -15,6 +15,13 @@ export class CompanionSystem extends System {
   update(world: World, delta: number): void {
     const companions = this.query(world, 'Companion', 'Transform', 'Render');
     
+    const baseAngles = [
+      Math.PI + Math.PI / 9,
+      Math.PI - Math.PI / 9,
+      Math.PI + Math.PI / 4,
+      Math.PI - Math.PI / 4,
+    ];
+    
     for (const entity of companions) {
       const companion = entity.getComponent<Companion>('Companion');
       const transform = entity.getComponent<Transform>('Transform');
@@ -31,8 +38,7 @@ export class CompanionSystem extends System {
       if (!ownerTransform) continue;
       
       const slot = companion.slot || 0;
-      const baseAngles = [Math.PI + Math.PI / 6, Math.PI - Math.PI / 6, Math.PI + Math.PI / 3.5, Math.PI - Math.PI / 3.5];
-      const baseAngle = baseAngles[slot] ?? (Math.PI + Math.PI / 8 + slot * (Math.PI / 10));
+      const baseAngle = baseAngles[slot] ?? (Math.PI + Math.PI / 8 + slot * (Math.PI / 12));
       companion.angle = baseAngle;
       
       const finalAngle = companion.angle + ownerTransform.rotation - Math.PI / 2;
