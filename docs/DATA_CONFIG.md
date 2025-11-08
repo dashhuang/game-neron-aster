@@ -231,6 +231,58 @@ public/data/
 - 每级 `effects` 为“增量效果”；选择该级时仅新增这一层，不回溯重算。
 - 可在 `levels[].extra` 写入自定义功能数据，配合事件 `upgrade_applied` 实现高级效果。
 
+### 字段补充
+
+| 字段 | 类型 | 说明 | 示例 |
+|------|------|------|------|
+| `resource` | `"core"｜"star"｜"time"｜"crown"` | 激活/升级消耗的资源类型 | `"core"` |
+| `cost` | number | 每级消耗的资源数量 | `1` |
+| `maxLevel` | number | 允许的最高等级 | `3` |
+| `initialLevel` | number | 初始等级，常用于核心节点或调试 | `1` |
+
+> 资源颜色与说明可参考 `src/data/talents/talentTree.ts` 中的 `TALENT_RESOURCE_META`，前端会根据该映射设置按钮主题颜色。
+
+---
+
+## 🌟 天赋配置（talentTree.ts）
+
+### 位置
+`src/data/talents/talentTree.ts`
+
+### 字段
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | string | 节点唯一 ID |
+| `title` / `description` | string | 名称与详细描述，用于提示卡 |
+| `shortLabel` | string | 节点方块显示的短标签 |
+| `category` | `"core"｜"attack"｜"defense"｜"utility"｜"growth"｜"mobility"` | 分类标签，决定节点主题色 |
+| `resource` | 同升级配置 | 消耗的资源类型 |
+| `cost` | number | 激活/升级所需资源数量 |
+| `maxLevel` | number | 最高等级 |
+| `initialLevel` | number | 初始等级（核心节点通常为 1） |
+| `position` | `{ x: number; y: number }` | 天赋树中的布局坐标（像素） |
+| `connections` | string[] | 可扩散的相邻节点 ID |
+
+### 示例
+
+```ts
+export const TALENT_NODES: TalentNodeConfig[] = [
+  {
+    id: 'def_barrier',
+    title: '磁流护盾',
+    description: '护盾上限 +40，恢复速度 +25%。',
+    shortLabel: 'DEF',
+    category: 'defense',
+    resource: 'crown',
+    cost: 1,
+    maxLevel: 2,
+    position: { x: 470, y: 460 },
+    connections: ['core_origin', 'def_recovery', 'def_guardian']
+  }
+];
+```
+
 ---
 
 ## 🎮 如何添加新敌人
