@@ -113,12 +113,13 @@ export const LAYERS = {
 // 标签/分类
 export enum EntityType {
   PLAYER = 'player',
+  PLAYER_COMPANION = 'player_companion',
   PLAYER_BULLET = 'player_bullet',
   ENEMY = 'enemy',
   ENEMY_BULLET = 'enemy_bullet',
   XP_SHARD = 'xp_shard',
   PICKUP = 'pickup',
-  PLAYER_COMPANION = 'player_companion',
+  COMPANION_BULLET = 'companion_bullet',
 }
 
 // 性能检测

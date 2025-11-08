@@ -71,7 +71,7 @@
 
 | 升级名称 | 效果 | 稀有度 | 说明 |
 |---------|------|--------|------|
-| 僚机支援 | 召唤金色僚机 | 史诗 | 在玩家旁生成僚机 |
+| 僚机支援 | 召唤金色僚机 | 史诗 | 在玩家旁生成僚机（可补齐 4 架） |
 
 ### 视觉系（1种）
 
@@ -273,7 +273,7 @@ world.eventBus.emit('upgrade_applied', { id, nextLevel, maxLevel, effects });
 - 机动：`moveSpeed`（`InputSystem` 读取 `PlayerStats.moveSpeedMultiplier`）
 - 吸附：`magnetRange`（`PickupSystem` 使用玩家与碎片范围的较大值）
 - 成长：`xpGain`（`PickupSystem` 在拾取时按倍率累加经验）
-- 特殊：`僚机支援` 升级会生成僚机实体（`CompanionSystem` 负责跟随玩家）
+- 特殊：`僚机支援` 升级会生成僚机实体（`CompanionSystem` 负责跟随玩家），僚机自带武器（`fireRate`=3/s，伤害为主武器 50%，子弹速度与体积可在升级配置的 `extra` 中调整）
 
 ---
 

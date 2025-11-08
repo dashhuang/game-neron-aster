@@ -7,6 +7,7 @@ import { createTransform } from '../components/Transform';
 import { createRender } from '../components/Render';
 import { createTag } from '../components/Tag';
 import { createCompanionComponent } from '../components/Companion';
+import { createCompanionWeapon } from '../components/CompanionWeapon';
 import { EntityType, LAYERS, COLORS, SCALE_FACTOR } from '../config/constants';
 import { NeonRenderer } from '../graphics/NeonRenderer';
 
@@ -17,6 +18,10 @@ interface CompanionOptions {
   slot?: number;
   color?: number;
   size?: number;
+  fireRate?: number;
+  damageRatio?: number;
+  bulletSpeed?: number;
+  bulletSize?: number;
 }
 
 export function createCompanionEntity(
@@ -25,12 +30,16 @@ export function createCompanionEntity(
   owner: Entity,
   options: CompanionOptions = {}
 ): Entity | null {
-  const distance = options.distance ?? 75 * SCALE_FACTOR;
+  const distance = options.distance ?? 32 * SCALE_FACTOR;
   const angle = options.angle ?? 0;
   const orbitSpeed = options.orbitSpeed ?? 0;
   const slot = options.slot ?? 0;
   const color = options.color ?? 0xffd44d;
   const size = options.size ?? 9 * SCALE_FACTOR;
+  const fireRate = options.fireRate ?? 3;
+  const damageRatio = options.damageRatio ?? 0.5;
+  const bulletSpeed = options.bulletSpeed ?? 900;
+  const bulletSize = options.bulletSize ?? 6;
   
   const entity = world.createEntity();
   const sprite = new Graphics();
@@ -45,7 +54,8 @@ export function createCompanionEntity(
   entity.addComponent(createTransform(initialX, initialY, angle, 1));
   entity.addComponent(createRender(sprite, LAYERS.PLAYER));
   entity.addComponent(createTag(EntityType.PLAYER_COMPANION));
-  entity.addComponent(createCompanionComponent(owner.id, distance, angle, orbitSpeed, slot));
+  entity.addComponent(createCompanionComponent(owner.id, distance, angle, orbitSpeed, slot, fireRate, damageRatio, bulletSpeed, bulletSize));
+  entity.addComponent(createCompanionWeapon(owner.id, fireRate, damageRatio, bulletSpeed, bulletSize));
   
   return entity;
 }

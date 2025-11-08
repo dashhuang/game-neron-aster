@@ -117,10 +117,10 @@
       "rarity": "epic",
       "tags": ["support", "drone"],
       "levels": [
-        { "level": 1, "description": "召唤僚机 (1/4)", "effects": [] },
-        { "level": 2, "description": "僚机数量 +1 (2/4)", "effects": [] },
-        { "level": 3, "description": "僚机数量 +1 (3/4)", "effects": [] },
-        { "level": 4, "description": "僚机数量 +1 (4/4)（Max）", "effects": [] }
+        { "level": 1, "description": "召唤僚机 (1/4)", "effects": [], "extra": { "fireRate": 3, "damageRatio": 0.5, "bulletSpeed": 900, "bulletSize": 6 } },
+        { "level": 2, "description": "僚机数量 +1 (2/4)", "effects": [], "extra": { "fireRate": 3, "damageRatio": 0.5, "bulletSpeed": 900, "bulletSize": 6 } },
+        { "level": 3, "description": "僚机数量 +1 (3/4)", "effects": [], "extra": { "fireRate": 3, "damageRatio": 0.5, "bulletSpeed": 900, "bulletSize": 6 } },
+        { "level": 4, "description": "僚机数量 +1 (4/4)（Max）", "effects": [], "extra": { "fireRate": 3, "damageRatio": 0.5, "bulletSpeed": 900, "bulletSize": 6 } }
       ]
     }
   ]

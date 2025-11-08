@@ -35,6 +35,9 @@ import { gameData } from '../data/DataLoader';
 import { MenuScreen } from '../ui/MenuScreen';
 import { TalentScreen } from '../ui/TalentScreen';
 import { CompanionSystem } from '../systems/CompanionSystem';
+import { CompanionWeaponSystem } from '../systems/CompanionWeaponSystem';
+import { createCompanionBullet } from '../entities/CompanionBullet';
+import { EntityType } from '../entities/Entity';
 
 export class GameEngine {
   private app: Application;
@@ -232,6 +235,7 @@ export class GameEngine {
       .addSystem(new ProjectileSystem())   // 子弹行为（追踪、弹跳）
       .addSystem(new MovementSystem())
       .addSystem(new CompanionSystem())    // 僚机跟随
+      .addSystem(new CompanionWeaponSystem()) // 僚机射击
       .addSystem(new WeaponSystem())
       .addSystem(new CollisionSystem())
       .addSystem(new HealthSystem())
@@ -251,6 +255,10 @@ export class GameEngine {
   private setupEventListeners(): void {
     // 监听射击事件
     this.world.eventBus.on(Events.SHOOT, (data) => {
+      if (data.companion) {
+        createCompanionBullet(this.world, this.gameStage, data);
+        return;
+      }
       // 找到玩家，使用修改后的武器属性
       const player = this.world.entities.find(e => e.id === data.ownerId);
       if (!player) return;
@@ -288,7 +296,15 @@ export class GameEngine {
         this.gameStage,
         data.x,
         data.y,
-        bulletConfig as any
+        {
+          ...bulletConfig,
+          damage: baseConfig.damage * (data.damageMultiplier ?? 1),
+          bulletSpeed: data.bulletSpeed ?? weapon.bulletSpeed,
+          bulletSize: data.bulletSize ?? weapon.bulletSize,
+        } as any,
+        data.directionX,
+        data.directionY,
+        data.tag ?? EntityType.PLAYER_BULLET
       );
     });
     

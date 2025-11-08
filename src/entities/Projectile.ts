@@ -23,7 +23,10 @@ export function createPlayerBulletFromWeapon(
   stage: Container, 
   x: number, 
   y: number,
-  weaponConfig: WeaponConfig
+  weaponConfig: WeaponConfig,
+  directionX: number = 0,
+  directionY: number = -1,
+  tag: EntityType = EntityType.PLAYER_BULLET
 ): Entity {
   const entity = world.createEntity();
   
@@ -34,10 +37,10 @@ export function createPlayerBulletFromWeapon(
   
   // 添加组件（使用武器配置）
   entity.addComponent(createTransform(x, y, 0, 1));
-  entity.addComponent(createVelocity(0, -weaponConfig.bulletSpeed)); // 向上飞行
+  entity.addComponent(createVelocity(directionX * weaponConfig.bulletSpeed, directionY * weaponConfig.bulletSpeed)); // 向上飞行
   entity.addComponent(createCollider(weaponConfig.bulletSize, 'bullet'));
   entity.addComponent(createRender(sprite, LAYERS.PLAYER_BULLETS));
-  entity.addComponent(createTag(EntityType.PLAYER_BULLET));
+  entity.addComponent(createTag(tag));
   entity.addComponent(createLifetime(weaponConfig.bulletLifetime));
   
   // 添加 Projectile 组件（包含伤害、穿透等）

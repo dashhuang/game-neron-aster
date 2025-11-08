@@ -3,7 +3,7 @@
  * 处理升级池、随机选择和升级应用
  */
 
-import { System, World } from '../core/ECS';
+import { System, World, Entity } from '../core/ECS';
 import { Container } from 'pixi.js';
 import { UpgradeGroup, UpgradeLevel, StatEffect } from '../data/types/UpgradeConfig';
 import { gameData } from '../data/DataLoader';
@@ -14,6 +14,14 @@ import { EntityType, SCALE_FACTOR } from '../config/constants';
 import { UpgradeProgress, createUpgradeProgress } from '../components/UpgradeProgress';
 import { createCompanionEntity } from '../entities/Companion';
 import { Companion } from '../components/Companion';
+import { CompanionWeapon } from '../components/CompanionWeapon';
+
+interface CompanionConfig {
+  fireRate?: number;
+  damageRatio?: number;
+  bulletSpeed?: number;
+  bulletSize?: number;
+}
 
 export class UpgradeSystem extends System {
   private upgradePanel: UpgradePanel;
@@ -74,7 +82,7 @@ export class UpgradeSystem extends System {
       nextLevel,
       maxLevel,
       tags: group.tags,
-      probability: undefined,
+      extra: levelDef?.extra,
     };
   }
   
@@ -233,33 +241,16 @@ export class UpgradeSystem extends System {
     console.log(`✅ 升级应用: ${option.displayName}`);
     console.log(`📊 当前修改器数量: ${statMod.modifiers.length}，${option.id} 等级 ${prevLevel} → ${prevLevel + 1}`);
     
-    this.handleSpecialUpgrade(world, option, progress);
+    this.handleSpecialUpgrade(world, player, option, progress);
   }
   
-  private handleSpecialUpgrade(world: World, option: UpgradeOption, progress: UpgradeProgress): void {
+  private handleSpecialUpgrade(world: World, player: Entity, option: UpgradeOption, progress: UpgradeProgress): void {
     if (option.id === 'companion_drone') {
-      this.spawnCompanions(world, progress.levels[option.id]);
+      this.spawnCompanions(world, player, progress.levels[option.id], option.extra as CompanionConfig | undefined);
     }
   }
   
-  private spawnCompanions(world: World, count: number): void {
-    const players = world.entities.filter(e => {
-      const tag = e.getComponent<Tag>('Tag');
-      return tag && tag.value === EntityType.PLAYER && e.active;
-    });
-    if (players.length === 0) return;
-    const player = players[0];
-    
-    const existingCompanions = world.entities.filter(entity => {
-      const companion = entity.getComponent<Companion>('Companion');
-      return companion && companion.ownerId === player.id;
-    });
-    
-    const desired = Math.min(4, count);
-    if (existingCompanions.length >= desired) {
-      return;
-    }
-    
+  private spawnCompanions(world: World, player: Entity, count: number, config?: CompanionConfig): void {
     const slotAngles = [
       Math.PI - (160 * Math.PI / 180) / 2,
       Math.PI - (160 * Math.PI / 180) / 6,
@@ -267,19 +258,35 @@ export class UpgradeSystem extends System {
       Math.PI + (160 * Math.PI / 180) / 2,
     ];
     const slotSequence = [1, 2, 0, 3];
-    const distance = 32 * SCALE_FACTOR;
-    const size = 9 * SCALE_FACTOR;
-    const color = 0xffd44d;
-    const orbitSpeed = 0;
+    const defaults = {
+      distance: 32 * SCALE_FACTOR,
+      fireRate: config?.fireRate ?? 3,
+      damageRatio: config?.damageRatio ?? 0.5,
+      bulletSpeed: config?.bulletSpeed ?? 900,
+      bulletSize: config?.bulletSize ?? 6,
+      color: 0xffd44d,
+      size: 9 * SCALE_FACTOR,
+    };
+    const desired = Math.min(slotAngles.length, count);
+    
+    const existingCompanions = world.entities.filter(entity => {
+      const companion = entity.getComponent<Companion>('Companion');
+      return companion && companion.ownerId === player.id;
+    });
     
     const existingSlots = new Set<number>();
     existingCompanions.forEach(entity => {
       const companion = entity.getComponent<Companion>('Companion');
-      if (!companion) return;
+      const weapon = entity.getComponent<CompanionWeapon>('CompanionWeapon');
+      if (!companion || !weapon) return;
       const slot = Math.max(0, Math.min(slotAngles.length - 1, companion.slot || 0));
       companion.slot = slot;
-      companion.distance = distance;
+      companion.distance = defaults.distance;
       companion.angle = slotAngles[slot];
+      weapon.fireRate = defaults.fireRate;
+      weapon.damageRatio = defaults.damageRatio;
+      weapon.bulletSpeed = defaults.bulletSpeed;
+      weapon.bulletSize = defaults.bulletSize;
       existingSlots.add(slot);
     });
     
@@ -287,11 +294,15 @@ export class UpgradeSystem extends System {
       if (existingSlots.size >= desired) break;
       if (!existingSlots.has(slot) && slot < slotAngles.length) {
         createCompanionEntity(world, this.stage, player, {
-          distance,
+          distance: defaults.distance,
           angle: slotAngles[slot],
-          orbitSpeed,
-          color,
-          size,
+          orbitSpeed: 0,
+          color: defaults.color,
+          size: defaults.size,
+          fireRate: defaults.fireRate,
+          damageRatio: defaults.damageRatio,
+          bulletSpeed: defaults.bulletSpeed,
+          bulletSize: defaults.bulletSize,
           slot,
         });
         existingSlots.add(slot);
@@ -322,5 +333,6 @@ export interface UpgradeOption {
   maxLevel: number;
   tags?: string[];
   probability?: number;
+  extra?: unknown;
 }
 
