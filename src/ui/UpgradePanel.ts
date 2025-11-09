@@ -271,9 +271,9 @@ export class UpgradePanel {
    */
   private getRarityColor(rarity: string): number {
     switch (rarity) {
-      case 'common': return 0x888888;  // 灰色
-      case 'rare': return 0xaa44ff;    // 紫色
-      case 'epic': return 0xffaa00;    // 金色
+      case 'common': return COLORS.UI_PRIMARY;      // 霓虹蓝
+      case 'rare': return COLORS.NEON_PURPLE;       // 霓虹紫
+      case 'epic': return COLORS.NEON_GOLD;         // 霓虹金
       default: return 0xffffff;
     }
   }

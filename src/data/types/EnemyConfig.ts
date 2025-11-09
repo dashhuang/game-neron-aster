@@ -15,7 +15,7 @@ export interface EnemyConfig {
   
   // 视觉属性
   size: number;                  // 尺寸（半径）
-  color: number;                 // 颜色（十六进制，如 0x44ddff）
+  color: number;                 // 颜色（十进制，如47359=0x00b8ff霓虹蓝）
   shape: 'hexagon' | 'triangle' | 'diamond' | 'star'; // 形状类型
   
   // 掉落与奖励

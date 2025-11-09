@@ -163,7 +163,7 @@ export class TalentScreen {
       style: {
         fontFamily: '"Press Start 2P", Arial',
         fontSize: 12,
-        fill: 0xa8bbff
+        fill: COLORS.NEON_BLUE
       }
     });
     title.x = 18;

@@ -178,7 +178,7 @@ export class UISystem extends System {
     // 经验条背景
     this.xpBarBg = new Graphics();
     this.xpBarBg.rect(20, 60, 200, 8);
-    this.xpBarBg.fill({ color: 0x333333, alpha: 0.6 });
+    this.xpBarBg.fill({ color: 0x1a1a2e, alpha: 0.6 });
     this.uiContainer.addChild(this.xpBarBg);
     
     // 经验条
@@ -195,7 +195,7 @@ export class UISystem extends System {
       style: {
         fontFamily: '"Press Start 2P", "Courier New", "Consolas", monospace',
         fontSize: 20,  // 爱心大号
-        fill: 0xff5555,
+        fill: COLORS.DAMAGE_TEXT,
         fontWeight: 'normal',
         stroke: { color: 0x000000, width: 3 },
       }
@@ -209,7 +209,7 @@ export class UISystem extends System {
       style: {
         fontFamily: '"Press Start 2P", "Courier New", "Consolas", monospace',
         fontSize: 20,  // 数字与爱心同样大小
-        fill: 0xff5555,
+        fill: COLORS.DAMAGE_TEXT,
         fontWeight: 'normal',
         stroke: { color: 0x000000, width: 3 },
         letterSpacing: 0.5,
@@ -255,7 +255,7 @@ export class UISystem extends System {
       style: {
         fontFamily: 'Arial',
         fontSize: 60,
-        fill: COLORS.ENEMY_BOSS,
+        fill: COLORS.DAMAGE_TEXT,
         fontWeight: 'bold',
         align: 'center',
       }

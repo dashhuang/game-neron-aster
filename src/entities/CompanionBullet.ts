@@ -24,7 +24,7 @@ interface CompanionShootData {
 
 export function createCompanionBullet(world: World, stage: Container, data: CompanionShootData) {
   const entity = world.createEntity();
-  const sprite = NeonRenderer.createPlayerBullet(data.bulletSize);
+  const sprite = NeonRenderer.createCompanionBullet(data.bulletSize);
   stage.addChild(sprite);
   
   entity.addComponent(createTransform(data.x, data.y, Math.atan2(data.directionY, data.directionX) + Math.PI / 2, 1));

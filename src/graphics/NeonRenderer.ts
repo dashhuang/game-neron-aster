@@ -125,7 +125,7 @@ export class NeonRenderer {
   }
   
   /**
-   * 创建玩家飞船（绿色三角形/箭头）
+   * 创建玩家飞船（霓虹蓝箭头）
    */
   static createPlayer(size: number = 20): Graphics {
     const graphics = new Graphics();
@@ -134,7 +134,7 @@ export class NeonRenderer {
   }
   
   /**
-   * 创建玩家子弹（白色圆形）
+   * 创建玩家子弹（浅蓝圆形）
    */
   static createPlayerBullet(size: number = 6): Graphics {
     const graphics = new Graphics();
@@ -142,18 +142,26 @@ export class NeonRenderer {
   }
   
   /**
+   * 创建僚机子弹（淡青圆形）
+   */
+  static createCompanionBullet(size: number = 6): Graphics {
+    const graphics = new Graphics();
+    return this.drawFilledCircle(graphics, size, COLORS.COMPANION_BULLET);
+  }
+  
+  /**
    * 创建六边形敌人
    */
-  static createHexEnemy(size: number = 16, color: number = COLORS.ENEMY_BASIC): Graphics {
+  static createHexEnemy(size: number = 16, color: number = COLORS.ENEMY_HEXAGON): Graphics {
     const graphics = new Graphics();
     const points = ShapeFactory.createHexagon(size);
     return this.drawPolygon(graphics, points, color);
   }
   
   /**
-   * 创建箭头敌人
+   * 创建箭头敌人（三角形）
    */
-  static createArrowEnemy(size: number = 12, color: number = COLORS.ENEMY_BASIC): Graphics {
+  static createArrowEnemy(size: number = 12, color: number = COLORS.ENEMY_TRIANGLE): Graphics {
     const graphics = new Graphics();
     const points = ShapeFactory.createTriangle(size);
     return this.drawPolygon(graphics, points, color);
@@ -187,7 +195,7 @@ export class NeonRenderer {
   /**
    * 创建僚机（小箭头）
    */
-  static createCompanion(size: number, color: number = 0xffd44d): Graphics {
+  static createCompanion(size: number, color: number = COLORS.COMPANION): Graphics {
     const graphics = new Graphics();
     const points = ShapeFactory.createArrow(size);
     return this.drawPolygon(graphics, points, color);

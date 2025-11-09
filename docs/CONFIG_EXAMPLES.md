@@ -2,6 +2,8 @@
 
 本文档提供各种游戏内容的配置示例，帮助你快速上手。
 
+**⚠️ 重要颜色规范**：所有示例中的颜色值必须遵循 [颜色设计规范](COLOR_DESIGN.md)。敌人颜色由形状决定，不可随意更改。
+
 ---
 
 ## 👾 敌人配置示例
@@ -17,7 +19,7 @@
   "speed": 30,
   "damage": 12,
   "size": 20,
-  "color": 17886,
+  "color": 47359,
   "shape": "hexagon",
   "xpDrop": 5,
   "aiType": "straight_down",
@@ -34,7 +36,7 @@
   "speed": 180,
   "damage": 6,
   "size": 10,
-  "color": 16728200,
+  "color": 16711816,
   "shape": "triangle",
   "xpDrop": 1,
   "aiType": "straight_down",
@@ -61,7 +63,7 @@
 }
 ```
 
-#### 星形 - 追踪型
+#### 星形 - 追踪型（特殊敌人，使用紫色）
 ```json
 {
   "id": "star_hunter",
@@ -70,7 +72,7 @@
   "speed": 80,
   "damage": 15,
   "size": 18,
-  "color": 16724804,
+  "color": 11158783,
   "shape": "star",
   "xpDrop": 6,
   "aiType": "tracking",
@@ -222,7 +224,7 @@
   "magnetRange": 120,
   "magnetSpeed": 200,
   "size": 20,
-  "color": 65416,
+  "color": 47359,
   "shape": "arrow",
   "levelUpXPBase": 10,
   "levelUpXPScale": 1.5
@@ -241,7 +243,7 @@
   "magnetRange": 100,
   "magnetSpeed": 250,
   "size": 18,
-  "color": 17886,
+  "color": 47359,
   "shape": "arrow",
   "levelUpXPBase": 12,
   "levelUpXPScale": 1.6
@@ -260,7 +262,7 @@
   "magnetRange": 140,
   "magnetSpeed": 180,
   "size": 24,
-  "color": 16724804,
+  "color": 47359,
   "shape": "arrow",
   "levelUpXPBase": 15,
   "levelUpXPScale": 1.4
@@ -364,19 +366,26 @@
 
 ---
 
-## 🎨 配色方案
+## 🎨 配色方案（基于Logo设计）
+
+**⚠️ 严格遵守**：所有颜色使用必须符合 [颜色设计规范](COLOR_DESIGN.md)
 
 ### 霓虹配色参考
 
 | 用途 | 颜色名 | 十六进制 | 十进制 |
 |------|--------|----------|--------|
-| 玩家 | 霓虹绿 | 0x00ff88 | 65416 |
-| 基础敌人 | 霓虹青 | 0x44ddff | 17886 |
-| 快速敌人 | 霓虹粉 | 0xff4488 | 16728200 |
-| 精英敌人 | 霓虹紫 | 0xaa44ff | 11158783 |
-| Boss | 霓虹红 | 0xff3344 | 16724804 |
-| 经验 | 霓虹黄 | 0xffdd44 | 16768324 |
-| UI | 霓虹蓝 | 0x44ddff | 17886 |
+| 玩家飞机 | 霓虹蓝 | 0x00b8ff | 47359 |
+| 玩家子弹 | 浅蓝 | 0x88ddff | 8969727 |
+| 僚机 | 霓虹青 | 0x00ddff | 56831 |
+| 六边形敌人 | 霓虹蓝 | 0x00b8ff | 47359 |
+| 三角形敌人 | 霓虹粉 | 0xff0088 | 16711816 |
+| 方形敌人 | 霓虹紫 | 0xaa44ff | 11158783 |
+| 圆形敌人 | 霓虹青 | 0x00ddff | 56831 |
+| Boss | 霓虹粉 | 0xff0088 | 16711816 |
+| 经验碎片 | 霓虹金 | 0xffdd44 | 16768324 |
+| 治疗包 | 霓虹绿 | 0x00ff88 | 65416 |
+| 爆炸特效 | 霓虹橙 | 0xff8844 | 16746564 |
+| 主UI | 霓虹蓝 | 0x00b8ff | 47359 |
 
 ---
 

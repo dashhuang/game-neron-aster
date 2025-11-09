@@ -24,7 +24,7 @@ export interface PlayerConfig {
   
   // 视觉属性
   size: number;                  // 尺寸
-  color: number;                 // 颜色
+  color: number;                 // 颜色（十进制，必须使用霓虹蓝47359）
   shape: 'arrow' | 'triangle' | 'custom'; // 形状
   
   // 成长属性（可选）

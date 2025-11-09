@@ -10,7 +10,7 @@ import { gameData } from '../data/DataLoader';
 import { UpgradePanel } from '../ui/UpgradePanel';
 import { StatModifier, addModifier, createStatModifier } from '../components/StatModifier';
 import { Tag } from '../components/Tag';
-import { EntityType, SCALE_FACTOR } from '../config/constants';
+import { EntityType, SCALE_FACTOR, COLORS } from '../config/constants';
 import { UpgradeProgress, createUpgradeProgress } from '../components/UpgradeProgress';
 import { createCompanionEntity } from '../entities/Companion';
 import { Companion } from '../components/Companion';
@@ -264,7 +264,7 @@ export class UpgradeSystem extends System {
       damageRatio: config?.damageRatio ?? 0.5,
       bulletSpeed: config?.bulletSpeed ?? 900,
       bulletSize: config?.bulletSize ?? 6,
-      color: 0xffd44d,
+      color: COLORS.COMPANION,
       size: 9 * SCALE_FACTOR,
     };
     const desired = Math.min(slotAngles.length, count);

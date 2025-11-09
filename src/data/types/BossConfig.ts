@@ -15,7 +15,7 @@ export interface BossEnemyConfig {
   
   // 视觉属性
   size: number;                  // 尺寸
-  color: number;                 // 颜色
+  color: number;                 // 颜色（十进制，必须使用霓虹粉16711816）
   shape: string;                 // 形状
   
   // Boss 特性

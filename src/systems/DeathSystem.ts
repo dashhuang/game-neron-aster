@@ -63,7 +63,7 @@ export class DeathSystem extends System {
           
         } else if (tag.value === EntityType.PLAYER) {
           // 玩家死亡：爆炸效果
-          const playerColor = COLORS.PLAYER; // 绿色
+          const playerColor = COLORS.PLAYER; // 霓虹蓝
           const playerData = entity.getComponent('PlayerData') as PlayerData | undefined;
           
           // 从配置读取爆炸效果

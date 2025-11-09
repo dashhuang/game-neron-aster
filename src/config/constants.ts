@@ -10,32 +10,61 @@ export const GAME_HEIGHT = 1280;
 // 全局尺寸缩放系数（1.3 = 放大30%）
 export const SCALE_FACTOR = 1.3;
 
-// 颜色方案（霓虹配色）
+// 颜色方案（霓虹配色 - 基于Logo设计）
+// 详细规范参考: docs/COLOR_DESIGN.md
 export const COLORS = {
-  // 背景
-  BACKGROUND: 0x0a0a15,
-  BACKGROUND_DARK: 0x050508,
+  // === 主色调 ===
+  NEON_BLUE: 0x00b8ff,      // 霓虹蓝 - 主角、主UI
+  NEON_MAGENTA: 0xff0088,   // 霓虹粉 - 敌人、警告
+  NEON_PURPLE: 0xaa44ff,    // 霓虹紫 - Boss、精英
+  NEON_ORANGE: 0xff8844,    // 霓虹橙 - 爆炸、危险
+  NEON_GOLD: 0xffdd44,      // 霓虹金 - 奖励、经验
+  NEON_GREEN: 0x00ff88,     // 霓虹绿 - 治疗、增益
+  NEON_CYAN: 0x00ddff,      // 霓虹青 - 辅助、次要
   
-  // 实体颜色
-  PLAYER: 0x00ff88,      // 绿色 - 玩家
-  PLAYER_BULLET: 0xffffff, // 白色 - 玩家子弹
+  // === 玩家系统 ===
+  PLAYER: 0x00b8ff,         // 玩家飞机 - 霓虹蓝
+  PLAYER_BULLET: 0x88ddff,  // 玩家子弹 - 浅蓝
+  COMPANION: 0x00ddff,      // 僚机 - 霓虹青
+  COMPANION_BULLET: 0x66ccff, // 僚机子弹 - 淡青
   
-  ENEMY_BASIC: 0xffffff,   // 白色 - 基础敌人
-  ENEMY_HEX: 0x44ddff,     // 青色 - 六边形敌人（霓虹蓝）
-  ENEMY_ARROW: 0xff4488,   // 粉色 - 箭头敌人（霓虹粉）
-  ENEMY_ELITE: 0xaa44ff,   // 紫色 - 精英敌人
-  ENEMY_BOSS: 0xff3344,    // 红色 - Boss
+  // === 敌人系统（按形状分类）===
+  ENEMY_HEXAGON: 0x00b8ff,  // 六边形敌人 - 霓虹蓝
+  ENEMY_TRIANGLE: 0xff0088, // 三角形敌人 - 霓虹粉
+  ENEMY_SQUARE: 0xaa44ff,   // 方形敌人 - 霓虹紫
+  ENEMY_CIRCLE: 0x00ddff,   // 圆形敌人 - 霓虹青
   
-  XP_SHARD: 0xffdd44,      // 黄色 - 经验碎片
-  HEAL: 0x44ff88,          // 绿色 - 治疗
+  // 兼容旧代码的别名（逐步废弃）
+  ENEMY_BASIC: 0xffffff,    // @deprecated 使用形状特定颜色
+  ENEMY_HEX: 0x00b8ff,      // @deprecated 使用 ENEMY_HEXAGON
+  ENEMY_ARROW: 0xff0088,    // @deprecated 使用 ENEMY_TRIANGLE
+  ENEMY_ELITE: 0xaa44ff,    // @deprecated 使用 ENEMY_SQUARE
+  ENEMY_BOSS: 0xff0088,     // @deprecated 使用 BOSS_PRIMARY
   
-  DAMAGE_TEXT: 0xff5555,   // 红色 - 伤害数字
-  HEAL_TEXT: 0x55ff88,     // 绿色 - 治疗数字
+  // === Boss系统 ===
+  BOSS_PRIMARY: 0xff0088,   // Boss主体 - 霓虹粉
+  BOSS_GLOW: 0xaa44ff,      // Boss发光 - 霓虹紫
+  BOSS_BULLET: 0xff44aa,    // Boss子弹 - 粉紫混合
   
-  // UI 颜色
-  UI_PRIMARY: 0x44ddff,    // 青色 - 主UI
-  UI_PROGRESS: 0x00ff88,   // 绿色 - 进度条
-  UI_WARNING: 0xff8844,    // 橙色 - 警告
+  // === 拾取物与奖励 ===
+  XP_SHARD: 0xffdd44,       // 经验碎片 - 霓虹金
+  HEAL: 0x00ff88,           // 治疗包 - 霓虹绿
+  POWERUP: 0xaa44ff,        // 特殊道具 - 霓虹紫
+  
+  // === UI颜色 ===
+  UI_PRIMARY: 0x00b8ff,     // 主UI元素 - 霓虹蓝
+  UI_SECONDARY: 0xff0088,   // 次要UI元素 - 霓虹粉
+  UI_PROGRESS: 0x00b8ff,    // 进度条 - 霓虹蓝
+  UI_WARNING: 0xff8844,     // 警告信息 - 霓虹橙
+  
+  // === 特效颜色 ===
+  DAMAGE_TEXT: 0xff0088,    // 伤害数字 - 霓虹粉
+  HEAL_TEXT: 0x00ff88,      // 治疗数字 - 霓虹绿
+  EXPLOSION: 0xff8844,      // 爆炸效果 - 霓虹橙
+  
+  // === 背景颜色 ===
+  BACKGROUND: 0x0a0a15,     // 主背景 - 深空
+  BACKGROUND_DARK: 0x050508, // 暗部背景 - 深黑
 };
 
 // 渲染配置

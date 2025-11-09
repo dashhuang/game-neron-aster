@@ -252,10 +252,10 @@ export class LevelSelectScreen {
   
   private getLevelTypeColor(type: string): number {
     switch (type) {
-      case 'timed': return 0x44ddff;      // 青色
-      case 'endless': return 0xaa44ff;    // 紫色
-      case 'boss': return 0xff3344;       // 红色
-      case 'survival': return 0xffaa00;   // 金色
+      case 'timed': return COLORS.NEON_CYAN;      // 霓虹青
+      case 'endless': return COLORS.NEON_PURPLE;  // 霓虹紫
+      case 'boss': return COLORS.NEON_MAGENTA;    // 霓虹粉
+      case 'survival': return COLORS.NEON_GOLD;   // 霓虹金
       default: return 0xffffff;
     }
   }

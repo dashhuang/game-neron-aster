@@ -8,7 +8,7 @@ import { createRender } from '../components/Render';
 import { createTag } from '../components/Tag';
 import { createCompanionComponent } from '../components/Companion';
 import { createCompanionWeapon } from '../components/CompanionWeapon';
-import { EntityType, LAYERS, SCALE_FACTOR } from '../config/constants';
+import { EntityType, LAYERS, SCALE_FACTOR, COLORS } from '../config/constants';
 import { NeonRenderer } from '../graphics/NeonRenderer';
 
 interface CompanionOptions {
@@ -34,7 +34,7 @@ export function createCompanionEntity(
   const angle = options.angle ?? 0;
   const orbitSpeed = options.orbitSpeed ?? 0;
   const slot = options.slot ?? 0;
-  const color = options.color ?? 0xffd44d;
+  const color = options.color ?? COLORS.COMPANION;
   const size = options.size ?? 9 * SCALE_FACTOR;
   const fireRate = options.fireRate ?? 3;
   const damageRatio = options.damageRatio ?? 0.5;

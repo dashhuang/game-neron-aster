@@ -9,7 +9,9 @@ import { Tag } from '../components/Tag';
 import { Collider } from '../components/Collider';
 import { createHitFlash } from '../components/HitFlash';
 import { ENEMY_COLORS } from '../entities/Enemy';
-import { EntityType } from '../config/constants';
+import { EntityType, COLORS } from '../config/constants';
+import { EnemyData } from '../components/EnemyData';
+import { gameData } from '../data/DataLoader';
 
 export class HealthSystem extends System {
   private isInitialized = false;
@@ -47,18 +49,34 @@ export class HealthSystem extends System {
         // 敌人受击效果
         const enemyColor = ENEMY_COLORS.get(target.id) || 0xffffff;
         
-        // 根据颜色判断形状类型和边数
+        // 从敌人配置中读取形状信息（更可靠）
+        const enemyData = target.getComponent<EnemyData>('EnemyData');
         let shape: 'hexagon' | 'triangle' = 'hexagon';
         let totalEdges = 6;
         
-        if (enemyColor === 0x44ddff || enemyColor === 17886) {
-          // 青色 = 六边形
-          shape = 'hexagon';
-          totalEdges = 6;
-        } else if (enemyColor === 0xff4488 || enemyColor === 16728200) {
-          // 粉色 = 三角形
-          shape = 'triangle';
-          totalEdges = 3;
+        if (enemyData) {
+          const enemyConfig = gameData.getEnemy(enemyData.configId);
+          if (enemyConfig) {
+            // 根据配置中的形状设置
+            switch (enemyConfig.shape) {
+              case 'hexagon':
+                shape = 'hexagon';
+                totalEdges = 6;
+                break;
+              case 'triangle':
+                shape = 'triangle';
+                totalEdges = 3;
+                break;
+              case 'diamond':
+                shape = 'hexagon'; // 暂时用六边形代替
+                totalEdges = 4;
+                break;
+              case 'star':
+                shape = 'hexagon'; // 暂时用六边形代替
+                totalEdges = 5;
+                break;
+            }
+          }
         }
         
         const size = collider.radius;
@@ -66,7 +84,7 @@ export class HealthSystem extends System {
         
       } else if (tag.value === EntityType.PLAYER) {
         // 玩家受击效果
-        const playerColor = 0x00ff88; // 绿色
+        const playerColor = COLORS.PLAYER; // 霓虹蓝
         const shape: 'hexagon' | 'triangle' = 'triangle'; // 玩家是箭头形
         const totalEdges = 5; // 箭头有5条边
         const size = collider.radius;

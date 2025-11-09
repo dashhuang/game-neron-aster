@@ -195,6 +195,9 @@ export class GameEngine {
         }
       });
       this.app.stage.addChild(this.menuScreen.getContainer());
+      
+      // 初始化时设置当前选中的关卡
+      this.menuScreen.updateSelectedLevel(this.selectedLevelId);
     }
     this.menuScreen.getContainer().visible = true;
     // 菜单显示时暂停世界更新（若已初始化）
@@ -243,9 +246,14 @@ export class GameEngine {
           console.log(`✅ 选择关卡: ${levelId}`);
           this.selectedLevelId = levelId;
           this.hideLevelSelect();
+          
+          // 更新菜单显示的关卡卡片
+          if (this.menuScreen) {
+            this.menuScreen.updateSelectedLevel(levelId);
+          }
+          
           this.showMenu();
           
-          // 更新菜单显示的关卡名称
           const level = gameData.getLevel(levelId);
           if (level) {
             console.log(`📋 当前关卡: ${level.name}`);
