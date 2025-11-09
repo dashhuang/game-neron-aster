@@ -4,7 +4,7 @@
  */
 
 import { Formation, FormationParams } from '../data/types/FormationConfig';
-import { GAME_WIDTH, GAME_HEIGHT } from '../config/constants';
+import { GAME_WIDTH } from '../config/constants';
 
 /**
  * 随机编队

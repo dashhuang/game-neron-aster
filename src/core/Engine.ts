@@ -19,7 +19,6 @@ import { HealthSystem } from '../systems/HealthSystem';
 import { PickupSystem } from '../systems/PickupSystem';
 import { RenderSystem } from '../systems/RenderSystem';
 import { LifetimeSystem } from '../systems/LifetimeSystem';
-import { EnemySpawnSystem } from '../systems/EnemySpawnSystem';
 import { WaveSystem } from '../systems/WaveSystem';
 import { BossSystem } from '../systems/BossSystem';
 import { DeathSystem } from '../systems/DeathSystem';

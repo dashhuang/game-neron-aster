@@ -13,13 +13,11 @@ interface MenuCallbacks {
  */
 export class MenuScreen {
   private container: Container;
-  private callbacks: MenuCallbacks;
   private selectedLevelId: string = 'test_level';
   
   constructor(private callbacks: MenuCallbacks) {
     this.container = new Container();
     this.container.zIndex = 2000;
-    this.callbacks = callbacks;
     this.build();
   }
   

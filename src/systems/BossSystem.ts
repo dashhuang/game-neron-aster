@@ -53,7 +53,7 @@ export class BossSystem extends System {
     
     // 修改 AI 模式
     if (phase.aiPattern) {
-      const ai = boss.getComponent<AI>('AI');
+      const ai = boss.getComponent('AI') as AI | undefined;
       if (ai) {
         ai.behaviorId = phase.aiPattern;
         ai.state = {}; // 重置状态

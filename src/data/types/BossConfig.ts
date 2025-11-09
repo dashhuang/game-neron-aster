@@ -19,7 +19,7 @@ export interface BossEnemyConfig {
   shape: string;                 // 形状
   
   // Boss 特性
-  phases: BossPhase[];           // 阶段配置
+  phases: BossPhaseConfig[];           // 阶段配置
   immuneToKnockback?: boolean;   // 免疫击退
   shieldPhases?: number[];       // 护盾阶段（哪些阶段有护盾）
   
@@ -37,9 +37,9 @@ export interface BossEnemyConfig {
 }
 
 /**
- * Boss 阶段配置
+ * Boss 阶段配置（Boss专用）
  */
-export interface BossPhase {
+export interface BossPhaseConfig {
   name?: string;                 // 阶段名称
   hpThreshold: number;           // HP 阈值（0-1）
   aiPattern: string;             // AI 模式
