@@ -36,7 +36,7 @@ export class MenuScreen {
     
     // 标题
     const title = new Text({
-      text: '霓虹小行星',
+      text: '霓虹战机',
       style: {
         fontFamily: '"Press Start 2P", Arial',
         fontSize: 28,
