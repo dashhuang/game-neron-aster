@@ -6,6 +6,7 @@
 export interface WeaponConfig {
   // 基础信息
   id: string;                    // 唯一标识符，如 "cannon_basic"
+  category: 'player' | 'enemy';  // 武器类别
   name: string;                  // 显示名称，如 "直射炮"
   
   // 射击属性
@@ -28,11 +29,22 @@ export interface WeaponConfig {
   // 弹道类型
   bulletType: 'normal' | 'laser' | 'missile' | 'beam'; // 子弹类型
   
+  // 发射方向（用于敌人武器）
+  fireDirection?: 'up' | 'down' | 'player' | 'forward' | 'random';
+  
   // 特殊效果
   homing?: {                     // 追踪参数（导弹）
     enabled: boolean;
-    turnRate: number;            // 转向速率
-    trackingRange: number;       // 追踪范围
+    turnRate: number;            // 转向速率（度/秒）
+    trackingRange: number;       // 追踪范围（像素）
+  };
+  
+  // 爆发射击模式（可选）
+  burstFire?: {
+    enabled: boolean;            // 是否启用爆发模式
+    shotsPerBurst: number;       // 每次爆发的子弹数
+    burstInterval: number;       // 爆发内的射击间隔（秒）
+    burstCooldown: number;       // 爆发后的冷却时间（秒）
   };
   
   // 标签

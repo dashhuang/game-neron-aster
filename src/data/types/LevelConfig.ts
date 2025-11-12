@@ -1,4 +1,16 @@
 /**
+ * 武器倍数配置
+ */
+export interface WeaponMultipliers {
+  damage?: number;
+  fireRate?: number;
+  bulletSpeed?: number;
+  bulletLifetime?: number;
+  'homing.turnRate'?: number;
+  'homing.trackingRange'?: number;
+}
+
+/**
  * 关卡配置接口
  * 定义关卡的波次、敌人生成规则
  */
@@ -16,6 +28,18 @@ export interface LevelConfig {
   waves?: WaveConfig[];          // 脚本化波次（固定时间轴）
   enemyPool?: EnemyPoolEntry[];  // 算法生成池（无尽模式）
   difficultyScale?: number;      // 难度增长倍率（无尽模式，如 1.05）
+  
+  // 全局倍数（应用到整个关卡）
+  globalMultipliers?: {
+    enemy?: {
+      hp?: number;
+      speed?: number;
+    };
+    weapon?: WeaponMultipliers;
+  };
+  
+  // 全局首次射击延迟 - 覆盖 constants 中的默认值
+  globalInitialFireDelay?: number;
   
   // Boss 配置
   boss?: BossConfig;
@@ -52,7 +76,21 @@ export interface WaveConfig {
     spacing?: number;            // 间距
     radius?: number;             // 半径（圆形编队）
     angle?: number;              // 角度（V字编队）
+    x?: number;                  // 固定 X 坐标（纵向编队等）
+    y?: number;                  // 起始 Y 坐标
   };
+  
+  // 武器倍数（应用到这一波所有敌人）
+  weaponMultipliers?: WeaponMultipliers;
+  
+  // 敌人属性倍数
+  enemyMultipliers?: {
+    hp?: number;
+    speed?: number;
+  };
+  
+  // 首次射击延迟 - 覆盖关卡和敌人配置
+  initialFireDelay?: number;
 }
 
 /**

@@ -19,6 +19,25 @@
       "tags": ["geometric", "basic", "slow"]
     },
     {
+      "id": "hex_shooter",
+      "name": "六边射手",
+      "hp": 80,
+      "speed": 35,
+      "damage": 8,
+      "size": 20.8,
+      "color": 47359,
+      "shape": "hexagon",
+      "xpDrop": 3,
+      "aiType": "straight_down",
+      "weaponId": "enemy_straight_shot",
+      "initialFireDelay": 1.0,
+      "deathEffect": {
+        "type": "explosion",
+        "particleCount": 15
+      },
+      "tags": ["geometric", "shooter", "slow"]
+    },
+    {
       "id": "arrow_fast",
       "name": "箭头群",
       "hp": 20,
@@ -34,6 +53,66 @@
         "particleCount": 10
       },
       "tags": ["geometric", "basic", "fast"]
+    },
+    {
+      "id": "triangle_sniper",
+      "name": "三角狙击手",
+      "hp": 40,
+      "speed": 60,
+      "damage": 5,
+      "size": 15.6,
+      "color": 16711816,
+      "shape": "triangle",
+      "xpDrop": 3,
+      "aiType": "zigzag",
+      "weaponId": "enemy_aimed_shot",
+      "initialFireDelay": 1.5,
+      "deathEffect": {
+        "type": "explosion_small",
+        "particleCount": 12
+      },
+      "tags": ["geometric", "sniper", "fast"]
+    },
+    {
+      "id": "triangle_loop",
+      "name": "环形尖兵",
+      "hp": 28,
+      "speed": 90,
+      "damage": 5,
+      "size": 15.6,
+      "color": 16711816,
+      "shape": "triangle",
+      "xpDrop": 2,
+      "aiType": "looping_curve",
+      "deathEffect": {
+        "type": "explosion_small",
+        "particleCount": 10
+      },
+      "tags": ["geometric", "formation", "curve"]
+    },
+    {
+      "id": "diamond_tracker",
+      "name": "菱形追踪者",
+      "hp": 120,
+      "speed": 30,
+      "damage": 10,
+      "size": 18,
+      "color": 11158783,
+      "shape": "diamond",
+      "xpDrop": 5,
+      "aiType": "tracking",
+      "weaponId": "enemy_tracking_missile",
+      "initialFireDelay": 2.0,
+      "shootingCondition": {
+        "type": "distance",
+        "minDistance": 100,
+        "maxDistance": 500
+      },
+      "deathEffect": {
+        "type": "explosion",
+        "particleCount": 20
+      },
+      "tags": ["geometric", "elite", "tracker"]
     }
   ]
 }

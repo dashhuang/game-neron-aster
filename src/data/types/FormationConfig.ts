@@ -4,7 +4,7 @@
  */
 
 export interface FormationConfig {
-  type: 'random' | 'line' | 'v_shape' | 'circle' | 'wave';
+  type: 'random' | 'line' | 'column' | 'v_shape' | 'circle' | 'wave';
   params?: FormationParams;
 }
 
@@ -14,6 +14,8 @@ export interface FormationParams {
   angle?: number;                // 角度（V字编队，弧度）
   amplitude?: number;            // 振幅（波浪编队）
   frequency?: number;            // 频率（波浪编队）
+  x?: number;                    // 固定 X 坐标（纵向编队）
+  y?: number;                    // 起始 Y 坐标
 }
 
 /**

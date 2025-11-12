@@ -6,12 +6,21 @@
 import { System, World, Events } from '../core/ECS';
 import { Transform } from '../components/Transform';
 import { Weapon } from '../components/Weapon';
+import { Tag } from '../components/Tag';
+import { EntityType } from '../config/constants';
 
 export class WeaponSystem extends System {
   update(world: World, delta: number): void {
-    const entities = this.query(world, 'Transform', 'Weapon');
+    const entities = this.query(world, 'Transform', 'Weapon', 'Tag');
     
     for (const entity of entities) {
+      const tag = entity.getComponent<Tag>('Tag')!;
+      
+      // 只处理玩家的武器（排除敌人的武器）
+      if (tag.value !== EntityType.PLAYER) {
+        continue;
+      }
+      
       const transform = entity.getComponent<Transform>('Transform')!;
       const weapon = entity.getComponent<Weapon>('Weapon')!;
       

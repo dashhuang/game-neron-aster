@@ -172,7 +172,42 @@ export class NeonRenderer {
    */
   static createXPShard(size: number = 5): Graphics {
     const graphics = new Graphics();
-    return this.drawFilledCircle(graphics, size, COLORS.XP_SHARD);
+    
+    // 计算五角星顶点
+    const createStarPoints = (radius: number) => {
+      const points = [];
+      const outerR = radius;
+      const innerR = radius * 0.4;
+      
+      for (let i = 0; i < 10; i++) {
+        const angle = (i * Math.PI / 5) - Math.PI / 2;
+        const r = i % 2 === 0 ? outerR : innerR;
+        points.push(Math.cos(angle) * r);
+        points.push(Math.sin(angle) * r);
+      }
+      return points;
+    };
+    
+    // 第1层：外层发光（最大，最透明）
+    const outerPoints = createStarPoints(size * 1.6);
+    graphics.poly(outerPoints);
+    graphics.fill({ color: COLORS.XP_SHARD, alpha: 0.2 });
+    
+    // 第2层：中层发光
+    const midPoints = createStarPoints(size * 1.3);
+    graphics.poly(midPoints);
+    graphics.fill({ color: COLORS.XP_SHARD, alpha: 0.4 });
+    
+    // 第3层：核心星星（亮金色，更亮）
+    const corePoints = createStarPoints(size);
+    graphics.poly(corePoints);
+    graphics.fill({ color: 0xFFFF88, alpha: 1.0 });  // 亮金色
+    
+    // 第4层：边缘描边（霓虹金，增强轮廓）
+    graphics.poly(corePoints);
+    graphics.stroke({ color: COLORS.XP_SHARD, width: 1.5, alpha: 0.9 });
+    
+    return graphics;
   }
   
   /**

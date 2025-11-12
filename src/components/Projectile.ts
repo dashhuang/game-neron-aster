@@ -13,10 +13,11 @@ export interface Projectile extends Component {
   maxPierce: number;        // 最大穿透次数
   chain: number;            // 连锁次数（剩余）
   maxChain: number;         // 最大连锁次数
+  owner: 'player' | 'enemy'; // 子弹所有者
   homing?: {                // 追踪参数（可选）
     enabled: boolean;
-    turnRate: number;       // 转向速率
-    trackingRange: number;  // 追踪范围
+    turnRate: number;       // 转向速率（度/秒）
+    trackingRange: number;  // 追踪范围（像素）
   };
   /**
    * 记录已命中的目标，防止在下一帧仍处于重叠时重复结算，
@@ -30,6 +31,7 @@ export function createProjectile(
   bulletType: string = 'normal',
   pierce: number = 0,
   chain: number = 0,
+  owner: 'player' | 'enemy' = 'player',
   homing?: { enabled: boolean; turnRate: number; trackingRange: number }
 ): Projectile {
   return {
@@ -40,6 +42,7 @@ export function createProjectile(
     maxPierce: pierce,
     chain,
     maxChain: chain,
+    owner,
     homing,
     hitSet: new Set<number>(),
   };

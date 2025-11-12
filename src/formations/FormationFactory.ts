@@ -46,6 +46,29 @@ class LineFormation implements Formation {
 }
 
 /**
+ * 纵向编队（单列）
+ */
+class ColumnFormation implements Formation {
+  constructor(private params?: FormationParams) {}
+  
+  getPositions(count: number): Array<{ x: number; y: number }> {
+    const positions: Array<{ x: number; y: number }> = [];
+    const x = this.params?.x ?? GAME_WIDTH / 2;
+    const spacing = this.params?.spacing ?? 60;
+    const startY = this.params?.y ?? -50;
+    
+    for (let i = 0; i < count; i++) {
+      positions.push({
+        x,
+        y: startY - i * spacing
+      });
+    }
+    
+    return positions;
+  }
+}
+
+/**
  * V字编队
  */
 class VFormation implements Formation {
@@ -124,6 +147,8 @@ export class FormationFactory {
     switch (type) {
       case 'line':
         return new LineFormation(params);
+      case 'column':
+        return new ColumnFormation(params);
       case 'v_shape':
         return new VFormation(params);
       case 'circle':

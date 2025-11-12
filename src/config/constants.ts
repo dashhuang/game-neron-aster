@@ -75,9 +75,21 @@ export const RENDER_CONFIG = {
   GLOW_ALPHA: 0.8,         // 辉光透明度
   
   // 性能限制
-  MAX_ENEMIES: 30,
+  MAX_ENEMIES: 200,
   MAX_PROJECTILES: 50,
   MAX_PARTICLES: 60,
+};
+
+// 武器系统配置
+export const WEAPON_CONFIG = {
+  // 全局首次射击延迟（秒）
+  DEFAULT_INITIAL_FIRE_DELAY: 0.8,
+  
+  // 全局射击条件
+  DEFAULT_SHOOTING_CONDITION: 'on_screen' as const,
+  
+  // 屏幕边界扩展（像素）- 用于判断"屏幕内"
+  SCREEN_BOUNDS_PADDING: 50,  // 敌人进入屏幕后多少像素才能射击
 };
 
 // 物理/游戏数值

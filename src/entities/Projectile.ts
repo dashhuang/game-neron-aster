@@ -49,6 +49,7 @@ export function createPlayerBulletFromWeapon(
     weaponConfig.bulletType,
     weaponConfig.pierce || 0,
     (weaponConfig as any).chain ?? (weaponConfig as any).bounce ?? 0,
+    'player',  // owner
     weaponConfig.homing
   ));
   

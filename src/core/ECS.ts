@@ -139,6 +139,13 @@ export class World {
     this.entities.forEach(e => e.destroy());
     this.entities = [];
     this.eventBus.clear();
+    this.paused = false;
+  }
+  
+  reset(): void {
+    this.clear();
+    this.systems = [];
+    this.nextEntityId = 1;
   }
   
   pause(): void {
@@ -160,5 +167,6 @@ export const Events = {
   PICKUP: 'pickup',
   LEVEL_UP: 'levelup',
   SHOOT: 'shoot',
+  ENEMY_SHOOT: 'enemy_shoot',
 } as const;
 

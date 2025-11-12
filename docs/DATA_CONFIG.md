@@ -122,9 +122,34 @@ public/data/
 | `color` | number | 颜色（十进制）**按形状规范** | `47359` (0x00b8ff 霓虹蓝) 六边形专用 |
 | `shape` | string | 形状类型 | `"hexagon"`, `"triangle"`, `"diamond"`, `"star"` |
 | `xpDrop` | number | 掉落经验值 | `2` |
-| `aiType` | string | AI 行为类型 | `"straight_down"` |
+| `aiType` | string | AI 行为类型 | `"straight_down"` / `"zigzag"` / `"tracking"` / `"looping_curve"` |
+| `weaponId` | string | 武器ID（可选）| `"enemy_straight_shot"` - 引用 weapons.json |
+| `initialFireDelay` | number | 首次射击延迟（秒，可选） | `1.0` - 生成后延迟多久开始射击 |
+| `shootingCondition` | object | 射击条件（可选） | 见下方说明 |
 | `deathEffect` | object | 死亡特效（可选） | 见下方说明 |
 | `tags` | string[] | 标签（可选） | `["geometric", "basic"]` |
+
+> 经验掉落说明：游戏运行时直接读取 `xpDrop` 生成经验碎片，不再使用固定随机值。调整配置即可即时影响实际掉落数量。
+
+**AI 行为枚举**：
+
+- `straight_down`：垂直俯冲
+- `zigzag`：水平摆动下落
+- `tracking` / `tracking_fast` / `tracking_slow`：追踪玩家（不同转向速度）
+- `looping_curve`：纵向列队垂直入场 → 270° 圆弧绕向远侧 → 沿出生侧水平切线离场，机头持续朝向移动方向
+
+### 射击条件配置（shootingCondition）
+
+| 字段 | 类型 | 说明 | 示例 |
+|------|------|------|------|
+| `type` | string | 触发类型 | `"on_screen"`, `"always"`, `"distance"` |
+| `minDistance` | number | 最小距离（type=distance时有效） | `100` |
+| `maxDistance` | number | 最大距离（type=distance时有效） | `500` |
+
+**触发类型说明**：
+- `on_screen`（默认）- 敌人在屏幕内才射击
+- `always` - 一直射击（慎用）
+- `distance` - 距离玩家在指定范围内才射击
 
 ### 死亡特效配置（deathEffect）
 
@@ -152,12 +177,12 @@ public/data/
 | 颜色 | 十六进制 | 十进制 | 说明 |
 |------|----------|--------|------|
 | 霓虹蓝 | 0x00b8ff | 47359 | 玩家、六边形、主UI |
-| 霓虹粉 | 0xff0088 | 16711816 | 三角形、Boss、警告 |
+| 霓虹粉 | 0xff0088 | 16711816 | 三角形、Boss、警告、追踪导弹 |
 | 霓虹紫 | 0xaa44ff | 11158783 | 方形、特殊道具 |
 | 霓虹青 | 0x00ddff | 56831 | 圆形、僚机 |
 | 霓虹金 | 0xffdd44 | 16768324 | 经验、奖励 |
 | 霓虹绿 | 0x00ff88 | 65416 | 治疗、增益 |
-| 霓虹橙 | 0xff8844 | 16746564 | 爆炸、危险 |
+| 霓虹橙 | 0xff8844 | 16746564 | 爆炸、危险、敌人子弹 |
 
 ---
 
@@ -171,18 +196,39 @@ public/data/
   "weapons": [
     {
       "id": "cannon_basic",
+      "category": "player",
       "name": "基础直射炮",
       "damage": 12,
       "fireRate": 3.0,
       "bulletSpeed": 900,
       "bulletLifetime": 2.0,
-      "bulletSize": 6,
+      "bulletSize": 7.8,
       "bulletColor": 16777215,
       "pierce": 0,
       "bounce": 0,
       "spreadCount": 1,
       "bulletType": "normal",
+      "fireDirection": "up",
       "tags": ["kinetic", "basic"]
+    },
+    {
+      "id": "enemy_tracking_missile",
+      "category": "enemy",
+      "name": "敌人追踪导弹",
+      "damage": 15,
+      "fireRate": 0.8,
+      "bulletSpeed": 250,
+      "bulletLifetime": 5.0,
+      "bulletSize": 8,
+      "bulletColor": 16711816,
+      "bulletType": "missile",
+      "fireDirection": "player",
+      "homing": {
+        "enabled": true,
+        "turnRate": 180,
+        "trackingRange": 300
+      },
+      "tags": ["enemy", "tracking"]
     }
   ]
 }
@@ -193,6 +239,7 @@ public/data/
 | 字段 | 类型 | 说明 | 示例 |
 |------|------|------|------|
 | `id` | string | 唯一标识符 | `"cannon_basic"` |
+| `category` | string | 武器类别 | `"player"`, `"enemy"` |
 | `name` | string | 显示名称 | `"基础直射炮"` |
 | `damage` | number | 基础伤害 | `12` |
 | `fireRate` | number | 射速（每秒射击次数） | `3.0` |
@@ -205,7 +252,45 @@ public/data/
 | `spreadCount` | number | 散射数量（1=单发） | `1` |
 | `spreadAngle` | number | 散射角度（度）（可选） | `30` |
 | `bulletType` | string | 子弹类型 | `"normal"`, `"laser"`, `"missile"`, `"beam"` |
+| `fireDirection` | string | 发射方向（敌人武器用） | `"up"`, `"down"`, `"player"`, `"forward"`, `"random"` |
+| `homing` | object | 追踪参数（可选） | 见下方说明 |
 | `tags` | string[] | 标签（可选） | `["kinetic", "basic"]` |
+
+### 发射方向说明（fireDirection）
+
+仅用于敌人武器，决定子弹发射方向：
+- `up` - 向上发射（很少用）
+- `down` - 向下直射
+- `player` - 瞄准玩家当前位置
+- `forward` - 沿敌人朝向发射
+- `random` - 随机方向
+
+### 追踪参数配置（homing）
+
+| 字段 | 类型 | 说明 | 示例 |
+|------|------|------|------|
+| `enabled` | boolean | 是否启用追踪 | `true` |
+| `turnRate` | number | 转向速率（度/秒） | `180` |
+| `trackingRange` | number | 追踪范围（像素） | `300` |
+
+### 爆发射击配置（burstFire）
+
+| 字段 | 类型 | 说明 | 示例 |
+|------|------|------|------|
+| `enabled` | boolean | 是否启用爆发模式 | `true` |
+| `shotsPerBurst` | number | 每次爆发的子弹数 | `3` |
+| `burstInterval` | number | 爆发内的射击间隔（秒） | `1.0` |
+| `burstCooldown` | number | 爆发后的冷却时间（秒） | `3.0` |
+
+**爆发模式说明**：
+- 启用后，武器会以"爆发-冷却-爆发"的节奏射击
+- 示例：`shotsPerBurst=3, burstInterval=1.0, burstCooldown=3.0`
+  - 0s: 发射第1发
+  - 1s: 发射第2发  
+  - 2s: 发射第3发
+  - 2s-5s: 冷却3秒
+  - 5s: 开始下一轮爆发
+- 节奏图：●-●-●-----●-●-●-----●-●-●
 
 ---
 

@@ -38,27 +38,27 @@ export class DeathSystem extends System {
         
         if (tag.value === EntityType.ENEMY) {
           // 敌人死亡：掉落经验和爆炸效果
-          const xpAmount = Math.random() > 0.5 ? GAME_CONFIG.HEX_XP : GAME_CONFIG.ARROW_XP;
+          const enemyData = entity.getComponent('EnemyData') as EnemyData | undefined;
+          let xpAmount = GAME_CONFIG.ARROW_XP;
+          let explosionType = 'explosion'; // 默认
+          let particleCount: number | undefined;
+          
+          if (enemyData) {
+            const config = gameData.getEnemy(enemyData.configId);
+            if (config) {
+              xpAmount = config.xpDrop ?? xpAmount;
+              if (config.deathEffect) {
+                explosionType = config.deathEffect.type;
+                particleCount = config.deathEffect.particleCount;
+              }
+            }
+          }
           
           // 在敌人位置生成经验碎片
           createXPShardEntity(world, this.stage, transform.x, transform.y, xpAmount);
           
           // 生成爆炸粒子效果（从敌人配置读取）
           const enemyColor = ENEMY_COLORS.get(entity.id) || 0xffffff;
-          const enemyData = entity.getComponent('EnemyData') as EnemyData | undefined;
-          
-          // 从配置读取爆炸效果
-          let explosionType = 'explosion'; // 默认
-          let particleCount: number | undefined;
-          
-          if (enemyData) {
-            const config = gameData.getEnemy(enemyData.configId);
-            if (config && config.deathEffect) {
-              explosionType = config.deathEffect.type;
-              particleCount = config.deathEffect.particleCount;
-            }
-          }
-          
           createExplosion(world, this.stage, transform.x, transform.y, enemyColor, explosionType, particleCount);
           
         } else if (tag.value === EntityType.PLAYER) {
@@ -86,6 +86,8 @@ export class DeathSystem extends System {
         if (render && render.sprite) {
           this.stage.removeChild(render.sprite);
         }
+        
+        ENEMY_COLORS.delete(entity.id);
       });
       this.isInitialized = true;
     }

@@ -160,7 +160,12 @@ export class CollisionSystem extends System {
       }
     }
     
-    // 敌人 vs 玩家
+    // 敌人子弹 vs 玩家
+    const enemyBullets = entities.filter(e => {
+      const tag = e.getComponent<Tag>('Tag');
+      return tag && tag.value === EntityType.ENEMY_BULLET;
+    });
+    
     const players = entities.filter(e => {
       const tag = e.getComponent<Tag>('Tag');
       return tag && tag.value === EntityType.PLAYER;
@@ -168,14 +173,66 @@ export class CollisionSystem extends System {
     
     if (players.length > 0) {
       const player = players[0];
-      const playerTransform = player.getComponent<Transform>('Transform')!;
-      const playerCollider = player.getComponent<Collider>('Collider')!;
+      const playerTransform = player.getComponent<Transform>('Transform');
+      const playerCollider = player.getComponent<Collider>('Collider');
+      
+      // 玩家死亡后组件可能为 undefined，跳过碰撞检测
+      if (!playerTransform || !playerCollider) {
+        // 继续检查敌人 vs 玩家（下面的代码）
+      } else {
+        // 敌人子弹击中玩家
+        for (const bullet of enemyBullets) {
+          if (!bullet.active) continue;
+          
+          const bulletTransform = bullet.getComponent<Transform>('Transform');
+          const bulletCollider = bullet.getComponent<Collider>('Collider');
+          
+          if (!bulletTransform || !bulletCollider) continue;
+          
+          const dx = playerTransform.x - bulletTransform.x;
+          const dy = playerTransform.y - bulletTransform.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          const minDistance = playerCollider.radius + bulletCollider.radius;
+          
+          if (distance < minDistance) {
+            // 获取子弹伤害
+            const projectile = bullet.getComponent<Projectile>('Projectile');
+            const damage = projectile ? projectile.damage : 10;
+            
+            // 玩家受伤
+            world.eventBus.emit(Events.DAMAGE, {
+              targetId: player.id,
+              sourceId: bullet.id,
+              damage,
+            });
+            
+            // 敌人子弹命中后销毁（暂不支持穿透）
+            const bulletRender = bullet.getComponent<Render>('Render');
+            if (bulletRender && bulletRender.sprite && bulletRender.sprite.parent) {
+              bulletRender.sprite.parent.removeChild(bulletRender.sprite);
+            }
+            bullet.destroy();
+          }
+        }
+      }
+    }
+    
+    // 敌人 vs 玩家（复用上面的 players）
+    if (players.length > 0) {
+      const player = players[0];
+      const playerTransform = player.getComponent<Transform>('Transform');
+      const playerCollider = player.getComponent<Collider>('Collider');
+      
+      // 玩家死亡后组件可能为 undefined，跳过碰撞检测
+      if (playerTransform && playerCollider) {
       
       for (const enemy of enemies) {
         if (!enemy.active) continue;
         
-        const enemyTransform = enemy.getComponent<Transform>('Transform')!;
-        const enemyCollider = enemy.getComponent<Collider>('Collider')!;
+        const enemyTransform = enemy.getComponent<Transform>('Transform');
+        const enemyCollider = enemy.getComponent<Collider>('Collider');
+        
+        if (!enemyTransform || !enemyCollider) continue;
         
         const dx = playerTransform.x - enemyTransform.x;
         const dy = playerTransform.y - enemyTransform.y;
@@ -206,6 +263,7 @@ export class CollisionSystem extends System {
             sourceId: player.id,
             damage: 99999, // 足够大的伤害确保死亡
           });
+        }
         }
       }
     }

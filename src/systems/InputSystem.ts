@@ -10,6 +10,7 @@ import { Transform } from '../components/Transform';
 import { Tag } from '../components/Tag';
 import { GAME_CONFIG, SCALE_FACTOR } from '../config/constants';
 import { PlayerStats } from '../components/PlayerStats';
+import { LevelManager } from '../managers/LevelManager';
 
 export class InputSystem extends System {
   private keys: Set<string> = new Set();
@@ -63,6 +64,11 @@ export class InputSystem extends System {
   }
   
   update(world: World, _delta: number): void {
+    // 在飞离阶段禁用玩家输入
+    if (LevelManager.isVictoryExit()) {
+      return;
+    }
+    
     // 找到玩家实体
     const players = this.query(world, 'Tag', 'Velocity', 'Transform').filter(e => {
       const tag = e.getComponent<Tag>('Tag');

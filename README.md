@@ -58,9 +58,10 @@
     - 边框颜色根据关卡类型变化（限时=青、无尽=紫、Boss=粉、生存=金）
     - 点击卡片打开关卡选择界面
     - 选择新关卡后卡片自动更新显示
-  * 下部：两个主要按钮（Y=880起，间距100px）
+* 下部：三个主要按钮（Y=880起，间距100px）
     - `进入游戏` - 主按钮，高亮显示，开始游戏
     - `天赋升级` - 进入天赋树界面
+    - `弧线测试` - 打开 Looping Curve 调试视图，仅渲染当前弧线轨迹（用于截图与节奏校准）
 * **视觉特性**：
   * 深色半透明背景（80% 透明度）
   * Logo大幅放大，震撼视觉，占据主要视觉焦点
@@ -82,7 +83,14 @@
   * 大幅放大以突出游戏标识（是原设计的近3倍）
   * 备用方案：加载失败时使用文本标题
 * **返回逻辑**：在天赋树界面可点击"返回"回到主菜单
-* **实现概述**：`MenuScreen`/`TalentScreen`（PixiJS UI），`GameEngine` 负责菜单/天赋/游戏的显示与切换，菜单期间通过 `world.pause()` 冻结系统更新
+* **实现概述**：`MenuScreen`/`TalentScreen`/`CurveTestScreen`（PixiJS UI），`GameEngine` 负责菜单与各子界面的切换，菜单期间通过 `world.pause()` 冻结系统更新
+
+### 3.1.1 弧线测试视图（CurveTestScreen）
+
+* 从主菜单点击 `弧线测试` 进入，显示当前 `looping_curve` 行为的完整路径
+* 左、右两个起点均可视化：曲线颜色分别为青色（左侧起点）与粉色（右侧起点）
+* 圆点标记实际敌人生成位置与轨迹对齐点，便于核对“排成一串”效果
+* 用于截图/调参，界面仅渲染轨迹线条，不进入游戏循环
 
 ---
 
@@ -190,12 +198,27 @@
 
 **敌人族系**（线框几何）：
 
-* 六边环（慢、肉、接触伤害高）
-* 箭头群（快、脆、成群扑杀）
-* 旋臂块（分裂/旋转）
-* 电晶体（发射弹幕/追踪）
-* 精英（紫）：更大体型、护甲、专属技能（冲锋/放射）。
-* Boss（红）：多阶段，召唤/范围压制。
+* **六边环**（慢、肉、接触伤害高）
+  - 基础型：仅撞击伤害
+  - 射手型：装备直射武器
+* **箭头群**（快、脆、成群扑杀）
+  - 基础型：快速俯冲
+  - 狙击型：装备瞄准武器
+  - **环形尖兵**：垂直列队下潜，正切进入圆弧后绕向远侧，再沿出生侧水平切线飞离屏幕（`looping_curve` AI）
+* **菱形追踪者**（精英、追踪导弹）
+  - 装备追踪导弹，持续威胁
+  - 距离触发射击
+* 旋臂块（分裂/旋转）- 未实现
+* 电晶体（发射弹幕/追踪）- 未实现
+* **精英**（紫）：更大体型、护甲、专属技能（冲锋/放射）
+* **Boss**（红）：多阶段，召唤/范围压制
+
+**敌人武器系统**（已实现 v0.6.0）：
+* 敌人可装备武器，向玩家发射子弹
+* 4 种武器类型：直射弹、瞄准弹、追踪导弹、散射弹
+* 射击条件可配置：屏幕内触发（默认）、距离触发、总是射击
+* 首次射击延迟可配置（敌人类型、关卡、波次多层覆盖）
+* 子弹颜色：普通弹霓虹橙、特殊弹霓虹粉
 
 **关卡目标类型**（每关随机或预设 1 种）：
 
@@ -204,8 +227,11 @@
 
 **生成逻辑**：
 
-* 基于**威胁值曲线**与时间轴的波次调度；每 30–45s 注入特殊波；90s 精英；终盘 Boss。
-* 屏外环绕刷怪（避免贴脸生成），根据玩家朝向/移动做反刷。
+* **脚本化波次**（wave_script）：精确时间轴控制，适合设计关卡节奏
+* **算法生成**（algorithm）：权重随机，难度递增，适合无尽模式
+* 支持**倍数系统**：波次级和关卡级倍数调整难度曲线
+* 屏外环绕刷怪（避免贴脸生成），6 种编队：直线/纵向单列/V字/圆形/波浪/随机
+* `enemy_test` 关卡保留单波 8 敌人的纵向编队，用于验证 `looping_curve` 行为和新敌人
 
 **地图**：
 
@@ -314,18 +340,28 @@
 
 **系统（Systems）**：
 
-* InputSystem、MovementSystem、WeaponSystem（开火/生成弹幕）、ProjectileSystem（飞行/命中/穿透/弹跳）
-* CollisionSystem（空间分区/碰撞回调）
-* DamageSystem（计算公式/暴击/克制）
-* HealthSystem（死亡/掉落/事件派发）
-* AISystem（寻路/冲锋/放射/召唤）
-* WaveSystem（时间轴/威胁值调度）
-* PickupSystem（磁吸/拾取/经验）+ LevelUpSystem（卡池生成/选择）
-* StatusEffectSystem（减速/流血/易伤/护盾充能）
-* CooldownSystem、TimerSystem、LifetimeSystem、ObjectPoolSystem
-* RenderSystem（批渲染/描边/发光）、UISystem（HUD/升级弹窗/飘字）
-* AudioSystem、CameraSystem（震屏/跟随/限制）
-* SaveSystem（局内种子/局外解锁）、AnalyticsSystem（事件日志）
+* **已实现**：
+  - InputSystem、MovementSystem、WeaponSystem（玩家射击）
+  - **EnemyWeaponSystem**（敌人射击）、**HomingSystem**（追踪导弹）
+  - **VictorySystem**（通关流程/收尾阶段/飞离动画）
+    - 通关后通过 `GameEngine` 清理世界系统与事件监听，确保再次进入关卡不会出现节奏加速
+  - ProjectileSystem（飞行/命中/穿透/连锁）
+  - CollisionSystem（碰撞检测/玩家敌人子弹区分）
+  - HealthSystem（血量/死亡事件）
+  - AISystem（直线/锯齿/追踪/环形弧线行为）
+  - WaveSystem（波次调度/编队生成/通关检测）、BossSystem（多阶段 Boss）
+  - PickupSystem（磁吸经验）、UpgradeSystem（升级卡池/收尾阶段跳过）
+  - StatModifierSystem（属性修改器）
+  - LifetimeSystem（生命周期）、CleanupSystem（屏幕外清理）
+  - ParticleSystem（粒子特效）、DeathSystem（死亡爆炸）
+  - HitFlashSystem（受击闪烁）
+  - RenderSystem（渲染同步）、UISystem（HUD/面板/通关UI）
+  - PerformanceSystem（性能监控 / 敌人上限200 / 子弹上限50（玩家+敌人+僚机）/ 清理残留精灵）
+* **计划中**：
+  - StatusEffectSystem（减速/流血/易伤）
+  - AudioSystem（音效系统）
+  - CameraSystem（震屏/跟随）
+  - SaveSystem（存档系统）
 
 **事件（Events）**：DamageEvent, DeathEvent, SpawnEvent, PickupEvent, LevelUpEvent, CastUltimateEvent, WaveReachedEvent。
 
@@ -565,9 +601,25 @@ MVP 已实现核心玩法循环：
 所有游戏内容通过 JSON 配置定义，无需修改代码即可调整：
 
 **配置文件位置**: `public/data/`
-- `enemies/enemies.json` - 敌人定义（血量、速度、颜色、形状等）
-- `weapons/weapons.json` - 武器定义（伤害、射速、子弹属性等）
+- `enemies/enemies.json` - 敌人定义（血量、速度、颜色、形状、武器等）
+- `weapons/weapons.json` - 武器定义（伤害、射速、子弹属性、发射方向等）
 - `players/players.json` - 角色定义（移动速度、初始武器、磁吸范围等）
+- `levels/levels.json` - 关卡定义（波次、敌人池、倍数系统等）
+
+**当前关卡** (2个)：
+- **线性关卡1**（linear_01）- wave_script 模式
+  - 29 个波次，密集节奏（2 秒→1.5 秒），倍数最高 ×2.5
+  - **支持通关流程**：最后敌人消失后自动通关
+- **测试关卡**（test_level）- algorithm 模式
+  - 权重随机生成，难度递增 ×1.03/秒，包含射击敌人
+  - 10 分钟固定时长
+
+**通关流程** (wave_script 模式)：
+1. 所有波次完成且屏幕无敌人 → 进入收尾阶段
+2. 显示"游戏通关"，10 秒倒计时
+3. 玩家可继续移动捡经验，升级不暂停游戏
+4. 10 秒到或经验豆收集完 → 玩家飞机向上飞离
+5. 飞离屏幕后自动返回主菜单
 
 ### 数据加载流程
 ```typescript
@@ -615,7 +667,8 @@ createEnemyFromConfig(world, stage, x, y, enemyConfig);
 ### 相关文档
 - 🚀 [快速开始](QUICKSTART.md) - 运行和测试游戏
 - 🎨 [颜色设计规范](docs/COLOR_DESIGN.md) - 完整颜色体系与使用规则
-- 📖 [配置手册](docs/DATA_CONFIG.md) - 详细配置说明
+- 📖 [配置手册](docs/DATA_CONFIG.md) - 详细配置说明（敌人、武器、玩家）
+- 🎮 [关卡配置手册](docs/LEVEL_CONFIG.md) - 关卡、波次、倍数系统
 - 🏗️ [架构文档](docs/ARCHITECTURE.md) - 技术架构设计
 - 👨‍💻 [开发指南](docs/DEVELOPER_GUIDE.md) - 开发实践
 - 📋 [配置示例](docs/CONFIG_EXAMPLES.md) - 各种配置示例

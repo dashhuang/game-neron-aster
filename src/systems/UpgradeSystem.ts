@@ -15,6 +15,7 @@ import { UpgradeProgress, createUpgradeProgress } from '../components/UpgradePro
 import { createCompanionEntity } from '../entities/Companion';
 import { Companion } from '../components/Companion';
 import { CompanionWeapon } from '../components/CompanionWeapon';
+import { LevelManager } from '../managers/LevelManager';
 
 interface CompanionConfig {
   fireRate?: number;
@@ -152,6 +153,12 @@ export class UpgradeSystem extends System {
    * 显示升级面板
    */
   showUpgradePanel(world: World, debugMode: boolean = false): void {
+    // 在收尾阶段不显示升级面板
+    if (LevelManager.isInCleanupPhase() || LevelManager.isVictoryExit()) {
+      console.log('⏭️ 收尾阶段，跳过升级面板');
+      return;
+    }
+    
     console.log(debugMode ? '🎴 显示调试升级面板' : '🎴 显示升级面板');
     this.isUpgrading = true;
     

@@ -9,7 +9,9 @@ import { LevelConfig, WaveConfig, EnemyPoolEntry } from '../data/types/LevelConf
 import { gameData } from '../data/DataLoader';
 import { createEnemyFromConfig } from '../entities/Enemy';
 import { FormationFactory } from '../formations/FormationFactory';
-import { GAME_WIDTH } from '../config/constants';
+import { GAME_WIDTH, EntityType } from '../config/constants';
+import { LevelManager } from '../managers/LevelManager';
+import { Tag } from '../components/Tag';
 
 export class WaveSystem extends System {
   private stage: Container;
@@ -42,6 +44,9 @@ export class WaveSystem extends System {
     this.difficultyMultiplier = 1.0;
     this.isLevelActive = true;
     
+    // 同步到 LevelManager
+    LevelManager.startLevel(level);
+    
     console.log(`🎮 关卡加载: ${level.name} (${level.type})`);
   }
   
@@ -57,6 +62,7 @@ export class WaveSystem extends System {
     if (!this.isLevelActive || !this.currentLevel) return;
     
     this.levelTime += delta;
+    LevelManager.updateTime(delta);
     
     // 检查关卡完成条件
     if (this.currentLevel.duration && this.levelTime >= this.currentLevel.duration) {
@@ -67,10 +73,38 @@ export class WaveSystem extends System {
     // 处理不同生成模式
     if (this.currentLevel.spawnMode === 'wave_script') {
       this.processScriptedWaves(world);
+      
+      // 检测 wave_script 模式的通关条件
+      this.checkWaveScriptCompletion(world);
     } else if (this.currentLevel.spawnMode === 'algorithm') {
       this.processAlgorithmicSpawn(world, delta);
     } else if (this.currentLevel.spawnMode === 'boss_only') {
       // Boss 由 BossSystem 处理
+    }
+  }
+  
+  /**
+   * 检测 wave_script 模式是否完成
+   */
+  private checkWaveScriptCompletion(world: World): void {
+    if (!this.currentLevel || !this.currentLevel.waves) return;
+    
+    // 检查所有波次是否已生成
+    const allWavesSpawned = this.waveIndex >= this.currentLevel.waves.length;
+    
+    if (allWavesSpawned) {
+      // 检查屏幕上是否还有敌人
+      const enemies = world.entities.filter(e => {
+        if (!e.active) return false;
+        const tag = e.getComponent<Tag>('Tag');
+        return tag && tag.value === EntityType.ENEMY;
+      });
+      
+      if (enemies.length === 0) {
+        // 所有波次完成且无敌人，触发通关
+        LevelManager.enterCleanupPhase();
+        this.isLevelActive = false;  // 停止生成新敌人
+      }
     }
   }
   
@@ -88,6 +122,7 @@ export class WaveSystem extends System {
       if (this.levelTime >= wave.time) {
         this.spawnWave(world, wave);
         this.waveIndex++;
+        LevelManager.setCurrentWaveIndex(this.waveIndex);
       } else {
         break;
       }
@@ -98,7 +133,16 @@ export class WaveSystem extends System {
    * 生成一个波次
    */
   private spawnWave(world: World, wave: WaveConfig): void {
-    console.log(`🌊 波次生成: ${wave.enemies.join(', ')} x${wave.count}`);
+    // 输出波次调试信息
+    if (this.currentLevel && this.currentLevel.waves) {
+      const totalWaves = this.currentLevel.waves.length;
+      const currentWave = this.waveIndex + 1; // 当前正在生成的波次（+1因为waveIndex是数组索引）
+      const interval = this.waveIndex > 0 ? wave.time - this.currentLevel.waves[this.waveIndex - 1].time : wave.time;
+      const nextWaveTime = this.waveIndex + 1 < totalWaves ? this.currentLevel.waves[this.waveIndex + 1].time : 0;
+      const nextInterval = nextWaveTime > 0 ? nextWaveTime - wave.time : 0;
+      
+      console.log(`📊 波次${currentWave}/${totalWaves} | 时间:${wave.time}s | 本次间隔:${interval}s | 下次间隔:${nextInterval}s | 敌人:${wave.enemies.join(',')} ×${wave.count}`);
+    }
     
     const formation = FormationFactory.create(
       wave.formation || 'random',

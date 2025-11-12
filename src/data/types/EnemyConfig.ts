@@ -24,6 +24,19 @@ export interface EnemyConfig {
   // AI 行为
   aiType: string;                // AI 类型，如 "straight_down", "zigzag", "tracking"
   
+  // 武器配置（可选）
+  weaponId?: string;             // 武器配置 ID（引用 weapons.json）
+  
+  // 首次射击延迟（秒）- 覆盖全局配置
+  initialFireDelay?: number;
+  
+  // 射击条件（可选）- 默认使用全局 on_screen
+  shootingCondition?: {
+    type: 'always' | 'distance' | 'on_screen';
+    minDistance?: number;        // type=distance 时有效
+    maxDistance?: number;        // type=distance 时有效
+  };
+  
   // 死亡特效（可选）
   deathEffect?: {
     type: string;                // 特效类型，如 "explosion_small", "explosion_large"

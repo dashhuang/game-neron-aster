@@ -38,6 +38,7 @@ export function createCompanionBullet(world: World, stage: Container, data: Comp
     'normal',
     0,
     0,
+    'player',  // owner
     undefined
   ));
   

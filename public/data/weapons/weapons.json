@@ -3,6 +3,7 @@
   "weapons": [
     {
       "id": "cannon_basic",
+      "category": "player",
       "name": "基础直射炮",
       "damage": 12,
       "fireRate": 3.0,
@@ -14,7 +15,97 @@
       "bounce": 0,
       "spreadCount": 1,
       "bulletType": "normal",
+      "fireDirection": "up",
       "tags": ["kinetic", "basic"]
+    },
+    {
+      "id": "enemy_straight_shot",
+      "category": "enemy",
+      "name": "敌人直射弹",
+      "damage": 10,
+      "fireRate": 1.5,
+      "bulletSpeed": 300,
+      "bulletLifetime": 5.0,
+      "bulletSize": 6,
+      "bulletColor": 16746564,
+      "bulletType": "normal",
+      "fireDirection": "down",
+      "tags": ["enemy", "basic"]
+    },
+    {
+      "id": "enemy_aimed_shot",
+      "category": "enemy",
+      "name": "敌人瞄准弹",
+      "damage": 12,
+      "fireRate": 1.0,
+      "bulletSpeed": 350,
+      "bulletLifetime": 4.0,
+      "bulletSize": 7,
+      "bulletColor": 16746564,
+      "bulletType": "normal",
+      "fireDirection": "player",
+      "burstFire": {
+        "enabled": true,
+        "shotsPerBurst": 3,
+        "burstInterval": 3.0,
+        "burstCooldown": 8.0
+      },
+      "tags": ["enemy", "aimed", "burst"]
+    },
+    {
+      "id": "enemy_tracking_missile",
+      "category": "enemy",
+      "name": "敌人追踪导弹",
+      "damage": 15,
+      "fireRate": 0.8,
+      "bulletSpeed": 250,
+      "bulletLifetime": 6.0,
+      "bulletSize": 8,
+      "bulletColor": 16711816,
+      "bulletType": "missile",
+      "fireDirection": "player",
+      "homing": {
+        "enabled": true,
+        "turnRate": 180,
+        "trackingRange": 300
+      },
+      "tags": ["enemy", "tracking", "dangerous"]
+    },
+    {
+      "id": "enemy_spread_shot",
+      "category": "enemy",
+      "name": "敌人散射弹",
+      "damage": 8,
+      "fireRate": 2.0,
+      "bulletSpeed": 280,
+      "bulletLifetime": 5.0,
+      "bulletSize": 5,
+      "bulletColor": 16746564,
+      "bulletType": "normal",
+      "fireDirection": "player",
+      "spreadCount": 3,
+      "spreadAngle": 30,
+      "tags": ["enemy", "spread"]
+    },
+    {
+      "id": "enemy_burst_shot",
+      "category": "enemy",
+      "name": "敌人爆发弹",
+      "damage": 10,
+      "fireRate": 1.0,
+      "bulletSpeed": 320,
+      "bulletLifetime": 5.0,
+      "bulletSize": 6,
+      "bulletColor": 16746564,
+      "bulletType": "normal",
+      "fireDirection": "player",
+      "burstFire": {
+        "enabled": true,
+        "shotsPerBurst": 3,
+        "burstInterval": 1.0,
+        "burstCooldown": 3.0
+      },
+      "tags": ["enemy", "burst", "rhythm"]
     }
   ]
 }

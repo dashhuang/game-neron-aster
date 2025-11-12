@@ -9,11 +9,15 @@ import { Weapon } from '../components/Weapon';
 import { GAME_WIDTH, GAME_HEIGHT, COLORS, EntityType } from '../config/constants';
 import { createPlayer } from '../entities/Player';
 import { createPlayerBulletFromWeapon } from '../entities/Projectile';
+import { createEnemyBullet } from '../entities/EnemyBullet';
 
 // 系统导入
 import { InputSystem } from '../systems/InputSystem';
 import { MovementSystem } from '../systems/MovementSystem';
 import { WeaponSystem } from '../systems/WeaponSystem';
+import { EnemyWeaponSystem } from '../systems/EnemyWeaponSystem';
+import { HomingSystem } from '../systems/HomingSystem';
+import { VictorySystem } from '../systems/VictorySystem';
 import { CollisionSystem } from '../systems/CollisionSystem';
 import { HealthSystem } from '../systems/HealthSystem';
 import { PickupSystem } from '../systems/PickupSystem';
@@ -34,8 +38,10 @@ import { StatModifierSystem } from '../systems/StatModifierSystem';
 import { UpgradePanel } from '../ui/UpgradePanel';
 import { gameData } from '../data/DataLoader';
 import { MenuScreen } from '../ui/MenuScreen';
+import { CurveTestScreen } from '../ui/CurveTestScreen';
 import { TalentScreen } from '../ui/TalentScreen';
 import { LevelSelectScreen } from '../ui/LevelSelectScreen';
+import { LevelManager } from '../managers/LevelManager';
 import { CompanionSystem } from '../systems/CompanionSystem';
 import { CompanionWeaponSystem } from '../systems/CompanionWeaponSystem';
 import { createCompanionBullet } from '../entities/CompanionBullet';
@@ -45,13 +51,16 @@ export class GameEngine {
   private world: World;
   private gameStage: Container;
   private inputSystem: InputSystem;
-  private upgradeSystem!: UpgradeSystem;
-  private waveSystem!: WaveSystem;
+  private upgradeSystem?: UpgradeSystem;
+  private upgradePanel?: UpgradePanel;
+  private waveSystem?: WaveSystem;
   private menuScreen?: MenuScreen;
+  private curveTestScreen?: CurveTestScreen;
   private talentScreen?: TalentScreen;
   private levelSelectScreen?: LevelSelectScreen;
-  private selectedLevelId: string = 'test_level';
+  private selectedLevelId: string;
   private hasGameInitialized: boolean = false;
+  private readonly LEVEL_STORAGE_KEY = 'neon_aster_selected_level';
   private readonly debugLogsEnabled: boolean = (() => {
     const env = (import.meta as any)?.env ?? {};
     return env.VITE_ENABLE_ENGINE_LOGS === 'true' || !!env.DEV;
@@ -63,6 +72,39 @@ export class GameEngine {
     this.world = new World();
     this.gameStage = new Container();
     this.inputSystem = new InputSystem();
+    
+    // 从本地存储读取上次选择的关卡
+    this.selectedLevelId = this.loadSelectedLevel();
+  }
+  
+  /**
+   * 从 localStorage 读取上次选择的关卡
+   */
+  private loadSelectedLevel(): string {
+    try {
+      const saved = localStorage.getItem(this.LEVEL_STORAGE_KEY);
+      if (saved) {
+        this.debug(`📖 读取上次选择的关卡: ${saved}`);
+        return saved;
+      }
+    } catch (error) {
+      console.warn('⚠️ 读取关卡记录失败:', error);
+    }
+    
+    // 默认关卡
+    return 'linear_01';
+  }
+  
+  /**
+   * 保存选择的关卡到 localStorage
+   */
+  private saveSelectedLevel(levelId: string): void {
+    try {
+      localStorage.setItem(this.LEVEL_STORAGE_KEY, levelId);
+      this.debug(`💾 保存关卡选择: ${levelId}`);
+    } catch (error) {
+      console.warn('⚠️ 保存关卡记录失败:', error);
+    }
   }
   
   async init(): Promise<void> {
@@ -169,7 +211,13 @@ export class GameEngine {
     this.setupEventListeners();
     
     // 加载选择的关卡
+    if (!this.waveSystem) {
+      throw new Error('WaveSystem 未初始化');
+    }
     this.waveSystem.loadLevel(this.selectedLevelId, this.world);
+    
+    // 保存关卡选择（确保记录）
+    this.saveSelectedLevel(this.selectedLevelId);
     
     // 隐藏菜单，开始游戏
     this.hideMenu();
@@ -192,13 +240,15 @@ export class GameEngine {
         onSelectLevel: (_levelId: string) => {
           console.log('🎯 打开关卡选择');
           this.showLevelSelect();
-        }
+        },
+        onOpenCurveTest: () => this.showCurveTest(),
       });
       this.app.stage.addChild(this.menuScreen.getContainer());
       
       // 初始化时设置当前选中的关卡
       this.menuScreen.updateSelectedLevel(this.selectedLevelId);
     }
+    this.hideCurveTest();
     this.menuScreen.getContainer().visible = true;
     // 菜单显示时暂停世界更新（若已初始化）
     this.world.pause();
@@ -236,6 +286,27 @@ export class GameEngine {
     }
   }
   
+  private showCurveTest(): void {
+    if (!this.curveTestScreen) {
+      this.curveTestScreen = new CurveTestScreen({
+        onBack: () => {
+          this.hideCurveTest();
+          this.showMenu();
+        }
+      });
+      this.app.stage.addChild(this.curveTestScreen.getContainer());
+    }
+    this.hideMenu();
+    this.curveTestScreen.show();
+    this.world.pause();
+  }
+  
+  private hideCurveTest(): void {
+    if (this.curveTestScreen) {
+      this.curveTestScreen.hide();
+    }
+  }
+  
   /**
    * 显示关卡选择界面
    */
@@ -245,6 +316,7 @@ export class GameEngine {
         onSelect: (levelId: string) => {
           console.log(`✅ 选择关卡: ${levelId}`);
           this.selectedLevelId = levelId;
+          this.saveSelectedLevel(levelId);  // 保存到本地存储
           this.hideLevelSelect();
           
           // 更新菜单显示的关卡卡片
@@ -277,37 +349,106 @@ export class GameEngine {
     }
   }
   
-  private registerSystems(): void {
-    // 创建升级面板
-    const upgradePanel = new UpgradePanel();
-    this.app.stage.addChild(upgradePanel.getContainer());
-    this.upgradeSystem = new UpgradeSystem(this.gameStage, upgradePanel);
+  /**
+   * 通关后返回主菜单
+   */
+  private returnToMenuAfterVictory(): void {
+    console.log('🏠 通关完成，返回主菜单');
     
+    // 清理游戏状态
+    this.waveSystem?.stopLevel();
+    LevelManager.endLevel();
+    
+    // 清空所有实体（并移除精灵）
+    this.world.entities.forEach(entity => {
+      if (entity.active) {
+        const render = entity.getComponent('Render') as any;
+        if (render && render.sprite && render.sprite.parent) {
+          render.sprite.parent.removeChild(render.sprite);
+        }
+        entity.destroy();
+      }
+    });
+    
+    // 重置世界（实体/系统/事件监听一并清理）
+    this.world.reset();
+    
+    // 移除升级面板，等待下次注册时重新创建
+    if (this.upgradePanel) {
+      const container = this.upgradePanel.getContainer();
+      if (container.parent) {
+        container.parent.removeChild(container);
+      }
+      this.upgradePanel = undefined;
+    }
+    this.upgradeSystem = undefined;
+    this.waveSystem = undefined;
+    
+    // 标记游戏未初始化，下次进入游戏时重新初始化
+    this.hasGameInitialized = false;
+    
+    // 显示主菜单
+    this.showMenu();
+    
+    // 恢复世界（确保菜单交互正常）
+    this.world.resume();
+  }
+  
+  private registerSystems(): void {
+    // 清空旧世界状态，避免残留实体、事件监听与系统列表
+    this.world.reset();
+
+    // 如已有升级面板，先从舞台移除
+    if (this.upgradePanel) {
+      const container = this.upgradePanel.getContainer();
+      if (container.parent) {
+        container.parent.removeChild(container);
+      }
+      this.upgradePanel = undefined;
+    }
+
+    // 创建升级面板与对应系统
+    this.upgradePanel = new UpgradePanel();
+    this.app.stage.addChild(this.upgradePanel.getContainer());
+    this.upgradeSystem = new UpgradeSystem(this.gameStage, this.upgradePanel);
+
     // 创建波次系统
     this.waveSystem = new WaveSystem(this.gameStage);
-    
+
     this.world
       .addSystem(this.inputSystem)
       .addSystem(new StatModifierSystem()) // 属性修改器（最先执行）
       .addSystem(new AISystem())           // AI 行为在移动前执行
       .addSystem(new ProjectileSystem())   // 子弹行为（追踪、弹跳）
+      .addSystem(new HomingSystem())       // 追踪导弹系统
       .addSystem(new MovementSystem())
       .addSystem(new CompanionSystem())    // 僚机跟随
       .addSystem(new CompanionWeaponSystem()) // 僚机射击
-      .addSystem(new WeaponSystem())
+      .addSystem(new WeaponSystem())       // 玩家武器系统
+      .addSystem(new EnemyWeaponSystem())  // 敌人武器系统
       .addSystem(new CollisionSystem())
       .addSystem(new HealthSystem())
       .addSystem(new PickupSystem())
       .addSystem(new ParticleSystem())     // 粒子系统
       .addSystem(new LifetimeSystem())
       .addSystem(new CleanupSystem(this.gameStage))
-      .addSystem(new PerformanceSystem())
-      .addSystem(this.waveSystem)          // 波次系统（替代 EnemySpawnSystem）
+      .addSystem(new PerformanceSystem());
+
+    if (this.waveSystem) {
+      this.world.addSystem(this.waveSystem);          // 波次系统（替代 EnemySpawnSystem）
+    }
+
+    this.world
       .addSystem(new BossSystem())         // Boss 系统
+      .addSystem(new VictorySystem(() => this.returnToMenuAfterVictory())) // 通关系统
       .addSystem(new DeathSystem(this.gameStage))
-      .addSystem(new HitFlashSystem())
-      .addSystem(this.upgradeSystem)       // 升级系统
-      .addSystem(new RenderSystem())
+      .addSystem(new HitFlashSystem());
+
+    if (this.upgradeSystem) {
+      this.world.addSystem(this.upgradeSystem);       // 升级系统
+    }
+
+    this.world.addSystem(new RenderSystem())
       .addSystem(new UISystem(this.app.stage, this.inputSystem, this.world));
   }
   
@@ -332,14 +473,20 @@ export class GameEngine {
       }
       // 找到玩家，使用修改后的武器属性
       const player = this.world.entities.find(e => e.id === data.ownerId);
-      if (!player) return;
+      if (!player) {
+        console.error('❌ SHOOT 事件：未找到玩家实体', data.ownerId);
+        return;
+      }
       
       const weapon = player.getComponent<Weapon>('Weapon');
-      if (!weapon) return;
+      if (!weapon) {
+        console.error('❌ SHOOT 事件：玩家没有 Weapon 组件');
+        return;
+      }
       
       const baseConfig = gameData.getWeapon(data.weaponId);
       if (!baseConfig) {
-        console.error(`未找到武器配置: ${data.weaponId}`);
+        console.error(`❌ SHOOT 事件：未找到武器配置: ${data.weaponId}`);
         return;
       }
       
@@ -373,9 +520,131 @@ export class GameEngine {
       );
     });
     
+    // 监听敌人射击事件
+    this.world.eventBus.on(Events.ENEMY_SHOOT, (data) => {
+      const weaponConfig = gameData.getWeapon(data.weaponId);
+      if (!weaponConfig) {
+        console.error(`未找到敌人武器配置: ${data.weaponId}`);
+        return;
+      }
+      
+      // 计算发射方向
+      let velocityX = 0;
+      let velocityY = 0;
+      
+      switch (weaponConfig.fireDirection) {
+        case 'down':
+          // 向下直射
+          velocityX = 0;
+          velocityY = weaponConfig.bulletSpeed;
+          break;
+          
+        case 'player': {
+          // 瞄准玩家
+          const playerEntities = this.world.entities.filter(e => {
+            const tag = e.getComponent('Tag') as any;
+            return tag && tag.value === EntityType.PLAYER && e.active;
+          });
+          
+          if (playerEntities.length > 0) {
+            const playerTransform = playerEntities[0].getComponent('Transform') as any;
+            const dx = playerTransform.x - data.x;
+            const dy = playerTransform.y - data.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > 0) {
+              velocityX = (dx / distance) * weaponConfig.bulletSpeed;
+              velocityY = (dy / distance) * weaponConfig.bulletSpeed;
+            } else {
+              // 玩家正好在敌人位置，默认向下
+              velocityY = weaponConfig.bulletSpeed;
+            }
+          } else {
+            // 没有玩家，默认向下
+            velocityY = weaponConfig.bulletSpeed;
+          }
+          break;
+        }
+          
+        case 'forward': {
+          // 沿敌人朝向（从 rotation 计算）
+          const angle = data.rotation ?? 0;
+          velocityX = Math.cos(angle) * weaponConfig.bulletSpeed;
+          velocityY = Math.sin(angle) * weaponConfig.bulletSpeed;
+          break;
+        }
+          
+        case 'random': {
+          // 随机方向
+          const randomAngle = Math.random() * Math.PI * 2;
+          velocityX = Math.cos(randomAngle) * weaponConfig.bulletSpeed;
+          velocityY = Math.sin(randomAngle) * weaponConfig.bulletSpeed;
+          break;
+        }
+          
+        default:
+          // 默认向下
+          velocityY = weaponConfig.bulletSpeed;
+      }
+      
+      // 处理散射
+      const spreadCount = weaponConfig.spreadCount ?? 1;
+      const spreadAngle = weaponConfig.spreadAngle ?? 30;
+      
+      if (spreadCount > 1) {
+        const baseAngle = Math.atan2(velocityY, velocityX);
+        const angleStep = (spreadAngle * Math.PI / 180) / (spreadCount - 1);
+        const startAngle = baseAngle - (spreadAngle * Math.PI / 180) / 2;
+        
+        // 子弹生成位置偏移
+        const spawnOffset = 25;
+        
+        for (let i = 0; i < spreadCount; i++) {
+          const angle = startAngle + angleStep * i;
+          const vx = Math.cos(angle) * weaponConfig.bulletSpeed;
+          const vy = Math.sin(angle) * weaponConfig.bulletSpeed;
+          
+          // 沿发射方向偏移生成位置
+          const spawnX = data.x + Math.cos(angle) * spawnOffset;
+          const spawnY = data.y + Math.sin(angle) * spawnOffset;
+          
+          createEnemyBullet(
+            this.world,
+            this.gameStage,
+            spawnX,
+            spawnY,
+            vx,
+            vy,
+            weaponConfig
+          );
+        }
+      } else {
+        // 单发
+        // 子弹生成位置稍微偏离敌人中心，避免与敌人重叠
+        const spawnOffset = 25;  // 像素
+        const angle = Math.atan2(velocityY, velocityX);
+        const spawnX = data.x + Math.cos(angle) * spawnOffset;
+        const spawnY = data.y + Math.sin(angle) * spawnOffset;
+        
+        createEnemyBullet(
+          this.world,
+          this.gameStage,
+          spawnX,
+          spawnY,
+          velocityX,
+          velocityY,
+          weaponConfig
+        );
+      }
+    });
+    
     // 监听升级事件
     this.world.eventBus.on(Events.LEVEL_UP, (data) => {
       this.debug('Level Up!', data.level, data?.debug ? '(Debug Panel)' : '');
+      if (!this.upgradeSystem) {
+        console.warn('⚠️ UpgradeSystem 未初始化，无法显示升级面板');
+        return;
+      }
       // 显示升级面板（调试按钮会打开调试面板）
       this.upgradeSystem.showUpgradePanel(this.world, data?.debug === true);
     });

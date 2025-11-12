@@ -9,6 +9,7 @@ import { AIBehavior } from '../ai/AIBehavior';
 import { StraightDownBehavior } from '../ai/StraightDownBehavior';
 import { ZigzagBehavior } from '../ai/ZigzagBehavior';
 import { TrackingBehavior } from '../ai/TrackingBehavior';
+import { LoopingCurveBehavior } from '../ai/LoopingCurveBehavior';
 
 export class AISystem extends System {
   private behaviors: Map<string, AIBehavior> = new Map();
@@ -23,6 +24,7 @@ export class AISystem extends System {
     this.registerBehavior('tracking', new TrackingBehavior(80));
     this.registerBehavior('tracking_fast', new TrackingBehavior(150));
     this.registerBehavior('tracking_slow', new TrackingBehavior(50));
+    this.registerBehavior('looping_curve', new LoopingCurveBehavior());
   }
   
   /**

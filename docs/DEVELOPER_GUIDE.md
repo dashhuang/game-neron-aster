@@ -590,6 +590,8 @@ engine.init()
   └── app.ticker.add(update)     # 启动主循环
 ```
 
+> 通关返回主菜单时，`GameEngine.returnToMenuAfterVictory()` 会清空世界中的系统列表、事件监听与升级面板，下次进入关卡重新注册，避免出现循环过程中逐次加速的 Bug。
+
 ### 主循环
 
 ```

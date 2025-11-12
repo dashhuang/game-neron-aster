@@ -12,6 +12,7 @@ import { Tag } from '../components/Tag';
 import { InputSystem } from './InputSystem';
 import { NeonRenderer } from '../graphics/NeonRenderer';
 import { EntityType } from '../config/constants';
+import { LevelManager, LevelState } from '../managers/LevelManager';
 
 export class UISystem extends System {
   private uiContainer: Container;
@@ -37,6 +38,10 @@ export class UISystem extends System {
   private restartButton!: Graphics;
   private restartText!: Text;
   
+  private victoryContainer!: Container;
+  private victoryText!: Text;
+  private cleanupTimerText!: Text;
+  
   private debugButton!: Graphics;
   private debugText!: Text;
   
@@ -58,6 +63,7 @@ export class UISystem extends System {
     this.createHUD();
     this.createJoystick();
     this.createGameOverUI();
+    this.createVictoryUI();
     this.createDebugButton(world);
     
     // 监听玩家死亡事件
@@ -174,6 +180,8 @@ export class UISystem extends System {
     this.xpRateText.x = GAME_WIDTH - 100;
     this.xpRateText.y = 94;
     this.uiContainer.addChild(this.xpRateText);
+    
+    // 波次调试信息（控制台输出，不显示在屏幕）
     
     // 经验条背景
     this.xpBarBg = new Graphics();
@@ -296,7 +304,83 @@ export class UISystem extends System {
     this.uiContainer.addChild(this.gameOverContainer);
   }
   
+  /**
+   * 创建通关 UI
+   */
+  private createVictoryUI(): void {
+    this.victoryContainer = new Container();
+    this.victoryContainer.visible = false;
+    this.victoryContainer.zIndex = 2000;
+    
+    // 半透明背景
+    const bg = new Graphics();
+    bg.rect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    bg.fill({ color: 0x000000, alpha: 0.6 });
+    this.victoryContainer.addChild(bg);
+    
+    // 游戏通关文字
+    this.victoryText = new Text({
+      text: '游戏通关',
+      style: {
+        fontFamily: '"Press Start 2P", "Microsoft YaHei", Arial',
+        fontSize: 48,
+        fill: COLORS.NEON_GOLD,
+        fontWeight: 'bold',
+        align: 'center',
+        stroke: { color: 0x000000, width: 4 },
+      }
+    });
+    this.victoryText.anchor.set(0.5);
+    this.victoryText.x = GAME_WIDTH / 2;
+    this.victoryText.y = GAME_HEIGHT / 2 - 100;
+    this.victoryContainer.addChild(this.victoryText);
+    
+    // 收尾阶段提示
+    const cleanupHint = new Text({
+      text: '收集剩余经验',
+      style: {
+        fontFamily: '"Press Start 2P", "Microsoft YaHei", Arial',
+        fontSize: 20,
+        fill: COLORS.NEON_CYAN,
+        align: 'center',
+      }
+    });
+    cleanupHint.anchor.set(0.5);
+    cleanupHint.x = GAME_WIDTH / 2;
+    cleanupHint.y = GAME_HEIGHT / 2;
+    this.victoryContainer.addChild(cleanupHint);
+    
+    // 倒计时文字
+    this.cleanupTimerText = new Text({
+      text: '10',
+      style: {
+        fontFamily: '"Press Start 2P", "Microsoft YaHei", Arial',
+        fontSize: 60,
+        fill: COLORS.NEON_BLUE,
+        fontWeight: 'bold',
+        align: 'center',
+        stroke: { color: 0x000000, width: 3 },
+      }
+    });
+    this.cleanupTimerText.anchor.set(0.5);
+    this.cleanupTimerText.x = GAME_WIDTH / 2;
+    this.cleanupTimerText.y = GAME_HEIGHT / 2 + 80;
+    this.victoryContainer.addChild(this.cleanupTimerText);
+    
+    this.uiContainer.addChild(this.victoryContainer);
+  }
+  
   update(world: World, delta: number): void {
+    // 处理通关UI
+    if (LevelManager.state === LevelState.VICTORY_CLEANUP) {
+      this.victoryContainer.visible = true;
+      // 更新倒计时
+      const timeRemaining = LevelManager.cleanupDuration - LevelManager.cleanupTimer;
+      this.cleanupTimerText.text = Math.ceil(Math.max(0, timeRemaining)).toString();
+    } else {
+      this.victoryContainer.visible = false;
+    }
+    
     // 如果游戏结束，不更新游戏时间
     if (this.isGameOver) return;
     
@@ -330,6 +414,7 @@ export class UISystem extends System {
     const totalXP = this.xpEvents.reduce((sum, e) => sum + e.amount, 0);
     const xpRate = Math.round(totalXP);
     this.xpRateText.text = `XP/10s: ${xpRate}`;
+    
     
     // 更新等级、经验条和玩家跟随血量显示
     const players = this.query(world, 'Tag', 'PlayerXP', 'Health', 'Transform').filter(e => {

@@ -148,19 +148,23 @@ export const gameData = new DataLoader();
    ↓
 8. WeaponSystem            # 玩家武器射击
    ↓
-9. CollisionSystem         # 碰撞检测（含弹射重定向）
+9. EnemyWeaponSystem       # 敌人武器射击
    ↓
-10. HealthSystem           # 处理伤害
+10. HomingSystem           # 追踪导弹系统
    ↓
-11. PickupSystem           # 拾取经验
+11. CollisionSystem        # 碰撞检测（含弹射重定向）
    ↓
-12. ParticleSystem         # 粒子效果管理
+12. HealthSystem           # 处理伤害
    ↓
-13. LifetimeSystem         # 生命周期
+13. PickupSystem           # 拾取经验
    ↓
-14. CleanupSystem          # 清理超出屏幕实体
+14. ParticleSystem         # 粒子效果管理
    ↓
-15. PerformanceSystem      # 限制实体数量
+15. LifetimeSystem         # 生命周期
+   ↓
+16. CleanupSystem          # 清理超出屏幕实体
+   ↓
+17. PerformanceSystem      # 限制实体数量
    ↓
 16. EnemySpawnSystem       # 生成敌人
    ↓
@@ -180,6 +184,13 @@ export const gameData = new DataLoader();
 - 先生成事件 → 后消费事件
 - 性能系统在生成系统之前
 - AI 和 Projectile 在 Movement 之前更新速度
+
+### 内置 AI 行为
+
+- `straight_down`：恒定向下冲刺
+- `zigzag`：水平摆动 + 下落
+- `tracking` / `tracking_fast` / `tracking_slow`：不同转向速度的追踪玩家
+- `looping_curve`：纵向列队垂直入场 → 270° 圆弧绕向远侧（入场/离场均保持切线方向）→ 沿出生侧水平切线离场，同时保持模型朝向移动方向
 
 ---
 
@@ -334,6 +345,7 @@ System B/C/D 处理事件
 - **GameEngine** 状态切换
   - `showMenu()` → `enterGame()` → `showTalent()` → `hideTalent()` 循环
   - 天赋界面展示期间保持世界暂停，返回菜单后可再次进入关卡
+  - `returnToMenuAfterVictory()` 会销毁剩余实体、清空事件监听与系统列表，下次进入关卡重新注册，避免“越玩越快”
 
 - **TalentScreen** (`src/ui/TalentScreen.ts`)
   - 渲染天赋树节点、拖拽与缩放交互（桌面滚轮、移动端双指捏合）
@@ -353,9 +365,9 @@ System B/C/D 处理事件
    - 减少 GC 压力
 
 2. **实体限制** (`PerformanceSystem`)
-   - 敌人 ≤ 30
-   - 子弹 ≤ 50
-   - 超出限制自动销毁
+   - 敌人 ≤ 200
+   - 子弹 ≤ 50（玩家/敌人/僚机子弹总数）
+   - 超出限制时先移除 `Render` 精灵再销毁实体，避免屏幕残影
 
 3. **屏幕外清理** (`CleanupSystem`)
    - 超出屏幕边界自动销毁

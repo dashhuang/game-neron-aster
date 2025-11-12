@@ -80,6 +80,25 @@
 }
 ```
 
+#### 三角形 - 环形编队敌人
+```json
+{
+  "id": "triangle_loop",
+  "name": "环形尖兵",
+  "hp": 28,
+  "speed": 90,
+  "damage": 5,
+  "size": 15.6,
+  "color": 16711816,
+  "shape": "triangle",
+  "xpDrop": 2,
+  "aiType": "looping_curve",
+  "tags": ["geometric", "formation", "curve"]
+}
+```
+
+> 调试：主菜单 `弧线测试` 按钮会调用 `CurveTestScreen` 可视化该行为的完整路径（含左右起点与生成点对齐标记）。入场保持垂直切线，绕行 270° 至远侧后再沿出生侧水平切线离开，不再出现额外折线。
+
 ---
 
 ## 🔫 武器配置示例

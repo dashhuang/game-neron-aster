@@ -1,12 +1,12 @@
 import { Container, Graphics, Text, Rectangle, Sprite, Assets, FillGradient } from 'pixi.js';
 import { GAME_WIDTH, GAME_HEIGHT, COLORS } from '../config/constants';
 import { gameData } from '../data/DataLoader';
-import { LevelConfig } from '../data/types/LevelConfig';
 
 interface MenuCallbacks {
   onStart: () => void;
   onOpenTalent: () => void;
   onSelectLevel: (levelId: string) => void;
+  onOpenCurveTest: () => void;
 }
 
 /**
@@ -113,6 +113,12 @@ export class MenuScreen {
       this.callbacks.onOpenTalent();
     }, startY + 200 + buttonSpacing);
     this.container.addChild(talentButton);
+    
+    const curveButton = this.createButton('弧线测试', () => {
+      console.log('[Menu] Curve test button clicked');
+      this.callbacks.onOpenCurveTest();
+    }, startY + 200 + buttonSpacing * 2);
+    this.container.addChild(curveButton);
   }
   
   /**

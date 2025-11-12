@@ -12,9 +12,11 @@ import { createRender } from '../components/Render';
 import { createTag } from '../components/Tag';
 import { createAI } from '../components/AI';
 import { createEnemyData } from '../components/EnemyData';
+import { createWeapon } from '../components/Weapon';
 import { EntityType, LAYERS } from '../config/constants';
 import { NeonRenderer } from '../graphics/NeonRenderer';
 import { EnemyConfig } from '../data/types/EnemyConfig';
+import { gameData } from '../data/DataLoader';
 
 // 存储每个敌人的颜色，用于受击闪烁后恢复
 export const ENEMY_COLORS = new Map<number, number>();
@@ -69,6 +71,20 @@ export function createEnemyFromConfig(
   
   // 添加 AI 组件
   entity.addComponent(createAI(config.aiType));
+  
+  // 如果配置了武器，添加 Weapon 组件
+  if (config.weaponId) {
+    const weaponConfig = gameData.getWeapon(config.weaponId);
+    if (weaponConfig) {
+      entity.addComponent(createWeapon(
+        weaponConfig.fireRate,
+        weaponConfig.damage,
+        weaponConfig.bulletSpeed,
+        weaponConfig.bulletLifetime,
+        config.weaponId
+      ));
+    }
+  }
   
   return entity;
 }
