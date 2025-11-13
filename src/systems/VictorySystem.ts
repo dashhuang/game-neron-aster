@@ -11,14 +11,12 @@ import { Transform } from '../components/Transform';
 import { Velocity } from '../components/Velocity';
 
 export class VictorySystem extends System {
-  private onReturnToMenu?: () => void;
   private playerExitSpeed: number = 400;  // 玩家飞离速度
   private hasEnteredExitPhase: boolean = false;
   
-  constructor(onReturnToMenu?: () => void) {
+  constructor() {
     super();
     this.updateWhenPaused = true;  // 确保在暂停时也能处理通关流程
-    this.onReturnToMenu = onReturnToMenu;
   }
   
   update(world: World, delta: number): void {
@@ -119,12 +117,15 @@ export class VictorySystem extends System {
       if (transform) {
         // 检查玩家是否已飞离屏幕
         if (transform.y < -100) {
-          // 玩家已飞离，完成关卡并返回菜单
+          // 玩家已飞离，完成关卡
           LevelManager.completeLevel();
           
-          if (this.onReturnToMenu) {
-            this.onReturnToMenu();
-          }
+          // 触发关卡完成事件（由Engine处理结算界面）
+          world.eventBus.emit('level_complete', {
+            levelId: LevelManager.currentLevel?.id,
+            time: LevelManager.levelTime,
+            success: true,
+          });
         }
       }
     }

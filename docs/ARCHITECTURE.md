@@ -340,12 +340,20 @@ System B/C/D 处理事件
 
 - **MenuScreen** (`src/ui/MenuScreen.ts`)
   - 负责关卡选择、入口按钮，显示时调用 `World.pause()` 冻结世界
-  - 点击“进入游戏”后触发 `GameEngine.enterGame()`，初始化系统与玩家实体
+  - 显示关卡卡片预览，动态显示当前选中关卡信息
+  - 点击"进入游戏"后触发 `GameEngine.enterGame()`，初始化系统与玩家实体
+
+- **GameResultScreen** (`src/ui/GameResultScreen.ts`)
+  - 关卡完成时显示通关结算界面
+  - 显示游戏统计：击败敌人数、总经验、生存时间
+  - 提供返回主菜单按钮
+  - 霓虹风格设计，与游戏整体风格统一
 
 - **GameEngine** 状态切换
   - `showMenu()` → `enterGame()` → `showTalent()` → `hideTalent()` 循环
+  - 通关流程：玩家飞离 → `level_complete事件` → `showGameResult()` → 点击返回 → `returnToMenuAfterResult()`
   - 天赋界面展示期间保持世界暂停，返回菜单后可再次进入关卡
-  - `returnToMenuAfterVictory()` 会销毁剩余实体、清空事件监听与系统列表，下次进入关卡重新注册，避免“越玩越快”
+  - `returnToMenuAfterResult()` 会销毁剩余实体、清空事件监听与系统列表、重置统计数据，下次进入关卡重新注册
 
 - **TalentScreen** (`src/ui/TalentScreen.ts`)
   - 渲染天赋树节点、拖拽与缩放交互（桌面滚轮、移动端双指捏合）

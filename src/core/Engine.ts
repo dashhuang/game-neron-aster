@@ -41,6 +41,7 @@ import { MenuScreen } from '../ui/MenuScreen';
 import { CurveTestScreen } from '../ui/CurveTestScreen';
 import { TalentScreen } from '../ui/TalentScreen';
 import { LevelSelectScreen } from '../ui/LevelSelectScreen';
+import { GameResultScreen } from '../ui/GameResultScreen';
 import { LevelManager } from '../managers/LevelManager';
 import { CompanionSystem } from '../systems/CompanionSystem';
 import { CompanionWeaponSystem } from '../systems/CompanionWeaponSystem';
@@ -58,9 +59,16 @@ export class GameEngine {
   private curveTestScreen?: CurveTestScreen;
   private talentScreen?: TalentScreen;
   private levelSelectScreen?: LevelSelectScreen;
+  private gameResultScreen?: GameResultScreen;
   private selectedLevelId: string;
   private hasGameInitialized: boolean = false;
   private readonly LEVEL_STORAGE_KEY = 'neon_aster_selected_level';
+  
+  // 游戏统计数据
+  private gameStats = {
+    enemiesDefeated: 0,
+    totalXP: 0,
+  };
   private readonly debugLogsEnabled: boolean = (() => {
     const env = (import.meta as any)?.env ?? {};
     return env.VITE_ENABLE_ENGINE_LOGS === 'true' || !!env.DEV;
@@ -350,10 +358,46 @@ export class GameEngine {
   }
   
   /**
-   * 通关后返回主菜单
+   * 显示通关结算界面
    */
-  private returnToMenuAfterVictory(): void {
-    console.log('🏠 通关完成，返回主菜单');
+  private showGameResult(): void {
+    if (!this.gameResultScreen) {
+      this.gameResultScreen = new GameResultScreen({
+        onBackToMenu: () => {
+          this.hideGameResult();
+          this.returnToMenuAfterResult();
+        }
+      });
+      this.app.stage.addChild(this.gameResultScreen.getContainer());
+    }
+    
+    // 获取当前关卡名称
+    const level = gameData.getLevel(this.selectedLevelId);
+    const levelName = level ? level.name : '未知关卡';
+    
+    // 获取生存时间
+    const survivalTime = this.waveSystem?.getLevelTime() || 0;
+    
+    // 显示结算界面
+    this.gameResultScreen.show({
+      enemiesDefeated: this.gameStats.enemiesDefeated,
+      totalXP: this.gameStats.totalXP,
+      survivalTime,
+      levelName,
+    });
+  }
+  
+  private hideGameResult(): void {
+    if (this.gameResultScreen) {
+      this.gameResultScreen.hide();
+    }
+  }
+  
+  /**
+   * 结算后返回主菜单
+   */
+  private returnToMenuAfterResult(): void {
+    console.log('🏠 返回主菜单');
     
     // 清理游戏状态
     this.waveSystem?.stopLevel();
@@ -383,6 +427,10 @@ export class GameEngine {
     }
     this.upgradeSystem = undefined;
     this.waveSystem = undefined;
+    
+    // 重置统计数据
+    this.gameStats.enemiesDefeated = 0;
+    this.gameStats.totalXP = 0;
     
     // 标记游戏未初始化，下次进入游戏时重新初始化
     this.hasGameInitialized = false;
@@ -440,7 +488,7 @@ export class GameEngine {
 
     this.world
       .addSystem(new BossSystem())         // Boss 系统
-      .addSystem(new VictorySystem(() => this.returnToMenuAfterVictory())) // 通关系统
+      .addSystem(new VictorySystem())      // 通关系统（通过事件触发）
       .addSystem(new DeathSystem(this.gameStage))
       .addSystem(new HitFlashSystem());
 
@@ -647,6 +695,36 @@ export class GameEngine {
       }
       // 显示升级面板（调试按钮会打开调试面板）
       this.upgradeSystem.showUpgradePanel(this.world, data?.debug === true);
+    });
+    
+    // 监听敌人死亡事件 - 追踪击败数
+    this.world.eventBus.on(Events.DEATH, (data) => {
+      if (data.entity) {
+        const tag = data.entity.getComponent('Tag') as any;
+        if (tag && tag.value === EntityType.ENEMY) {
+          this.gameStats.enemiesDefeated++;
+        }
+      }
+    });
+    
+    // 监听经验拾取事件 - 追踪总经验
+    this.world.eventBus.on(Events.PICKUP, (data) => {
+      if (data.type === 'xp' && data.amount) {
+        this.gameStats.totalXP += data.amount;
+      }
+    });
+    
+    // 监听关卡完成事件 - 显示结算界面
+    this.world.eventBus.on('level_complete', (data) => {
+      console.log('🎉 关卡完成！显示结算界面', data);
+      
+      // 暂停游戏
+      this.world.pause();
+      
+      // 延迟显示结算界面（让玩家飞离屏幕）
+      setTimeout(() => {
+        this.showGameResult();
+      }, 1000);
     });
   }
   
