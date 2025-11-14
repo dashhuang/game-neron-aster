@@ -7,7 +7,6 @@ import { System, World } from '../core/ECS';
 import { Transform } from '../components/Transform';
 import { Render } from '../components/Render';
 import { Tag } from '../components/Tag';
-import { Velocity } from '../components/Velocity';
 import { GAME_WIDTH, GAME_HEIGHT, SCALE_FACTOR, EntityType } from '../config/constants';
 import { Container } from 'pixi.js';
 
@@ -20,9 +19,10 @@ export class CleanupSystem extends System {
   }
   
   update(world: World, _delta: number): void {
-    const entities = this.query(world, 'Transform', 'Tag', 'Velocity');
+    const entities = this.query(world, 'Transform', 'Tag');
 
     let minEnemyY = Infinity;
+    let maxEnemyY = -Infinity;
 
     for (const entity of entities) {
       const transform = entity.getComponent<Transform>('Transform');
@@ -30,8 +30,13 @@ export class CleanupSystem extends System {
 
       if (!transform || !tag) continue;
 
-      if (tag.value === EntityType.ENEMY && transform.y < minEnemyY) {
-        minEnemyY = transform.y;
+      if (tag.value === EntityType.ENEMY) {
+        if (transform.y < minEnemyY) {
+          minEnemyY = transform.y;
+        }
+        if (transform.y > maxEnemyY) {
+          maxEnemyY = transform.y;
+        }
       }
     }
 
@@ -40,37 +45,32 @@ export class CleanupSystem extends System {
       minEnemyY === Infinity || minEnemyY >= 0
         ? 0
         : Math.max(0, -minEnemyY) + 50 * SCALE_FACTOR; // 额外缓冲 50px（放大后计算）
+    const dynamicBottomExtension =
+      maxEnemyY === -Infinity || maxEnemyY <= GAME_HEIGHT
+        ? 0
+        : Math.max(0, maxEnemyY - GAME_HEIGHT) + 50 * SCALE_FACTOR;
     const enemyTopMargin = baseMargin + dynamicTopExtension;
+    const enemyBottomMargin = baseMargin + dynamicBottomExtension;
     
     for (const entity of entities) {
       const transform = entity.getComponent<Transform>('Transform');
       const tag = entity.getComponent<Tag>('Tag');
-      const velocity = entity.getComponent<Velocity>('Velocity');
       
       if (!transform || !tag) continue;
       
       if (tag.value === EntityType.PLAYER) continue;
 
       const horizontalMargin = baseMargin;
-      const bottomMargin = baseMargin;
+      const bottomMargin = tag.value === EntityType.ENEMY ? enemyBottomMargin : baseMargin;
       const topMargin = tag.value === EntityType.ENEMY ? enemyTopMargin : baseMargin;
 
-      let shouldRemove = 
+      const outOfBounds = 
         transform.x < -horizontalMargin ||
         transform.x > GAME_WIDTH + horizontalMargin ||
         transform.y < -topMargin ||
         transform.y > GAME_HEIGHT + bottomMargin;
-
-      if (shouldRemove && tag.value === EntityType.ENEMY) {
-        const vy = velocity?.vy ?? 0;
-        const safeBottomLimit = GAME_HEIGHT + baseMargin;
-        if (transform.y > safeBottomLimit && vy < 0) {
-          // 敌人从屏幕下方向上行进，允许其进入画面
-          shouldRemove = false;
-        }
-      }
-
-      if (shouldRemove) {
+      
+      if (outOfBounds) {
         const render = entity.getComponent<Render>('Render');
         if (render && render.sprite) {
           this.stage.removeChild(render.sprite);
