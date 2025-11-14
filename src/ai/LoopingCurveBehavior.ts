@@ -185,7 +185,7 @@ function buildSimpleLoopingPath(
   effectiveStartY: number
 ): LoopingCurvePathData {
   const exitAnchor = params.exitAnchor ?? getDefaultExitAnchor(direction);
-  const entryX = params.entryAnchor?.x ?? startX;
+  const entryX = params.entryAnchor?.x ?? (startX + (direction === 1 ? -40 : 40));
   const entryY = params.entryAnchor?.y ?? DEFAULT_ENTRY_Y;
   const rawPoints: Array<{ x: number; y: number }> = [];
 
