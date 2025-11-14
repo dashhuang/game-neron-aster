@@ -147,14 +147,14 @@
         },
         "arc": {
           "radius": 150,
-          "spanDeg": 270
+          "spanDeg": 360
         },
         "exit": {
-          "targetX": 100,
+          "targetX": 220,
           "targetY": 1500,
           "angleDeg": 225,
-          "startTangentDistance": 320,
-          "endTangentDistance": 420
+          "startTangentDistance": 420,
+          "endTangentDistance": 520
         }
       },
       "tags": ["geometric", "formation", "curve"]
@@ -177,14 +177,14 @@
         },
         "arc": {
           "radius": 150,
-          "spanDeg": 270
+          "spanDeg": 360
         },
         "exit": {
-          "targetX": 100,
+          "targetX": 220,
           "targetY": 1500,
           "angleDeg": 225,
-          "startTangentDistance": 320,
-          "endTangentDistance": 420
+          "startTangentDistance": 420,
+          "endTangentDistance": 520
         }
       },
       "weaponId": "enemy_aimed_shot",
