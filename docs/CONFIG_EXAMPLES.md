@@ -80,6 +80,23 @@
 }
 ```
 
+#### 三角形 - 环形编队敌人（特殊敌人，使用紫色）
+```json
+{
+  "id": "star_hunter",
+  "name": "猎星者",
+  "hp": 100,
+  "speed": 80,
+  "damage": 15,
+  "size": 18,
+  "color": 11158783,
+  "shape": "star",
+  "xpDrop": 6,
+  "aiType": "tracking",
+  "tags": ["geometric", "hunter", "dangerous"]
+}
+```
+
 #### 三角形 - 环形编队敌人（自动切线）
 ```json
 {
@@ -139,34 +156,49 @@
 }
 ```
 
-#### 三角形 - 环形编队敌人（向下离场）
+#### 关卡波次覆写示例（向右/向下离场）
 ```json
 {
-  "id": "triangle_loop_bottom",
-  "name": "环形尖兵·下离场",
-  "hp": 28,
-  "speed": 90,
-  "damage": 5,
-  "size": 15.6,
-  "color": 16711816,
-  "shape": "triangle",
-  "xpDrop": 2,
-  "aiType": "looping_curve",
-  "aiParams": {
-    "auto": {
-      "circleCenter": { "x": 360, "y": 320 },
-      "radius": 150,
-      "exitPoint": { "x": 360, "y": 1500 },
-      "minArcDeg": 315,
-      "exitStartScale": 0.45,
-      "exitEndScale": 0.65
+  "time": 12,
+  "enemies": [
+    {
+      "id": "triangle_loop",
+      "aiParams": {
+        "auto": {
+          "entryPoint": { "x": 540, "y": -40 },
+          "circleCenter": { "x": 520, "y": 320 },
+          "radius": 150,
+          "exitPoint": { "x": 120, "y": 1500 },
+          "minArcDeg": 360,
+          "clockwise": false,
+          "exitStartScale": 0.45,
+          "exitEndScale": 0.6
+        }
+      }
+    },
+    {
+      "id": "triangle_loop_shooter",
+      "aiParams": {
+        "auto": {
+          "entryPoint": { "x": 540, "y": -40 },
+          "circleCenter": { "x": 520, "y": 320 },
+          "radius": 150,
+          "exitPoint": { "x": 120, "y": 1500 },
+          "minArcDeg": 360,
+          "clockwise": false,
+          "exitStartScale": 0.45,
+          "exitEndScale": 0.6
+        }
+      }
     }
-  },
-  "tags": ["geometric", "formation", "curve"]
+  ],
+  "count": 8,
+  "formation": "column",
+  "formation_params": { "x": 500, "spacing": 60, "y": -40 }
 }
 ```
 
-> 镜像到右侧时，可复制配置并仅通过 `auto.entryPoint`（可选）、`circleCenter`、`exitPoint` 与 `minArcDeg` 调整方向。例如 `triangle_loop_right` 使用 `circleCenter={x:520,y:320}`、`exitPoint={x:120,y:1500}`、`minArcDeg=360`，可让敌机完整绕圈后缓慢向左下离场。如需更细调，可在自动结果基础上补充局部的 `entry` / `exit` 字段覆盖。
+> 同一波次中既可以混用不同敌人 ID，也可以为同一个敌人提供多套 `aiParams`。向下离场只需把 `exitPoint` 改为 `{ "x": 360, "y": 1500 }` 并把 `minArcDeg` 调整为 `315`，即可让队列在圆弧右侧折向屏幕底部离开。
 
 > 调试：主菜单 `弧线测试` 按钮会调用 `CurveTestScreen` 可视化该行为的完整路径（含左右起点与生成点对齐标记）。通过 `aiParams` 可以在不修改代码的情况下微调入场高度、切线方向与离场距离，系统会自动做 Hermite 与圆弧衔接，确保曲线平滑。若需要完全不同的弧线形态，建议复制敌人配置为新的 ID。敌人从同一列生成时，路径会自动向上延展到最靠上的出生点，避免队列互相重叠。弧线测试界面会实时读取 `enemy_test` 关卡的波次与敌人配置，确保与实际轨迹完全一致。
 

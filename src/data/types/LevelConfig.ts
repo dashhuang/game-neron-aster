@@ -1,6 +1,10 @@
+import { EnemyConfig } from './EnemyConfig';
+
 /**
- * 武器倍数配置
+ * 关卡配置接口
+ * 定义关卡的波次、敌人生成规则
  */
+
 export interface WeaponMultipliers {
   damage?: number;
   fireRate?: number;
@@ -10,10 +14,13 @@ export interface WeaponMultipliers {
   'homing.trackingRange'?: number;
 }
 
-/**
- * 关卡配置接口
- * 定义关卡的波次、敌人生成规则
- */
+export interface WaveEnemyDefinition {
+  id: string;
+  overrides?: Partial<EnemyConfig>;
+  aiParams?: EnemyConfig['aiParams'];
+}
+
+export type WaveEnemyEntry = string | WaveEnemyDefinition;
 
 export interface LevelConfig {
   // 基础信息
@@ -65,7 +72,7 @@ export interface LevelConfig {
  */
 export interface WaveConfig {
   time: number;                  // 触发时间（秒）
-  enemies: string[];             // 敌人ID列表
+  enemies: WaveEnemyEntry[];     // 敌人定义（可以是字符串 ID 或带覆写的对象）
   count: number;                 // 数量
   formation?: string;            // 编队类型：'line' | 'v_shape' | 'circle' | 'wave' | 'random'
   position?: 'top' | 'sides' | 'around'; // 生成位置

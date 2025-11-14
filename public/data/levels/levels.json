@@ -122,14 +122,126 @@
         {
           "time": 12,
           "enemies": [
-            "triangle_loop_right",
-            "triangle_loop_shooter_right",
-            "triangle_loop_right",
-            "triangle_loop_right",
-            "triangle_loop_right",
-            "triangle_loop_shooter_right",
-            "triangle_loop_right",
-            "triangle_loop_right"
+            {
+              "id": "triangle_loop",
+              "aiParams": {
+                "auto": {
+                  "entryPoint": { "x": 540, "y": -40 },
+                  "circleCenter": { "x": 520, "y": 320 },
+                  "radius": 150,
+                  "exitPoint": { "x": 120, "y": 1500 },
+                  "minArcDeg": 360,
+                  "clockwise": false,
+                  "exitStartScale": 0.45,
+                  "exitEndScale": 0.6
+                }
+              }
+            },
+            {
+              "id": "triangle_loop_shooter",
+              "aiParams": {
+                "auto": {
+                  "entryPoint": { "x": 540, "y": -40 },
+                  "circleCenter": { "x": 520, "y": 320 },
+                  "radius": 150,
+                  "exitPoint": { "x": 120, "y": 1500 },
+                  "minArcDeg": 360,
+                  "clockwise": false,
+                  "exitStartScale": 0.45,
+                  "exitEndScale": 0.6
+                }
+              }
+            },
+            {
+              "id": "triangle_loop",
+              "aiParams": {
+                "auto": {
+                  "entryPoint": { "x": 540, "y": -40 },
+                  "circleCenter": { "x": 520, "y": 320 },
+                  "radius": 150,
+                  "exitPoint": { "x": 120, "y": 1500 },
+                  "minArcDeg": 360,
+                  "clockwise": false,
+                  "exitStartScale": 0.45,
+                  "exitEndScale": 0.6
+                }
+              }
+            },
+            {
+              "id": "triangle_loop",
+              "aiParams": {
+                "auto": {
+                  "entryPoint": { "x": 540, "y": -40 },
+                  "circleCenter": { "x": 520, "y": 320 },
+                  "radius": 150,
+                  "exitPoint": { "x": 120, "y": 1500 },
+                  "minArcDeg": 360,
+                  "clockwise": false,
+                  "exitStartScale": 0.45,
+                  "exitEndScale": 0.6
+                }
+              }
+            },
+            {
+              "id": "triangle_loop",
+              "aiParams": {
+                "auto": {
+                  "entryPoint": { "x": 540, "y": -40 },
+                  "circleCenter": { "x": 520, "y": 320 },
+                  "radius": 150,
+                  "exitPoint": { "x": 120, "y": 1500 },
+                  "minArcDeg": 360,
+                  "clockwise": false,
+                  "exitStartScale": 0.45,
+                  "exitEndScale": 0.6
+                }
+              }
+            },
+            {
+              "id": "triangle_loop_shooter",
+              "aiParams": {
+                "auto": {
+                  "entryPoint": { "x": 540, "y": -40 },
+                  "circleCenter": { "x": 520, "y": 320 },
+                  "radius": 150,
+                  "exitPoint": { "x": 120, "y": 1500 },
+                  "minArcDeg": 360,
+                  "clockwise": false,
+                  "exitStartScale": 0.45,
+                  "exitEndScale": 0.6
+                }
+              }
+            },
+            {
+              "id": "triangle_loop",
+              "aiParams": {
+                "auto": {
+                  "entryPoint": { "x": 540, "y": -40 },
+                  "circleCenter": { "x": 520, "y": 320 },
+                  "radius": 150,
+                  "exitPoint": { "x": 120, "y": 1500 },
+                  "minArcDeg": 360,
+                  "clockwise": false,
+                  "exitStartScale": 0.45,
+                  "exitEndScale": 0.6
+                }
+              }
+            },
+            {
+              "id": "triangle_loop",
+              "aiParams": {
+                "auto": {
+                  "entryPoint": { "x": 540, "y": -40 },
+                  "circleCenter": { "x": 520, "y": 320 },
+                  "radius": 150,
+                  "exitPoint": { "x": 120, "y": 1500 },
+                  "minArcDeg": 360,
+                  "clockwise": false,
+                  "exitStartScale": 0.45,
+                  "exitEndScale": 0.6
+                }
+              }
+            }
           ],
           "count": 8,
           "formation": "column",
@@ -138,14 +250,110 @@
         {
           "time": 24,
           "enemies": [
-            "triangle_loop_bottom",
-            "triangle_loop_shooter_bottom",
-            "triangle_loop_bottom",
-            "triangle_loop_bottom",
-            "triangle_loop_bottom",
-            "triangle_loop_shooter_bottom",
-            "triangle_loop_bottom",
-            "triangle_loop_bottom"
+            {
+              "id": "triangle_loop",
+              "aiParams": {
+                "auto": {
+                  "circleCenter": { "x": 360, "y": 320 },
+                  "radius": 150,
+                  "exitPoint": { "x": 360, "y": 1500 },
+                  "minArcDeg": 315,
+                  "exitStartScale": 0.45,
+                  "exitEndScale": 0.65
+                }
+              }
+            },
+            {
+              "id": "triangle_loop_shooter",
+              "aiParams": {
+                "auto": {
+                  "circleCenter": { "x": 360, "y": 320 },
+                  "radius": 150,
+                  "exitPoint": { "x": 360, "y": 1500 },
+                  "minArcDeg": 315,
+                  "exitStartScale": 0.45,
+                  "exitEndScale": 0.65
+                }
+              }
+            },
+            {
+              "id": "triangle_loop",
+              "aiParams": {
+                "auto": {
+                  "circleCenter": { "x": 360, "y": 320 },
+                  "radius": 150,
+                  "exitPoint": { "x": 360, "y": 1500 },
+                  "minArcDeg": 315,
+                  "exitStartScale": 0.45,
+                  "exitEndScale": 0.65
+                }
+              }
+            },
+            {
+              "id": "triangle_loop",
+              "aiParams": {
+                "auto": {
+                  "circleCenter": { "x": 360, "y": 320 },
+                  "radius": 150,
+                  "exitPoint": { "x": 360, "y": 1500 },
+                  "minArcDeg": 315,
+                  "exitStartScale": 0.45,
+                  "exitEndScale": 0.65
+                }
+              }
+            },
+            {
+              "id": "triangle_loop",
+              "aiParams": {
+                "auto": {
+                  "circleCenter": { "x": 360, "y": 320 },
+                  "radius": 150,
+                  "exitPoint": { "x": 360, "y": 1500 },
+                  "minArcDeg": 315,
+                  "exitStartScale": 0.45,
+                  "exitEndScale": 0.65
+                }
+              }
+            },
+            {
+              "id": "triangle_loop_shooter",
+              "aiParams": {
+                "auto": {
+                  "circleCenter": { "x": 360, "y": 320 },
+                  "radius": 150,
+                  "exitPoint": { "x": 360, "y": 1500 },
+                  "minArcDeg": 315,
+                  "exitStartScale": 0.45,
+                  "exitEndScale": 0.65
+                }
+              }
+            },
+            {
+              "id": "triangle_loop",
+              "aiParams": {
+                "auto": {
+                  "circleCenter": { "x": 360, "y": 320 },
+                  "radius": 150,
+                  "exitPoint": { "x": 360, "y": 1500 },
+                  "minArcDeg": 315,
+                  "exitStartScale": 0.45,
+                  "exitEndScale": 0.65
+                }
+              }
+            },
+            {
+              "id": "triangle_loop",
+              "aiParams": {
+                "auto": {
+                  "circleCenter": { "x": 360, "y": 320 },
+                  "radius": 150,
+                  "exitPoint": { "x": 360, "y": 1500 },
+                  "minArcDeg": 315,
+                  "exitStartScale": 0.45,
+                  "exitEndScale": 0.65
+                }
+              }
+            }
           ],
           "count": 8,
           "formation": "column",

@@ -5,7 +5,8 @@
 
 import { System, World } from '../core/ECS';
 import { Container } from 'pixi.js';
-import { LevelConfig, WaveConfig, EnemyPoolEntry } from '../data/types/LevelConfig';
+import { EnemyConfig } from '../data/types/EnemyConfig';
+import { LevelConfig, WaveConfig, EnemyPoolEntry, WaveEnemyEntry } from '../data/types/LevelConfig';
 import { gameData } from '../data/DataLoader';
 import { createEnemyFromConfig } from '../entities/Enemy';
 import { FormationFactory } from '../formations/FormationFactory';
@@ -140,8 +141,9 @@ export class WaveSystem extends System {
       const interval = this.waveIndex > 0 ? wave.time - this.currentLevel.waves[this.waveIndex - 1].time : wave.time;
       const nextWaveTime = this.waveIndex + 1 < totalWaves ? this.currentLevel.waves[this.waveIndex + 1].time : 0;
       const nextInterval = nextWaveTime > 0 ? nextWaveTime - wave.time : 0;
+      const enemyLabels = wave.enemies.map(entry => (typeof entry === 'string' ? entry : entry.id));
       
-      console.log(`📊 波次${currentWave}/${totalWaves} | 时间:${wave.time}s | 本次间隔:${interval}s | 下次间隔:${nextInterval}s | 敌人:${wave.enemies.join(',')} ×${wave.count}`);
+      console.log(`📊 波次${currentWave}/${totalWaves} | 时间:${wave.time}s | 本次间隔:${interval}s | 下次间隔:${nextInterval}s | 敌人:${enemyLabels.join(',')} ×${wave.count}`);
     }
     
     const formation = FormationFactory.create(
@@ -152,14 +154,17 @@ export class WaveSystem extends System {
     const positions = formation.getPositions(wave.count);
     
     for (let i = 0; i < wave.count; i++) {
-      const enemyId = wave.enemies[i % wave.enemies.length];
-      const enemyConfig = gameData.getEnemy(enemyId);
+      const enemyEntry = wave.enemies[i % wave.enemies.length];
+      const enemyConfig = this.resolveEnemyConfig(enemyEntry);
       
       if (enemyConfig && positions[i]) {
         if (wave.interval && wave.interval > 0) {
           // 延迟生成
           setTimeout(() => {
-            createEnemyFromConfig(world, this.stage, positions[i].x, positions[i].y, enemyConfig);
+            const delayedConfig = this.resolveEnemyConfig(enemyEntry);
+            if (delayedConfig) {
+              createEnemyFromConfig(world, this.stage, positions[i].x, positions[i].y, delayedConfig);
+            }
           }, i * wave.interval * 1000);
         } else {
           // 立即生成
@@ -167,6 +172,59 @@ export class WaveSystem extends System {
         }
       }
     }
+  }
+
+  private resolveEnemyConfig(entry: WaveEnemyEntry): EnemyConfig | undefined {
+    const enemyId = typeof entry === 'string' ? entry : entry.id;
+    const baseConfig = gameData.getEnemy(enemyId);
+
+    if (!baseConfig) {
+      console.warn(`[WaveSystem] 未找到敌人配置: ${enemyId}`);
+      return undefined;
+    }
+
+    const clone = this.cloneEnemyConfig(baseConfig);
+
+    if (typeof entry !== 'string') {
+      if (entry.overrides) {
+        this.deepMerge(clone, entry.overrides);
+      }
+      if (entry.aiParams !== undefined) {
+        clone.aiParams = entry.aiParams;
+      }
+    }
+
+    return clone;
+  }
+
+  private cloneEnemyConfig(config: EnemyConfig): EnemyConfig {
+    return JSON.parse(JSON.stringify(config)) as EnemyConfig;
+  }
+
+  private deepMerge(target: any, source: any): any {
+    if (!source) return target;
+
+    for (const key of Object.keys(source)) {
+      const value = source[key];
+      if (value === undefined) continue;
+
+      if (
+        value &&
+        typeof value === 'object' &&
+        !Array.isArray(value) &&
+        typeof target[key] === 'object' &&
+        target[key] !== null &&
+        !Array.isArray(target[key])
+      ) {
+        this.deepMerge(target[key], value);
+      } else if (Array.isArray(value)) {
+        target[key] = value.map(item => (typeof item === 'object' ? JSON.parse(JSON.stringify(item)) : item));
+      } else {
+        target[key] = value;
+      }
+    }
+
+    return target;
   }
   
   /**

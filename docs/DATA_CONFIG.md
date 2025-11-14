@@ -132,7 +132,7 @@ public/data/
 
 > 经验掉落说明：游戏运行时直接读取 `xpDrop` 生成经验碎片，不再使用固定随机值。调整配置即可即时影响实际掉落数量。
 
-> 若只希望同一波次中的部分单位开火，推荐复制原敌人配置为“射手版”（如 `triangle_loop_shooter`）并挂载武器，再在波次的 `enemies` 数组里按顺序混排不同 ID，即可精确控制第几个敌人会射击。
+> 若只希望同一波次中的部分单位开火，推荐复制原敌人配置为“射手版”（如 `triangle_loop_shooter`）并挂载武器，再在波次的 `enemies` 数组里按顺序混排不同 ID，即可精确控制第几个敌人会射击。需要换轨迹时，无需再新增敌人 ID，直接在波次里覆写 `aiParams` 即可（见下文）。
 
 **AI 行为枚举**：
 
@@ -228,7 +228,39 @@ public/data/
 | `endTangentDistance` | `max(0.4 × distance, 140)` | 离场段终点切线长度，影响直线段延展 |
 | `sampleCount` | `32` | 离场段采样精度 |
 
-> ⚠️ 提示：无论使用自动还是手动模式，系统都会对长度与角度做归一化，确保路径始终平滑连贯。若同一关卡需要多种弧线形态，可复制 `triangle_loop` 配置为新敌人并分别设置 `aiParams`，弧线测试界面会实时反映配置差异。
+> ⚠️ 提示：无论使用自动还是手动模式，系统都会对长度与角度做归一化，确保路径始终平滑连贯。若同一关卡需要多种弧线形态，优先在关卡波次内覆写 `aiParams`；只有当基础属性完全不同（如血量、掉落）时，再考虑复制 `triangle_loop` 配置为新的敌人 ID。弧线测试界面会实时反映配置差异。
+
+#### 波次覆写（`waves[].enemies`）
+
+关卡脚本中 `waves[].enemies` 支持两种写法：
+
+1. 直接写敌人 ID（字符串）——使用 `enemies.json` 中的原始配置。
+2. 写成对象：
+
+```json
+{
+  "id": "triangle_loop",
+  "aiParams": {
+    "auto": {
+      "entryPoint": { "x": 540, "y": -40 },
+      "circleCenter": { "x": 520, "y": 320 },
+      "radius": 150,
+      "exitPoint": { "x": 120, "y": 1500 },
+      "minArcDeg": 360,
+      "clockwise": false,
+      "exitStartScale": 0.45,
+      "exitEndScale": 0.6
+    }
+  }
+}
+```
+
+对象可以包含：
+- `id`（必填）：引用基础敌人配置。
+- `aiParams`：直接覆盖敌人的 AI 参数（常用于切换曲线）。
+- `overrides`：可选，传入任意 `EnemyConfig` 字段的局部覆写，例如调整 `speed` 或 `xpDrop`。
+
+这样即可在关卡里为同一种敌人指定多种出场方式，而无需在 `enemies.json` 中创建额外的镜像 / 变体条目。
 
 ### 射击条件配置（shootingCondition）
 
@@ -371,4 +403,3 @@ public/data/
 |------|------|------|------|
 | `enabled` | boolean | 是否启用爆发模式 | `true` |
 | `shotsPerBurst` | number | 每次爆发的子弹数 | `3` |
-| `
