@@ -134,38 +134,35 @@ public/data/
 
 > 若只希望同一波次中的部分单位开火，推荐复制原敌人配置为“射手版”（如 `triangle_loop_shooter`）并挂载武器，再在波次的 `enemies` 数组里按顺序混排不同 ID，即可精确控制第几个敌人会射击。
 
-**AI 行为枚举**：
+#### 🧭 锚点式快速配置（推荐）
 
-- `straight_down`：垂直俯冲
-- `zigzag`：水平摆动下落
-- `tracking` / `tracking_fast` / `tracking_slow`：追踪玩家（不同转向速度）
-- `looping_curve`：纵向列队垂直入场 → 绕圈/缓弯 → 离场，机头持续朝向移动方向
+现在可以只提供“进入锚点 + 离开锚点 + 是否绕圈”就生成完整轨迹，其余细节由系统自动推导：
 
-#### `looping_curve` 简化参数
+| 字段 | 说明 | 默认值 |
+|------|------|--------|
+| `entryAnchor` | 入场锚点，可指定 `{ x, y }` 或相对偏移 `{ offsetX, offsetY }` | `x`: 生成点；`y`: 生成时高度 |
+| `exitAnchor` | 离场锚点，决定最终飞向的屏幕外目标点 | 左侧敌人→左下方，右侧敌人→右下方 |
+| `loop` | 是否绕圈 | `true` |
+| `loopOptions.radius` | 圆弧半径 | `150` |
+| `loopOptions.turnSide` | 强制转向方向：`left` / `right` / `auto` | 根据出生侧自动判断 |
+| `loopOptions.entryDepth` | 入场下潜高度（绝对 Y） | `320` |
+| `loopOptions.minSweepDeg` / `maxSweepDeg` | 圆弧最小/最大跨度（度） | `210` / `360` |
+| `loopOptions.alignThreshold` | 离场时切线与离开向量的对齐阈值（0~1） | `0.965` |
 
-新版 `looping_curve` 只需描述“从哪里进入、往哪里离开、是否绕圈”，其余曲线都会自动计算。
+示例：
 
 ```json
 "aiParams": {
-  "entryAnchor": { "x": 220, "y": -40 },   // 可选，缺省=生成点
-  "exitAnchor": { "x": -200, "y": 1500 },  // 离场目标点（必须）
-  "loop": true,                                // 是否绕圈，默认 true
-  "loopOptions": {                             // 可选：覆盖半径/方向等细节
-    "radius": 150,
-    "turnSide": "auto"                        // "auto" / "left" / "right"
+  "entryAnchor": { "x": 220 },
+  "exitAnchor": { "x": 180, "y": 1500 },
+  "loop": true,
+  "loopOptions": {
+    "radius": 150
   }
 }
 ```
 
-- **entryAnchor**：若不填写，系统直接使用阵型给出的生成坐标；仅在需要水平偏移或特殊高度时配置。
-- **exitAnchor**：指定离场时希望到达的屏幕外锚点（例如左侧离场 `x=-200` 或下方离场 `y=GAME_HEIGHT+200`）。
-- **loop**：`true` 表示在屏幕中部自动寻找最优圆弧接入点；`false` 则改为柔和 S 形离场。
-- **loopOptions.radius**：绕圈半径（默认 150）。
-- **loopOptions.turnSide**：强制指定圆弧方向；`auto` 会根据生成侧自动镜像。
-- **loopOptions.minProgress / maxProgress**：控制最少/最多绕行角度（弧度按弧度制，默认约 135°～340°）。
-- **loopOptions.startBlend / exitBlend**：调整离场段 Hermite 切线长度（默认自动计算）。
-
-> 仍支持旧版 `entry` / `arc` / `exit` 详细配置；若同时填写这些字段，系统会优先采用详细模式，适合在极端场景下手动控制每一段的切线与角度。
+> 依旧可以同时填写旧的 `entry`/`arc`/`exit` 字段进行精细控制；若两者同时出现，旧字段优先生效。
 
 #### `looping_curve` 参数（`aiParams`）
 

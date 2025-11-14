@@ -85,8 +85,16 @@
       "xpDrop": 2,
       "aiType": "looping_curve",
       "aiParams": {
-        "exitAnchor": { "x": -200, "y": 1500 },
-        "loop": true
+        "entry": {
+          "targetY": 320
+        },
+        "arc": {
+          "radius": 150,
+          "spanDeg": 270
+        },
+        "exit": {
+          "distance": 420
+        }
       },
       "deathEffect": {
         "type": "explosion_small",
@@ -106,8 +114,16 @@
       "xpDrop": 2,
       "aiType": "looping_curve",
       "aiParams": {
-        "exitAnchor": { "x": -200, "y": 1500 },
-        "loop": true
+        "entry": {
+          "targetY": 320
+        },
+        "arc": {
+          "radius": 150,
+          "spanDeg": 270
+        },
+        "exit": {
+          "distance": 420
+        }
       },
       "weaponId": "enemy_aimed_shot",
       "initialFireDelay": 1.2,
@@ -125,11 +141,20 @@
       "xpDrop": 2,
       "aiType": "looping_curve",
       "aiParams": {
-        "exitAnchor": { "x": 220, "y": 1500 },
-        "loop": true,
-        "loopOptions": {
-          "turnSide": "auto",
-          "radius": 150
+        "entry": {
+          "targetY": 320,
+          "offsetX": 40
+        },
+        "arc": {
+          "radius": 150,
+          "spanDeg": 360
+        },
+        "exit": {
+          "targetX": 220,
+          "targetY": 1500,
+          "angleDeg": 225,
+          "startTangentDistance": 420,
+          "endTangentDistance": 520
         }
       },
       "tags": ["geometric", "formation", "curve"]
@@ -146,11 +171,20 @@
       "xpDrop": 2,
       "aiType": "looping_curve",
       "aiParams": {
-        "exitAnchor": { "x": 220, "y": 1500 },
-        "loop": true,
-        "loopOptions": {
-          "turnSide": "auto",
-          "radius": 150
+        "entry": {
+          "targetY": 320,
+          "offsetX": 40
+        },
+        "arc": {
+          "radius": 150,
+          "spanDeg": 360
+        },
+        "exit": {
+          "targetX": 220,
+          "targetY": 1500,
+          "angleDeg": 225,
+          "startTangentDistance": 420,
+          "endTangentDistance": 520
         }
       },
       "weaponId": "enemy_aimed_shot",
