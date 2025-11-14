@@ -12,6 +12,7 @@
   - `LoopingCurveBehavior` 支持 `aiParams.auto`，仅需提供入场锚点、圆心与离场坐标即可自动求解正切点，至少绕行半圈并保持速度连续
   - 自动推算出的 `entry / arc / exit` 可被同名字段按需覆盖，用于局部微调切线角度或离场距离
   - 为未来新敌人降低配置难度，编队中的每一架飞机都会共享同一条自动生成的曲线
+  - `triangle_loop` / `triangle_loop_right` 及射手版现已改用 `auto` 配置，真实关卡与弧线测试默认应用自动切线方案
 
 - **环形尖兵曲线调参能力**
   - `EnemyConfig` 支持可选 `aiParams` 字段，通过 `entry / arc / exit` 三段参数控制入场高度、圆弧半径/角度与离场方向
