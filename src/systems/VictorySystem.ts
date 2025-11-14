@@ -9,9 +9,11 @@ import { EntityType } from '../config/constants';
 import { Tag } from '../components/Tag';
 import { Transform } from '../components/Transform';
 import { Velocity } from '../components/Velocity';
+import { Weapon } from '../components/Weapon';
+import { CompanionWeapon } from '../components/CompanionWeapon';
 
 export class VictorySystem extends System {
-  private playerExitSpeed: number = 400;  // 玩家飞离速度
+  private playerExitSpeed: number = 800;  // 玩家飞离速度（快速飞离）
   private hasEnteredExitPhase: boolean = false;
   
   constructor() {
@@ -90,12 +92,33 @@ export class VictorySystem extends System {
     if (players.length > 0) {
       const player = players[0];
       const velocity = player.getComponent<Velocity>('Velocity');
-      const transform = player.getComponent<Transform>('Transform');
+      const weapon = player.getComponent<Weapon>('Weapon');
       
-      if (velocity && transform) {
-        // 设置向上飞离的速度
+      if (velocity) {
+        // 设置向上飞离的速度（快速）
         velocity.vx = 0;
         velocity.vy = -this.playerExitSpeed;
+      }
+      
+      if (weapon) {
+        // 禁用射击（将射速设置为0）
+        weapon.fireRate = 0;
+        weapon.cooldown = 999999; // 确保不会触发射击
+      }
+    }
+    
+    // 禁用所有僚机的射击
+    const companions = world.entities.filter(e => {
+      if (!e.active) return false;
+      const tag = e.getComponent<Tag>('Tag');
+      return tag && tag.value === EntityType.PLAYER_COMPANION;
+    });
+    
+    for (const companion of companions) {
+      const companionWeapon = companion.getComponent<CompanionWeapon>('CompanionWeapon');
+      if (companionWeapon) {
+        companionWeapon.fireRate = 0;
+        companionWeapon.fireCooldown = 999999;
       }
     }
   }
