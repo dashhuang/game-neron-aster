@@ -27,6 +27,9 @@ export class CompanionWeaponSystem extends System {
         const transform = entity.getComponent<Transform>('Transform');
         if (!companion || !weapon || !transform) continue;
         
+        // 通关时不射击（fireRate <= 0）
+        if (weapon.fireRate <= 0) continue;
+        
         const owner = world.entities.find(e => e.id === companion.ownerId && e.active);
         if (!owner) {
           entity.destroy();

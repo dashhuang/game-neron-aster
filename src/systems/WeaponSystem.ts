@@ -24,6 +24,9 @@ export class WeaponSystem extends System {
       const transform = entity.getComponent<Transform>('Transform')!;
       const weapon = entity.getComponent<Weapon>('Weapon')!;
       
+      // 通关时不射击（fireRate <= 0）
+      if (weapon.fireRate <= 0) continue;
+      
       // 更新冷却
       weapon.cooldown -= delta;
       
