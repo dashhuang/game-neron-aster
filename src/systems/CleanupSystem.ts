@@ -21,20 +21,37 @@ export class CleanupSystem extends System {
   update(world: World, _delta: number): void {
     const entities = this.query(world, 'Transform', 'Tag');
 
+    let minEnemyY = Infinity;
+
     for (const entity of entities) {
       const transform = entity.getComponent<Transform>('Transform');
       const tag = entity.getComponent<Tag>('Tag');
 
       if (!transform || !tag) continue;
 
-      // 玩家不清理
-      if (tag.value === 'player') continue;
+      if (tag.value === EntityType.ENEMY && transform.y < minEnemyY) {
+        minEnemyY = transform.y;
+      }
+    }
 
-      // 针对不同实体类型使用差异化安全边距
-      const baseMargin = 100 * SCALE_FACTOR;
-      const topMargin = tag.value === EntityType.ENEMY ? 900 * SCALE_FACTOR : baseMargin;
+    const baseMargin = 100 * SCALE_FACTOR;
+    const dynamicTopExtension =
+      minEnemyY === Infinity || minEnemyY >= 0
+        ? 0
+        : Math.max(0, -minEnemyY) + 50 * SCALE_FACTOR; // 额外缓冲 50px（放大后计算）
+    const enemyTopMargin = baseMargin + dynamicTopExtension;
+
+    for (const entity of entities) {
+      const transform = entity.getComponent<Transform>('Transform');
+      const tag = entity.getComponent<Tag>('Tag');
+
+      if (!transform || !tag) continue;
+
+      if (tag.value === EntityType.PLAYER) continue;
+
       const horizontalMargin = baseMargin;
       const bottomMargin = baseMargin;
+      const topMargin = tag.value === EntityType.ENEMY ? enemyTopMargin : baseMargin;
 
       const outOfBounds =
         transform.x < -horizontalMargin ||
