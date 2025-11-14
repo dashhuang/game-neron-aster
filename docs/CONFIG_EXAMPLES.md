@@ -80,7 +80,7 @@
 }
 ```
 
-#### 三角形 - 环形编队敌人
+#### 三角形 - 环形编队敌人（自动切线）
 ```json
 {
   "id": "triangle_loop",
@@ -94,24 +94,19 @@
   "xpDrop": 2,
   "aiType": "looping_curve",
   "aiParams": {
-    "entry": {
-      "targetY": 280,
-      "offsetX": -40,
-      "angleDeg": 100
-    },
-    "arc": {
-      "radius": 200,
-      "spanDeg": 300
-    },
-    "exit": {
-      "distance": 520
+    "auto": {
+      "entryPoint": { "x": 220, "y": -40 },
+      "circleCenter": { "x": 370, "y": 320 },
+      "radius": 150,
+      "exitPoint": { "x": -80, "y": 200 },
+      "minArcDeg": 270
     }
   },
   "tags": ["geometric", "formation", "curve"]
 }
 ```
 
-#### 三角形 - 环形射手
+#### 三角形 - 环形编队敌人（手动微调示例）
 ```json
 {
   "id": "triangle_loop_shooter",
@@ -126,16 +121,17 @@
   "aiType": "looping_curve",
   "aiParams": {
     "entry": {
-      "targetY": 280,
-      "offsetX": -40,
-      "angleDeg": 100
+      "targetY": 320,
+      "angleDeg": 96
     },
     "arc": {
-      "radius": 200,
-      "spanDeg": 300
+      "radius": 160,
+      "spanDeg": 290,
+      "centerOffsetNormal": 20
     },
     "exit": {
-      "distance": 520
+      "distance": 520,
+      "angleDeg": 350
     }
   },
   "weaponId": "enemy_aimed_shot",
@@ -144,32 +140,7 @@
 }
 ```
 
-> 镜像到右侧时，可复制为 `triangle_loop_right` / `triangle_loop_shooter_right` 并调整 `entry.offsetX`（正值向右偏移）与 `exit.angleDeg=225`，即可实现“右上进场、左下离场”的同款轨迹。
-
-#### 三角形 - 锚点式快速配置
-```json
-{
-  "id": "triangle_loop_anchor_demo",
-  "name": "环形尖兵·锚点示例",
-  "hp": 28,
-  "speed": 90,
-  "damage": 5,
-  "size": 15.6,
-  "color": 16711816,
-  "shape": "triangle",
-  "xpDrop": 2,
-  "aiType": "looping_curve",
-  "aiParams": {
-    "entryAnchor": { "x": 220 },
-    "exitAnchor": { "x": 160, "y": 1500 },
-    "loop": true,
-    "loopOptions": {
-      "radius": 150
-    }
-  },
-  "tags": ["geometric", "formation", "curve"]
-}
-```
+> 镜像到右侧时，可复制配置并仅通过 `auto.circleCenter` / `exitPoint` 调整方向；如需更细调，可在自动结果基础上补充局部的 `entry` / `exit` 字段覆盖。
 
 > 调试：主菜单 `弧线测试` 按钮会调用 `CurveTestScreen` 可视化该行为的完整路径（含左右起点与生成点对齐标记）。通过 `aiParams` 可以在不修改代码的情况下微调入场高度、切线方向与离场距离，系统会自动做 Hermite 与圆弧衔接，确保曲线平滑。若需要完全不同的弧线形态，建议复制敌人配置为新的 ID。敌人从同一列生成时，路径会自动向上延展到最靠上的出生点，避免队列互相重叠。弧线测试界面会实时读取 `enemy_test` 关卡的波次与敌人配置，确保与实际轨迹完全一致。
 

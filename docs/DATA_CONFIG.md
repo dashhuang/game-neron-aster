@@ -134,56 +134,58 @@ public/data/
 
 > 若只希望同一波次中的部分单位开火，推荐复制原敌人配置为“射手版”（如 `triangle_loop_shooter`）并挂载武器，再在波次的 `enemies` 数组里按顺序混排不同 ID，即可精确控制第几个敌人会射击。
 
-#### 🧭 锚点式快速配置（推荐）
+**AI 行为枚举**：
 
-现在可以只提供“进入锚点 + 离开锚点 + 是否绕圈”就生成完整轨迹，其余细节由系统自动推导：
-
-| 字段 | 说明 | 默认值 |
-|------|------|--------|
-| `entryAnchor` | 入场锚点，可指定 `{ x, y }` 或相对偏移 `{ offsetX, offsetY }` | `x`: 生成点；`y`: 生成时高度 |
-| `exitAnchor` | 离场锚点，决定最终飞向的屏幕外目标点 | 左侧敌人→左下方，右侧敌人→右下方 |
-| `loop` | 是否绕圈 | `true` |
-| `loopOptions.radius` | 圆弧半径 | `150` |
-| `loopOptions.turnSide` | 强制转向方向：`left` / `right` / `auto` | 根据出生侧自动判断 |
-| `loopOptions.entryDepth` | 入场下潜高度（绝对 Y） | `320` |
-| `loopOptions.minSweepDeg` / `maxSweepDeg` | 圆弧最小/最大跨度（度） | `210` / `360` |
-| `loopOptions.alignThreshold` | 离场时切线与离开向量的对齐阈值（0~1） | `0.965` |
-
-示例：
-
-```json
-"aiParams": {
-  "entryAnchor": { "x": 220 },
-  "exitAnchor": { "x": 180, "y": 1500 },
-  "loop": true,
-  "loopOptions": {
-    "radius": 150
-  }
-}
-```
-
-> 依旧可以同时填写旧的 `entry`/`arc`/`exit` 字段进行精细控制；若两者同时出现，旧字段优先生效。
+- `straight_down`：垂直俯冲
+- `zigzag`：水平摆动下落
+- `tracking` / `tracking_fast` / `tracking_slow`：追踪玩家（不同转向速度）
+- `looping_curve`：纵向列队垂直入场 → 270° 圆弧绕向远侧 → 沿出生侧水平切线离场，机头持续朝向移动方向
 
 #### `looping_curve` 参数（`aiParams`）
 
-为 `looping_curve` 敌人配置 `aiParams` 后，可在保持整条路径平滑、切线连续的前提下调整入场 / 圆弧 / 离场的空间位置与角度。所有字段均为可选，未填写时会使用系统默认值。
+`looping_curve` 现支持 **两种配置方式**：
+
+1. **自动切线模式（推荐）**：通过 `auto` 描述进入点、圆心与离场点，系统自动求解三段路径的切线并拼接为光滑曲线。
+2. **手动精调模式**：继续使用 `entry / arc / exit` 三段参数进行逐项微调；与 `auto` 同时存在时，手动字段会覆盖自动推算结果中的对应值。
 
 ```json
 "aiParams": {
-  "entry": {
-    "targetY": 300,
-    "angleDeg": 100
-  },
-  "arc": {
-    "radius": 180,
-    "spanDeg": 300
-  },
-  "exit": {
-    "distance": 520,
-    "angleDeg": 0
+  "auto": {
+    "entryPoint": { "x": 500, "y": -40 },
+    "circleCenter": { "x": 380, "y": 320 },
+    "radius": 150,
+    "exitPoint": { "x": 120, "y": 1500 },
+    "minArcDeg": 360
   }
 }
 ```
+
+> `auto` 会根据实际出生点（编队纵向排列的不同高度）自动寻找最靠近的正切点，确保队列中每一架敌机都沿完全一致的轨迹。
+
+若需要进一步雕刻细节，可在 `aiParams` 同级继续加入 `entry / arc / exit` 字段；这些字段只会覆盖自身涉及的属性，其他部分仍使用自动求解的结果。
+
+**auto（自动切线）**
+
+| 字段 | 默认值 | 说明 |
+|------|--------|------|
+| `entryPoint` | 敌人真实出生点 | 起始切线的求解源点，可用于强制所有敌机从同一锚点切入 |
+| `circleCenter` | 必填 | 圆心坐标 |
+| `radius` | 必填 | 圆弧半径 |
+| `exitPoint` | 必填 | 离场终点；曲线在该点结束后沿终端切线继续前进 |
+| `minArcDeg` | `180` | 最小绕行角度（度），不足时自动补足整圈 |
+| `clockwise` | 左侧敌人默认顺时针 / 右侧敌人默认逆时针 | 强制指定绕行方向 |
+| `extraTurns` | `0` | 除最小角度外再额外增加的整圈数量 |
+| `entryApproachScale` | `0.6` | 入场段 Hermite 起点切线长度占比 |
+| `entryTangentScale` | `0.55` | 入场段 Hermite 终点切线长度占比 |
+| `exitStartScale` | `0.4` | 离场段起点切线长度占比 |
+| `exitEndScale` | `0.55` | 离场段终点切线长度占比 |
+| `entrySamples` / `arcSamples` / `exitSamples` | 使用系统默认采样数 | 若需要更高曲线精度可单独配置 |
+
+> 建议先通过 `auto` 描述期望的进场 / 圆弧与离场位置，再按需使用 `entry / arc / exit` 覆盖个别字段（如更改离场终点的缓出距离或特定切线角度）。
+
+**手动 `entry` / `arc` / `exit` 字段**
+
+当手动字段存在时，会在自动推算的基础上覆盖对应的参数。以下表格同样适用于未使用 `auto` 的完全手动模式。
 
 **entry（入场段）**
 
@@ -224,7 +226,7 @@ public/data/
 | `endTangentDistance` | `max(0.4 × distance, 140)` | 离场段终点切线长度，影响直线段延展 |
 | `sampleCount` | `32` | 离场段采样精度 |
 
-> ⚠️ 提示：参数值会自动做长度与角度的归一化，确保路径在任何组合下都保持光滑。若同一关卡需要多种弧线形态，可复制 `triangle_loop` 配置为新敌人并分别设置 `aiParams`。
+> ⚠️ 提示：无论使用自动还是手动模式，系统都会对长度与角度做归一化，确保路径始终平滑连贯。若同一关卡需要多种弧线形态，可复制 `triangle_loop` 配置为新敌人并分别设置 `aiParams`，弧线测试界面会实时反映配置差异。
 
 ### 射击条件配置（shootingCondition）
 
@@ -367,3 +369,4 @@ public/data/
 |------|------|------|------|
 | `enabled` | boolean | 是否启用爆发模式 | `true` |
 | `shotsPerBurst` | number | 每次爆发的子弹数 | `3` |
+| `

@@ -57,30 +57,28 @@ export interface LoopingCurveExitParams {
   sampleCount?: number;
 }
 
-interface LoopingCurveAnchor {
-  x?: number;
-  y?: number;
-  offsetX?: number;
-  offsetY?: number;
-}
-
-interface LoopingCurveLoopOptions {
-  turnSide?: 'auto' | 'left' | 'right';
-  radius?: number;
-  entryDepth?: number;
-  minSweepDeg?: number;
-  maxSweepDeg?: number;
-  alignThreshold?: number;
+export interface LoopingCurveAutoParams {
+  circleCenter: { x: number; y: number };
+  radius: number;
+  exitPoint: { x: number; y: number };
+  entryPoint?: { x: number; y: number };
+  minArcDeg?: number;
+  clockwise?: boolean;
+  extraTurns?: number;
+  entryApproachScale?: number;
+  entryTangentScale?: number;
+  exitStartScale?: number;
+  exitEndScale?: number;
+  entrySamples?: number;
+  arcSamples?: number;
+  exitSamples?: number;
 }
 
 export interface LoopingCurveParams {
   entry?: LoopingCurveEntryParams;
   arc?: LoopingCurveArcParams;
   exit?: LoopingCurveExitParams;
-  entryAnchor?: LoopingCurveAnchor;
-  exitAnchor?: LoopingCurveAnchor;
-  loop?: boolean;
-  loopOptions?: LoopingCurveLoopOptions;
+  auto?: LoopingCurveAutoParams;
 }
 
 export interface LoopingCurvePreviewOptions {
@@ -89,20 +87,31 @@ export interface LoopingCurvePreviewOptions {
   spawnY?: number;
 }
 
+interface TangentSolution {
+  angle: number;
+  point: { x: number; y: number };
+  tangentDir: { x: number; y: number };
+  lineDir: { x: number; y: number };
+  alignment: number;
+}
+
 const DEFAULT_START_Y = -140;
 const DEFAULT_ENTRY_Y = Math.min(GAME_HEIGHT * 0.28, 320);
 const DEFAULT_ENTRY_SAMPLES = 32;
 const DEFAULT_ARC_SAMPLES = 128;
 const DEFAULT_EXIT_SAMPLES = 32;
 const MIN_ARC_RADIUS = 40;
-const DEFAULT_EXIT_MARGIN_X = 220;
-const DEFAULT_EXIT_MARGIN_Y = 220;
-const DEFAULT_LOOP_MIN_SWEEP = 210;
-const DEFAULT_LOOP_MAX_SWEEP = 360;
-const DEFAULT_LOOP_ALIGN_THRESHOLD = 0.965;
 
 function degToRad(deg: number): number {
   return (deg * Math.PI) / 180;
+}
+
+function radToDeg(rad: number): number {
+  return (rad * 180) / Math.PI;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }
 
 function stableStringify(value: any): string {
@@ -147,6 +156,209 @@ function normalize(x: number, y: number): { x: number; y: number } {
   return { x: x / len, y: y / len };
 }
 
+function computeTangentSolutions(
+  externalPoint: { x: number; y: number },
+  circleCenter: { x: number; y: number },
+  radius: number,
+  clockwise: boolean
+): TangentSolution[] {
+  let dx = externalPoint.x - circleCenter.x;
+  let dy = externalPoint.y - circleCenter.y;
+  let distSq = dx * dx + dy * dy;
+
+  if (distSq <= radius * radius + 1e-3) {
+    const fallbackRadius = radius + 12;
+    const dir = normalize(dx, dy);
+    const safeDir = vecLength(dir.x, dir.y) < 1e-5 ? { x: 0, y: -1 } : dir;
+    const adjustedPoint = {
+      x: circleCenter.x + safeDir.x * fallbackRadius,
+      y: circleCenter.y + safeDir.y * fallbackRadius,
+    };
+    dx = adjustedPoint.x - circleCenter.x;
+    dy = adjustedPoint.y - circleCenter.y;
+    distSq = dx * dx + dy * dy;
+  }
+
+  const dist = Math.max(Math.sqrt(distSq), radius + 1e-3);
+  const baseAngle = Math.atan2(dy, dx);
+  const angleOffset = Math.acos(clamp(radius / dist, -1, 1));
+  const angles = [baseAngle + angleOffset, baseAngle - angleOffset];
+
+  return angles.map(theta => {
+    const point = {
+      x: circleCenter.x + radius * Math.cos(theta),
+      y: circleCenter.y + radius * Math.sin(theta),
+    };
+    const lineDir = normalize(point.x - externalPoint.x, point.y - externalPoint.y);
+    const tangentDir = clockwise
+      ? normalize(Math.sin(theta), -Math.cos(theta))
+      : normalize(-Math.sin(theta), Math.cos(theta));
+    return {
+      angle: theta,
+      point,
+      tangentDir,
+      lineDir,
+      alignment: lineDir.x * tangentDir.x + lineDir.y * tangentDir.y,
+    };
+  });
+}
+
+function computeArcSpan(thetaStart: number, thetaEnd: number, clockwise: boolean): number {
+  const fullTurn = Math.PI * 2;
+  if (clockwise) {
+    let span = thetaStart - thetaEnd;
+    while (span <= 0) {
+      span += fullTurn;
+    }
+    return span;
+  }
+  let span = thetaEnd - thetaStart;
+  while (span <= 0) {
+    span += fullTurn;
+  }
+  return span;
+}
+
+function deriveAutoCurveParams(
+  auto: LoopingCurveAutoParams,
+  direction: 1 | -1,
+  pathStart: { x: number; y: number },
+  spawnPoint: { x: number; y: number }
+): {
+  entry: LoopingCurveEntryParams;
+  arc: LoopingCurveArcParams;
+  exit: LoopingCurveExitParams;
+} {
+  const radius = Math.max(auto.radius, MIN_ARC_RADIUS);
+  const clockwise = auto.clockwise ?? (direction === 1);
+  const circleCenter = auto.circleCenter;
+  const entryOrigin = auto.entryPoint ?? spawnPoint;
+  const exitPoint = auto.exitPoint;
+
+  const entrySolutions = computeTangentSolutions(entryOrigin, circleCenter, radius, clockwise);
+  const exitSolutions = computeTangentSolutions(exitPoint, circleCenter, radius, clockwise);
+
+  const minArcRad = degToRad(auto.minArcDeg ?? 180);
+  const extraTurns = Math.max(0, auto.extraTurns ?? 0);
+
+  let bestEntry = entrySolutions[0];
+  let bestExit = exitSolutions[0];
+  let bestSpan = Math.max(minArcRad, Math.PI);
+  let bestScore = -Infinity;
+  let fallbackScore = -Infinity;
+  let fallbackEntry = bestEntry;
+  let fallbackExit = bestExit;
+  let fallbackSpan = bestSpan;
+
+  for (const entrySol of entrySolutions) {
+    for (const exitSol of exitSolutions) {
+      let span = computeArcSpan(entrySol.angle, exitSol.angle, clockwise);
+      if (span < minArcRad) {
+        const neededTurns = Math.ceil((minArcRad - span) / (Math.PI * 2));
+        span += neededTurns * Math.PI * 2;
+      }
+      span += extraTurns * Math.PI * 2;
+
+      const exitDir = normalize(exitPoint.x - exitSol.point.x, exitPoint.y - exitSol.point.y);
+      const exitAlignment = exitDir.x * exitSol.tangentDir.x + exitDir.y * exitSol.tangentDir.y;
+      const entryAlignment = entrySol.alignment;
+      const score = exitAlignment * 2 + entryAlignment - span * 0.001;
+
+      if (score > fallbackScore) {
+        fallbackScore = score;
+        fallbackEntry = entrySol;
+        fallbackExit = exitSol;
+        fallbackSpan = span;
+      }
+
+      if (exitAlignment >= -0.2 && score > bestScore) {
+        bestScore = score;
+        bestEntry = entrySol;
+        bestExit = exitSol;
+        bestSpan = span;
+      }
+    }
+  }
+
+  if (bestScore === -Infinity) {
+    bestEntry = fallbackEntry;
+    bestExit = fallbackExit;
+    bestSpan = fallbackSpan;
+  }
+
+  const entryPoint = bestEntry.point;
+  const exitCirclePoint = bestExit.point;
+
+  const entryTangentDir = bestEntry.tangentDir;
+  const exitTangentDir = bestExit.tangentDir;
+
+  const entryApproachVector = {
+    x: entryPoint.x - pathStart.x,
+    y: entryPoint.y - pathStart.y,
+  };
+  const entrySegmentLength = Math.max(vecLength(entryApproachVector.x, entryApproachVector.y), 1);
+
+  const approachScale = auto.entryApproachScale ?? 0.6;
+  const tangentScale = auto.entryTangentScale ?? 0.55;
+
+  const entryParams: LoopingCurveEntryParams = {
+    targetX: entryPoint.x,
+    targetY: entryPoint.y,
+    angleDeg: radToDeg(Math.atan2(entryTangentDir.y, entryTangentDir.x)),
+    approachAngleDeg: radToDeg(Math.atan2(entryApproachVector.y, entryApproachVector.x)),
+    approachDistance: Math.max(entrySegmentLength * approachScale, radius * 0.5, 60),
+    tangentDistance: Math.max(entrySegmentLength * tangentScale, radius * 0.45, 50),
+    sampleCount: auto.entrySamples,
+  };
+
+  const baseNormal = clockwise
+    ? { x: entryTangentDir.y, y: -entryTangentDir.x }
+    : { x: -entryTangentDir.y, y: entryTangentDir.x };
+  const baseCenter = {
+    x: entryPoint.x + baseNormal.x * radius,
+    y: entryPoint.y + baseNormal.y * radius,
+  };
+  const centerDiff = {
+    x: circleCenter.x - baseCenter.x,
+    y: circleCenter.y - baseCenter.y,
+  };
+  const centerOffsetAlongTangent = centerDiff.x * entryTangentDir.x + centerDiff.y * entryTangentDir.y;
+  const centerOffsetNormal = centerDiff.x * baseNormal.x + centerDiff.y * baseNormal.y;
+
+  const arcParams: LoopingCurveArcParams = {
+    radius,
+    spanDeg: radToDeg(bestSpan),
+    clockwise,
+    centerOffsetAlongTangent,
+    centerOffsetNormal,
+    sampleCount: auto.arcSamples,
+  };
+
+  const exitVector = {
+    x: auto.exitPoint.x - exitCirclePoint.x,
+    y: auto.exitPoint.y - exitCirclePoint.y,
+  };
+  const exitDistance = Math.max(vecLength(exitVector.x, exitVector.y), radius * 0.8, 120);
+  const exitStartScale = auto.exitStartScale ?? 0.4;
+  const exitEndScale = auto.exitEndScale ?? 0.55;
+
+  const exitParams: LoopingCurveExitParams = {
+    targetX: auto.exitPoint.x,
+    targetY: auto.exitPoint.y,
+    distance: exitDistance,
+    angleDeg: radToDeg(Math.atan2(exitTangentDir.y, exitTangentDir.x)),
+    startTangentDistance: Math.max(exitDistance * exitStartScale, radius * 0.6, 90),
+    endTangentDistance: Math.max(exitDistance * exitEndScale, radius * 0.8, 120),
+    sampleCount: auto.exitSamples,
+  };
+
+  return {
+    entry: entryParams,
+    arc: arcParams,
+    exit: exitParams,
+  };
+}
+
 function hermite(
   p0: { x: number; y: number },
   m0: { x: number; y: number },
@@ -170,13 +382,24 @@ function buildLoopingPath(
   startX: number,
   direction: 1 | -1,
   params: LoopingCurveParams | undefined,
-  effectiveStartY: number
+  effectiveStartY: number,
+  spawnY?: number
 ): LoopingCurvePathData {
-  const entryParams = params?.entry ?? {};
-  const arcParams = params?.arc ?? {};
-  const exitParams = params?.exit ?? {};
+  let entryParams: LoopingCurveEntryParams = { ...(params?.entry ?? {}) };
+  let arcParams: LoopingCurveArcParams = { ...(params?.arc ?? {}) };
+  let exitParams: LoopingCurveExitParams = { ...(params?.exit ?? {}) };
 
-  const startPoint = { x: startX, y: effectiveStartY };
+  const pathStart = { x: startX, y: effectiveStartY };
+  const spawnPoint = { x: startX, y: spawnY ?? effectiveStartY };
+
+  if (params?.auto) {
+    const autoDerived = deriveAutoCurveParams(params.auto, direction, pathStart, spawnPoint);
+    entryParams = { ...autoDerived.entry, ...entryParams };
+    arcParams = { ...autoDerived.arc, ...arcParams };
+    exitParams = { ...autoDerived.exit, ...exitParams };
+  }
+
+  const startPoint = pathStart;
   
   const entryTargetX = entryParams.targetX ?? (startX + (entryParams.offsetX ?? 0));
   const entryTargetY = entryParams.targetY ?? (DEFAULT_ENTRY_Y + (entryParams.offsetY ?? 0));
@@ -375,159 +598,24 @@ function updateFacingFromVelocity(transform: Transform, vx: number, vy: number):
   transform.rotation = Math.atan2(vx, -vy);
 }
 
-function expandLoopingParams(
-  startX: number,
-  direction: 1 | -1,
-  rawParams: LoopingCurveParams | undefined
-): LoopingCurveParams | undefined {
-  if (!rawParams) {
-    return undefined;
-  }
-
-  const hasLegacy =
-    rawParams.entry !== undefined ||
-    rawParams.arc !== undefined ||
-    rawParams.exit !== undefined;
-
-  if (hasLegacy) {
-    return rawParams;
-  }
-
-  const entryAnchor = rawParams.entryAnchor ?? {};
-  const exitAnchor = rawParams.exitAnchor ?? {};
-  const loopEnabled = rawParams.loop !== undefined ? rawParams.loop : true;
-  const loopOptions = rawParams.loopOptions ?? {};
-  const entryBaseX = entryAnchor.x ?? startX;
-  const entryOffsetX = entryAnchor.offsetX ?? 0;
-  const entryOffsetY = entryAnchor.offsetY ?? 0;
-  const entryPoint = {
-    x: entryBaseX + entryOffsetX,
-    y: loopOptions.entryDepth ?? DEFAULT_ENTRY_Y + entryOffsetY,
-  };
-
-  const defaultExitX = direction === 1 ? -DEFAULT_EXIT_MARGIN_X : GAME_WIDTH + DEFAULT_EXIT_MARGIN_X;
-  const exitPoint = {
-    x: (exitAnchor.x ?? defaultExitX) + (exitAnchor.offsetX ?? 0),
-    y: (exitAnchor.y ?? GAME_HEIGHT + DEFAULT_EXIT_MARGIN_Y) + (exitAnchor.offsetY ?? 0),
-  };
-
-  const entryParams: LoopingCurveEntryParams = {
-    targetX: entryPoint.x,
-    targetY: entryPoint.y,
-    angleDeg: 90,
-    startY: rawParams.entry?.startY ?? DEFAULT_START_Y,
-  };
-
-  if (!loopEnabled) {
-    // 退化为简单的 Hermite 曲线：使用较小的弧度辅助离场
-    const exitVector = normalize(exitPoint.x - entryPoint.x, exitPoint.y - entryPoint.y);
-    const exitAngleDeg = Math.atan2(exitVector.y, exitVector.x) * 180 / Math.PI;
-    const distance = vecLength(exitPoint.x - entryPoint.x, exitPoint.y - entryPoint.y);
-    return {
-      entry: entryParams,
-      arc: {
-        radius: distance * 0.15,
-        spanDeg: 45,
-        clockwise: direction === 1,
-      },
-      exit: {
-        targetX: exitPoint.x,
-        targetY: exitPoint.y,
-        angleDeg: exitAngleDeg,
-        startTangentDistance: Math.max(distance * 0.35, 120),
-        endTangentDistance: Math.max(distance * 0.45, 160),
-      },
-    };
-  }
-
-  const radius = Math.max(loopOptions.radius ?? 150, MIN_ARC_RADIUS);
-  let clockwise = direction === 1;
-  if (loopOptions.turnSide === 'left') {
-    clockwise = false;
-  } else if (loopOptions.turnSide === 'right') {
-    clockwise = true;
-  } else if (loopOptions.turnSide === 'auto') {
-    clockwise = exitPoint.x >= entryPoint.x;
-  }
-
-  const entryTangentDir = { x: 0, y: 1 };
-  const baseNormal = clockwise
-    ? { x: entryTangentDir.y, y: -entryTangentDir.x }
-    : { x: -entryTangentDir.y, y: entryTangentDir.x };
-
-  const circleCenter = {
-    x: entryPoint.x + baseNormal.x * radius,
-    y: entryPoint.y + baseNormal.y * radius,
-  };
-
-  const thetaStart = Math.atan2(entryPoint.y - circleCenter.y, entryPoint.x - circleCenter.x);
-  const thetaDir = clockwise ? -1 : 1;
-  const minSweepDeg = loopOptions.minSweepDeg ?? DEFAULT_LOOP_MIN_SWEEP;
-  const maxSweepDeg = loopOptions.maxSweepDeg ?? DEFAULT_LOOP_MAX_SWEEP;
-  const alignThreshold = loopOptions.alignThreshold ?? DEFAULT_LOOP_ALIGN_THRESHOLD;
-
-  let chosenSweepDeg = maxSweepDeg;
-  let chosenPoint = entryPoint;
-
-  for (let sweepDeg = minSweepDeg; sweepDeg <= maxSweepDeg; sweepDeg += 2) {
-    const theta = thetaStart + thetaDir * degToRad(sweepDeg);
-    const pointOnArc = {
-      x: circleCenter.x + radius * Math.cos(theta),
-      y: circleCenter.y + radius * Math.sin(theta),
-    };
-    const tangent = normalize(
-      -Math.sin(theta) * thetaDir,
-      Math.cos(theta) * thetaDir
-    );
-    const toExit = normalize(exitPoint.x - pointOnArc.x, exitPoint.y - pointOnArc.y);
-    const dot = tangent.x * toExit.x + tangent.y * toExit.y;
-    chosenPoint = pointOnArc;
-    if (dot >= alignThreshold) {
-      chosenSweepDeg = sweepDeg;
-      break;
-    }
-  }
-
-  const exitDirection = normalize(exitPoint.x - chosenPoint.x, exitPoint.y - chosenPoint.y);
-  const exitDistance = vecLength(exitPoint.x - chosenPoint.x, exitPoint.y - chosenPoint.y);
-  const exitAngleDeg = Math.atan2(exitDirection.y, exitDirection.x) * 180 / Math.PI;
-
-  const exitParams: LoopingCurveExitParams = {
-    targetX: exitPoint.x,
-    targetY: exitPoint.y,
-    angleDeg: exitAngleDeg,
-    startTangentDistance: Math.max(exitDistance * 0.38, 160),
-    endTangentDistance: Math.max(exitDistance * 0.52, 200),
-  };
-
-  return {
-    entry: entryParams,
-    arc: {
-      radius,
-      spanDeg: chosenSweepDeg,
-      clockwise,
-    },
-    exit: exitParams,
-  };
-}
-
 export class LoopingCurveBehavior implements AIBehavior {
   private static pathCache: Map<string, LoopingCurvePathData> = new Map();
   
   private static getPath(
-     startX: number,
-     direction: 1 | -1,
-     params: LoopingCurveParams | undefined,
+    startX: number,
+    direction: 1 | -1,
+    params: LoopingCurveParams | undefined,
     spawnY?: number
-   ): LoopingCurvePathData {
-    const expandedParams = expandLoopingParams(startX, direction, params);
-    const paramSource = expandedParams ?? params;
-    const configuredStartY = paramSource?.entry?.startY ?? DEFAULT_START_Y;
+  ): LoopingCurvePathData {
+    const configuredStartY =
+      params?.entry?.startY ??
+      params?.auto?.entryPoint?.y ??
+      DEFAULT_START_Y;
     const effectiveStartY = Math.min(configuredStartY, spawnY ?? configuredStartY);
-    const key = `${direction}:${startX.toFixed(2)}:${effectiveStartY.toFixed(1)}:${serializeParams(paramSource)}`;
+    const key = `${direction}:${startX.toFixed(2)}:${effectiveStartY.toFixed(1)}:${serializeParams(params)}`;
     let path = this.pathCache.get(key);
     if (!path) {
-      path = buildLoopingPath(startX, direction, paramSource, effectiveStartY);
+      path = buildLoopingPath(startX, direction, params, effectiveStartY, spawnY);
       this.pathCache.set(key, path);
     }
     return path;

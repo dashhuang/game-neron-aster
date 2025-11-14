@@ -8,6 +8,11 @@
 
 ### ✨ 新增
 
+- **looping_curve 自动切线生成**
+  - `LoopingCurveBehavior` 支持 `aiParams.auto`，仅需提供入场锚点、圆心与离场坐标即可自动求解正切点，至少绕行半圈并保持速度连续
+  - 自动推算出的 `entry / arc / exit` 可被同名字段按需覆盖，用于局部微调切线角度或离场距离
+  - 为未来新敌人降低配置难度，编队中的每一架飞机都会共享同一条自动生成的曲线
+
 - **环形尖兵曲线调参能力**
   - `EnemyConfig` 支持可选 `aiParams` 字段，通过 `entry / arc / exit` 三段参数控制入场高度、圆弧半径/角度与离场方向
   - `LoopingCurveBehavior` 根据参数自动重建 Hermite + 圆弧路径，保证过渡连续且保持机头朝向
@@ -15,7 +20,7 @@
 
 ### 📚 文档
 
-- `README`、`ARCHITECTURE`、`DATA_CONFIG`、`CONFIG_EXAMPLES` 同步说明 `aiParams` 字段与常用调参示例
+- `README`、`ARCHITECTURE`、`DATA_CONFIG`、`CONFIG_EXAMPLES` 同步说明 `aiParams.auto` 与手动覆盖策略，补充自动切线示例配置
 - `enemies.json` 默认为 `triangle_loop` 提供示例配置，便于在不写代码的情况下快速调整弧线形态
 
 ### 🔧 修复
@@ -28,8 +33,6 @@
   - `CurveTestScreen` 直接读取 `enemy_test` 关卡的波次与敌人配置，轨迹效果与实际敌人完全一致，调参后可即时对照
 - **敌人测试关卡镜像波次**
   - 新增 `triangle_loop_right` / `triangle_loop_shooter_right` 配置，第二波从右侧入场后朝左下离场，仅第 2、6 架射击，便于对比左右两套路径
-- **looping_curve 锚点式配置**
-  - 支持仅凭 `entryAnchor` + `exitAnchor` + `loopOptions` 自动生成平滑弧线，旧版 `entry`/`arc`/`exit` 仍然兼容
 
 ---
 
