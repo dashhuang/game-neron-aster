@@ -105,7 +105,16 @@
       "waves": [
         {
           "time": 0,
-          "enemies": ["triangle_loop"],
+          "enemies": [
+            "triangle_loop",
+            "triangle_loop_shooter",
+            "triangle_loop",
+            "triangle_loop",
+            "triangle_loop",
+            "triangle_loop_shooter",
+            "triangle_loop",
+            "triangle_loop"
+          ],
           "count": 8,
           "formation": "column",
           "formation_params": { "x": 220, "spacing": 60, "y": -40 }

@@ -103,6 +103,33 @@
       "tags": ["geometric", "formation", "curve"]
     },
     {
+      "id": "triangle_loop_shooter",
+      "name": "环形尖兵·射手",
+      "hp": 28,
+      "speed": 90,
+      "damage": 5,
+      "size": 15.6,
+      "color": 16711816,
+      "shape": "triangle",
+      "xpDrop": 2,
+      "aiType": "looping_curve",
+      "aiParams": {
+        "entry": {
+          "targetY": 320
+        },
+        "arc": {
+          "radius": 150,
+          "spanDeg": 270
+        },
+        "exit": {
+          "distance": 420
+        }
+      },
+      "weaponId": "enemy_aimed_shot",
+      "initialFireDelay": 1.2,
+      "tags": ["geometric", "formation", "curve", "shooter"]
+    },
+    {
       "id": "diamond_tracker",
       "name": "菱形追踪者",
       "hp": 120,

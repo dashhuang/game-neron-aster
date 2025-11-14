@@ -111,6 +111,39 @@
 }
 ```
 
+#### 三角形 - 环形射手
+```json
+{
+  "id": "triangle_loop_shooter",
+  "name": "环形尖兵·射手",
+  "hp": 28,
+  "speed": 90,
+  "damage": 5,
+  "size": 15.6,
+  "color": 16711816,
+  "shape": "triangle",
+  "xpDrop": 2,
+  "aiType": "looping_curve",
+  "aiParams": {
+    "entry": {
+      "targetY": 280,
+      "offsetX": -40,
+      "angleDeg": 100
+    },
+    "arc": {
+      "radius": 200,
+      "spanDeg": 300
+    },
+    "exit": {
+      "distance": 520
+    }
+  },
+  "weaponId": "enemy_aimed_shot",
+  "initialFireDelay": 1.2,
+  "tags": ["geometric", "formation", "curve", "shooter"]
+}
+```
+
 > 调试：主菜单 `弧线测试` 按钮会调用 `CurveTestScreen` 可视化该行为的完整路径（含左右起点与生成点对齐标记）。通过 `aiParams` 可以在不修改代码的情况下微调入场高度、切线方向与离场距离，系统会自动做 Hermite 与圆弧衔接，确保曲线平滑。若需要完全不同的弧线形态，建议复制敌人配置为新的 ID。敌人从同一列生成时，路径会自动向上延展到最靠上的出生点，避免队列互相重叠。弧线测试界面会实时读取 `enemy_test` 关卡的波次与敌人配置，确保与实际轨迹完全一致。
 
 ---
