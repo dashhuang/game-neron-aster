@@ -5,21 +5,33 @@ import { EnemyConfig } from './EnemyConfig';
  * 定义关卡的波次、敌人生成规则
  */
 
+/**
+ * 武器倍数配置
+ * 用于在关卡或波次级别动态调整武器属性
+ */
 export interface WeaponMultipliers {
-  damage?: number;
-  fireRate?: number;
-  bulletSpeed?: number;
-  bulletLifetime?: number;
-  'homing.turnRate'?: number;
-  'homing.trackingRange'?: number;
+  damage?: number;                    // 伤害倍率
+  fireRate?: number;                  // 射速倍率
+  bulletSpeed?: number;               // 子弹速度倍率
+  bulletLifetime?: number;            // 子弹生命周期倍率
+  'homing.turnRate'?: number;         // 追踪转向速率倍率
+  'homing.trackingRange'?: number;    // 追踪范围倍率
 }
 
+/**
+ * 波次敌人定义（对象形式）
+ * 允许在关卡波次中覆写敌人的基础配置
+ */
 export interface WaveEnemyDefinition {
-  id: string;
-  overrides?: Partial<EnemyConfig>;
-  aiParams?: EnemyConfig['aiParams'];
+  id: string;                         // 引用的基础敌人 ID
+  overrides?: Partial<EnemyConfig>;   // 覆写敌人的任意属性（如 hp、speed、xpDrop）
+  aiParams?: EnemyConfig['aiParams']; // 覆写 AI 参数（常用于切换轨迹）
 }
 
+/**
+ * 波次敌人条目
+ * 可以是字符串 ID（使用基础配置）或对象（带覆写）
+ */
 export type WaveEnemyEntry = string | WaveEnemyDefinition;
 
 export interface LevelConfig {

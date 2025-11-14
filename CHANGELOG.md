@@ -13,28 +13,41 @@
   - 自动推算出的 `entry / arc / exit` 可被同名字段按需覆盖，用于局部微调切线角度或离场距离
   - 为未来新敌人降低配置难度，编队中的每一架飞机都会共享同一条自动生成的曲线
   - `triangle_loop` / `triangle_loop_shooter` 现作为唯一的环形敌人类型，真实关卡与弧线测试默认应用自动切线方案
-  - wave_script 波次可直接覆写 `enemies[]` 中的 `aiParams` / `overrides`，无需再为不同轨迹复制额外敌人 ID（`enemy_test` 关卡现展示左入右出、右入左下出、左下入右上出、上入左下出的四种组合）
+  - wave_script 波次可直接覆写 `enemies[]` 中的 `aiParams` / `overrides`，无需再为不同轨迹复制额外敌人 ID（`enemy_test` 关卡现展示左上入右出、右上入左下出、底部入右上出、上入左下出的四种组合）
 
 - **环形尖兵曲线调参能力**
   - `EnemyConfig` 支持可选 `aiParams` 字段，通过 `entry / arc / exit` 三段参数控制入场高度、圆弧半径/角度与离场方向
   - `LoopingCurveBehavior` 根据参数自动重建 Hermite + 圆弧路径，保证过渡连续且保持机头朝向
   - `AISystem` / `AI` 组件新增行为参数透传机制，后续其他行为亦可复用
 
-### 📚 文档
-
-- `README`、`ARCHITECTURE`、`DATA_CONFIG`、`CONFIG_EXAMPLES` 同步说明 `aiParams.auto` 与手动覆盖策略，补充自动切线示例配置
-- `enemies.json` 默认为 `triangle_loop` 提供示例配置，便于在不写代码的情况下快速调整弧线形态
-
 ### 🔧 修复
 
-- **敌人测试关卡只出现 2 架敌人**
-  - `CleanupSystem` 为敌人向上预热保留顶部缓冲，并根据场景中最靠上的敌人动态扩展安全距离，避免列队生成时被错误清理
+- **敌人清理边界优化**
+  - `CleanupSystem` 动态扩展顶部/底部容许范围，根据场上敌人实际位置自动调整
+  - 支持从屏幕上方或下方外侧入场的编队，不会被提前清理
+  - 一旦所有敌人回到屏幕内或离开，边界立即恢复为基础值（100px），确保通关判定准确触发
 - **纵向队列敌人重叠**
   - `LoopingCurveBehavior` 会根据实际生成高度自动延长入场段，确保整列敌人沿路径保持间距
 - **弧线调试视图与关卡配置不同步**
   - `CurveTestScreen` 直接读取 `enemy_test` 关卡的波次与敌人配置，轨迹效果与实际敌人完全一致，调参后可即时对照
-- **敌人测试关卡曲线调试**
-  - 关卡默认仅保留基础波次，使用对象覆写 `aiParams` 的示例可按需启用，用于测试镜像、底部离场等不同轨迹组合
+- **代码格式规范**
+  - 修正 `DeathSystem.ts` 和 `MovementSystem.ts` 的缩进问题
+
+### ♻️ 重构
+
+- **提取共享工具函数**
+  - 新增 `src/utils/ConfigUtils.ts`，提取 `resolveEnemyConfig`、`deepMerge`、`cloneEnemyConfig` 等重复逻辑
+  - `WaveSystem` 和 `CurveTestScreen` 引用统一实现，消除代码重复
+
+### 📚 文档
+
+- 为 `LoopingCurveBehavior` 和 `LevelConfig` 类型添加完整 JSDoc 注释
+- 在 `DATA_CONFIG.md` 中新增"配置最佳实践"章节
+- 在 `LEVEL_CONFIG.md` 中补充波次覆写的完整示例和使用场景
+- 在 `DEVELOPER_GUIDE.md` 中添加"如何配置环形敌人轨迹"快速指南
+- 为所有配置手册添加目录导航
+- 在 `README.md` 顶部添加文档导航链接
+- 统一所有文档中的术语和描述风格（"波次覆写"、"自动切线模式"等）
 
 ---
 

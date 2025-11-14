@@ -5,14 +5,14 @@
 
 import { System, World } from '../core/ECS';
 import { Container } from 'pixi.js';
-import { EnemyConfig } from '../data/types/EnemyConfig';
-import { LevelConfig, WaveConfig, EnemyPoolEntry, WaveEnemyEntry } from '../data/types/LevelConfig';
+import { LevelConfig, WaveConfig, EnemyPoolEntry } from '../data/types/LevelConfig';
 import { gameData } from '../data/DataLoader';
 import { createEnemyFromConfig } from '../entities/Enemy';
 import { FormationFactory } from '../formations/FormationFactory';
 import { GAME_WIDTH, EntityType } from '../config/constants';
 import { LevelManager } from '../managers/LevelManager';
 import { Tag } from '../components/Tag';
+import { resolveEnemyConfig } from '../utils/ConfigUtils';
 
 export class WaveSystem extends System {
   private stage: Container;
@@ -155,13 +155,13 @@ export class WaveSystem extends System {
     
     for (let i = 0; i < wave.count; i++) {
       const enemyEntry = wave.enemies[i % wave.enemies.length];
-      const enemyConfig = this.resolveEnemyConfig(enemyEntry);
+      const enemyConfig = resolveEnemyConfig(enemyEntry);
       
       if (enemyConfig && positions[i]) {
         if (wave.interval && wave.interval > 0) {
           // 延迟生成
           setTimeout(() => {
-            const delayedConfig = this.resolveEnemyConfig(enemyEntry);
+            const delayedConfig = resolveEnemyConfig(enemyEntry);
             if (delayedConfig) {
               createEnemyFromConfig(world, this.stage, positions[i].x, positions[i].y, delayedConfig);
             }
@@ -172,59 +172,6 @@ export class WaveSystem extends System {
         }
       }
     }
-  }
-
-  private resolveEnemyConfig(entry: WaveEnemyEntry): EnemyConfig | undefined {
-    const enemyId = typeof entry === 'string' ? entry : entry.id;
-    const baseConfig = gameData.getEnemy(enemyId);
-
-    if (!baseConfig) {
-      console.warn(`[WaveSystem] 未找到敌人配置: ${enemyId}`);
-      return undefined;
-    }
-
-    const clone = this.cloneEnemyConfig(baseConfig);
-
-    if (typeof entry !== 'string') {
-      if (entry.overrides) {
-        this.deepMerge(clone, entry.overrides);
-      }
-      if (entry.aiParams !== undefined) {
-        clone.aiParams = entry.aiParams;
-      }
-    }
-
-    return clone;
-  }
-
-  private cloneEnemyConfig(config: EnemyConfig): EnemyConfig {
-    return JSON.parse(JSON.stringify(config)) as EnemyConfig;
-  }
-
-  private deepMerge(target: any, source: any): any {
-    if (!source) return target;
-
-    for (const key of Object.keys(source)) {
-      const value = source[key];
-      if (value === undefined) continue;
-
-      if (
-        value &&
-        typeof value === 'object' &&
-        !Array.isArray(value) &&
-        typeof target[key] === 'object' &&
-        target[key] !== null &&
-        !Array.isArray(target[key])
-      ) {
-        this.deepMerge(target[key], value);
-      } else if (Array.isArray(value)) {
-        target[key] = value.map(item => (typeof item === 'object' ? JSON.parse(JSON.stringify(item)) : item));
-      } else {
-        target[key] = value;
-      }
-    }
-
-    return target;
   }
   
   /**

@@ -3,8 +3,7 @@ import { GAME_HEIGHT, GAME_WIDTH, COLORS } from '../config/constants';
 import { LoopingCurveBehavior, LoopingCurvePathData, LoopingCurveParams } from '../ai/LoopingCurveBehavior';
 import { gameData } from '../data/DataLoader';
 import { FormationFactory } from '../formations/FormationFactory';
-import { EnemyConfig } from '../data/types/EnemyConfig';
-import { WaveEnemyEntry } from '../data/types/LevelConfig';
+import { resolveEnemyConfig } from '../utils/ConfigUtils';
 
 interface CurveTestCallbacks {
   onBack: () => void;
@@ -126,7 +125,7 @@ export class CurveTestScreen {
 
         for (let i = 0; i < wave.count; i++) {
           const enemyEntry = wave.enemies[i % wave.enemies.length];
-          const enemyConfig = this.resolveEnemyConfig(enemyEntry);
+          const enemyConfig = resolveEnemyConfig(enemyEntry);
 
           if (!enemyConfig || enemyConfig.aiType !== 'looping_curve' || !positions[i]) {
             continue;
@@ -260,58 +259,6 @@ export class CurveTestScreen {
     btn.on('pointerdown', () => this.callbacks.onBack());
     
     return btn;
-  }
-
-  private resolveEnemyConfig(entry: WaveEnemyEntry): EnemyConfig | undefined {
-    const enemyId = typeof entry === 'string' ? entry : entry.id;
-    const baseConfig = gameData.getEnemy(enemyId);
-
-    if (!baseConfig) {
-      return undefined;
-    }
-
-    const clone = this.cloneEnemyConfig(baseConfig);
-
-    if (typeof entry !== 'string') {
-      if (entry.overrides) {
-        this.deepMerge(clone, entry.overrides);
-      }
-      if (entry.aiParams !== undefined) {
-        clone.aiParams = entry.aiParams;
-      }
-    }
-
-    return clone;
-  }
-
-  private cloneEnemyConfig(config: EnemyConfig): EnemyConfig {
-    return JSON.parse(JSON.stringify(config)) as EnemyConfig;
-  }
-
-  private deepMerge(target: any, source: any): any {
-    if (!source) return target;
-
-    for (const key of Object.keys(source)) {
-      const value = source[key];
-      if (value === undefined) continue;
-
-      if (
-        value &&
-        typeof value === 'object' &&
-        !Array.isArray(value) &&
-        typeof target[key] === 'object' &&
-        target[key] !== null &&
-        !Array.isArray(target[key])
-      ) {
-        this.deepMerge(target[key], value);
-      } else if (Array.isArray(value)) {
-        target[key] = value.map(item => (typeof item === 'object' ? JSON.parse(JSON.stringify(item)) : item));
-      } else {
-        target[key] = value;
-      }
-    }
-
-    return target;
   }
 }
 

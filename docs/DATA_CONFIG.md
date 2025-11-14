@@ -2,6 +2,19 @@
 
 本文档说明如何通过 JSON 配置文件定义和修改游戏内容。
 
+## 目录
+
+- [配置文件位置](#配置文件位置)
+- [敌人配置 (enemies.json)](#敌人配置-enemiesjson)
+  - [字段说明](#字段说明)
+  - [AI 行为类型](#ai-行为枚举)
+  - [looping_curve 参数](#looping_curve-参数aiparams)
+  - [波次覆写](#波次覆写waveenemies)
+- [武器配置 (weapons.json)](#武器配置-weaponsjson)
+- [玩家配置 (players.json)](#玩家配置-playersjson)
+
+---
+
 **重要**：所有颜色配置必须遵循 [颜色设计规范](COLOR_DESIGN.md)。
 
 ---
@@ -143,10 +156,16 @@ public/data/
 
 #### `looping_curve` 参数（`aiParams`）
 
-`looping_curve` 现支持 **两种配置方式**：
+`looping_curve` 支持 **两种配置方式**：
 
-1. **自动切线模式（推荐）**：通过 `auto` 描述进入点、圆心与离场点，系统自动求解三段路径的切线并拼接为光滑曲线。
-2. **手动精调模式**：继续使用 `entry / arc / exit` 三段参数进行逐项微调；与 `auto` 同时存在时，手动字段会覆盖自动推算结果中的对应值。
+1. **自动切线模式（推荐）**：通过 `auto` 描述入场锚点、圆心与离场点，系统自动求解正切点并生成整条平滑曲线。
+2. **手动精调模式**：使用 `entry / arc / exit` 三段参数逐项微调；与 `auto` 同时存在时，手动字段会覆盖自动推算结果。
+
+**配置最佳实践**：
+- 新敌人或新轨迹：优先使用 `auto` 模式，只需 4 个关键参数（圆心、半径、离场点、最小角度）
+- 微调现有轨迹：在 `auto` 基础上附加 `exit.startTangentDistance` 等局部参数
+- 完全自定义：直接使用 `entry / arc / exit` 手动控制每个环节
+- 波次级变化：在关卡 `waves[].enemies` 中覆写 `aiParams`，无需新增敌人 ID
 
 ```json
 "aiParams": {

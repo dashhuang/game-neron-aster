@@ -56,20 +56,81 @@ npm run build
 }
 ```
 
-#### 步骤 2：使用新敌人
+#### 步骤 2：在关卡中使用
 
-在 `EnemySpawnSystem.ts` 中：
+编辑 `public/data/levels/levels.json`，在波次中引用：
 
-```typescript
-const enemyConfig = gameData.getEnemy('diamond_shield');
-if (enemyConfig) {
-  createEnemyFromConfig(world, this.stage, x, y, enemyConfig);
+```json
+{
+  "time": 10,
+  "enemies": ["diamond_shield"],
+  "count": 5,
+  "formation": "v_shape"
 }
 ```
 
 #### 步骤 3：测试
 
 刷新浏览器，新敌人会按配置生成。
+
+---
+
+### 1.1 配置环形敌人轨迹（looping_curve）
+
+#### 快速开始：使用自动切线
+
+最简配置只需 4 个参数：
+
+```json
+{
+  "id": "triangle_custom",
+  "name": "自定义环形",
+  "hp": 28,
+  "speed": 90,
+  "aiType": "looping_curve",
+  "aiParams": {
+    "auto": {
+      "circleCenter": { "x": 360, "y": 320 },
+      "radius": 150,
+      "exitPoint": { "x": 900, "y": 320 },
+      "minArcDeg": 270
+    }
+  }
+}
+```
+
+#### 在关卡中切换轨迹
+
+无需新增敌人 ID，直接在波次中覆写：
+
+```json
+{
+  "time": 12,
+  "enemies": [
+    {
+      "id": "triangle_loop",
+      "aiParams": {
+        "auto": {
+          "circleCenter": { "x": 520, "y": 320 },
+          "exitPoint": { "x": 120, "y": 1500 },
+          "minArcDeg": 360
+        }
+      }
+    }
+  ],
+  "count": 8,
+  "formation": "column"
+}
+```
+
+#### 调试轨迹
+
+1. 主菜单点击"弧线测试"
+2. 查看可视化路径（实时读取 `enemy_test` 关卡配置）
+3. 调整 `aiParams` 参数
+4. 刷新页面查看效果
+
+详细参数说明见 [DATA_CONFIG.md](DATA_CONFIG.md#looping_curve-参数aiparams)
 
 ---
 

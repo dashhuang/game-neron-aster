@@ -10,81 +10,113 @@ import { Velocity } from '../components/Velocity';
 import { AI } from '../components/AI';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/constants';
 
+/**
+ * 路径采样点
+ * @internal
+ */
 interface PathSample {
-  distance: number;
-  x: number;
-  y: number;
-  dx: number;
-  dy: number;
+  distance: number;  // 从起点沿路径的累积距离
+  x: number;         // 采样点 x 坐标
+  y: number;         // 采样点 y 坐标
+  dx: number;        // 切线方向 x 分量（归一化）
+  dy: number;        // 切线方向 y 分量（归一化）
 }
 
+/**
+ * 环形曲线路径数据
+ * 包含弧长参数化后的采样点序列
+ */
 export interface LoopingCurvePathData {
-  totalLength: number;
-  samples: PathSample[];
+  totalLength: number;  // 路径总长度
+  samples: PathSample[]; // 按弧长排列的采样点
 }
 
+/**
+ * 入场段参数（手动模式）
+ * 控制敌人从生成点到圆弧切入点的 Hermite 曲线
+ */
 export interface LoopingCurveEntryParams {
-  startY?: number;
-  targetX?: number;
-  targetY?: number;
-  offsetX?: number;
-  offsetY?: number;
-  angleDeg?: number;
-  approachAngleDeg?: number;
-  approachDistance?: number;
-  tangentDistance?: number;
-  sampleCount?: number;
+  startY?: number;            // 路径起始高度（默认 -140）
+  targetX?: number;           // 入场段终点 x 坐标
+  targetY?: number;           // 入场段终点 y 坐标（默认 320）
+  offsetX?: number;           // 相对生成点的 x 偏移
+  offsetY?: number;           // 相对生成点的 y 偏移
+  angleDeg?: number;          // 入场段终点切线角度（度，默认 90）
+  approachAngleDeg?: number;  // 入场段起点切线角度（度）
+  approachDistance?: number;  // 起点切线长度
+  tangentDistance?: number;   // 终点切线长度
+  sampleCount?: number;       // 采样精度（默认 32）
 }
 
+/**
+ * 圆弧段参数（手动模式）
+ * 控制圆弧的半径、跨度和方向
+ */
 export interface LoopingCurveArcParams {
-  radius?: number;
-  spanDeg?: number;
-  clockwise?: boolean;
-  centerOffsetAlongTangent?: number;
-  centerOffsetNormal?: number;
-  sampleCount?: number;
+  radius?: number;                  // 圆弧半径（默认 150）
+  spanDeg?: number;                 // 绕行角度（度，默认 270）
+  clockwise?: boolean;              // 是否顺时针（默认左侧敌人顺时针）
+  centerOffsetAlongTangent?: number; // 沿切线方向平移圆心
+  centerOffsetNormal?: number;      // 沿法线方向平移圆心
+  sampleCount?: number;             // 采样精度（默认 128）
 }
 
+/**
+ * 离场段参数（手动模式）
+ * 控制从圆弧离开点到最终离场点的 Hermite 曲线
+ */
 export interface LoopingCurveExitParams {
-  targetX?: number;
-  targetY?: number;
-  offsetX?: number;
-  offsetY?: number;
-  distance?: number;
-  angleDeg?: number;
-  startTangentDistance?: number;
-  endTangentDistance?: number;
-  sampleCount?: number;
+  targetX?: number;           // 离场段终点 x 坐标
+  targetY?: number;           // 离场段终点 y 坐标
+  offsetX?: number;           // 终点 x 偏移
+  offsetY?: number;           // 终点 y 偏移
+  distance?: number;          // 离场段长度（默认 420）
+  angleDeg?: number;          // 离场段终点切线角度（度）
+  startTangentDistance?: number; // 起点切线长度
+  endTangentDistance?: number;   // 终点切线长度
+  sampleCount?: number;       // 采样精度（默认 32）
 }
 
+/**
+ * 自动切线参数（推荐模式）
+ * 仅需提供关键锚点，系统自动求解正切点并生成平滑曲线
+ */
 export interface LoopingCurveAutoParams {
-  circleCenter: { x: number; y: number };
-  radius: number;
-  exitPoint: { x: number; y: number };
-  entryPoint?: { x: number; y: number };
-  minArcDeg?: number;
-  clockwise?: boolean;
-  extraTurns?: number;
-  entryApproachScale?: number;
-  entryTangentScale?: number;
-  exitStartScale?: number;
-  exitEndScale?: number;
-  entrySamples?: number;
-  arcSamples?: number;
-  exitSamples?: number;
+  circleCenter: { x: number; y: number }; // 圆心坐标（必填）
+  radius: number;                         // 圆弧半径（必填）
+  exitPoint: { x: number; y: number };    // 离场终点（必填）
+  entryPoint?: { x: number; y: number };  // 入场锚点（默认使用实际生成点）
+  minArcDeg?: number;                     // 最小绕行角度（度，默认 180）
+  clockwise?: boolean;                    // 强制指定绕行方向
+  extraTurns?: number;                    // 额外整圈数（默认 0）
+  entryApproachScale?: number;            // 入场起点切线长度占比（默认 0.6）
+  entryTangentScale?: number;             // 入场终点切线长度占比（默认 0.55）
+  exitStartScale?: number;                // 离场起点切线长度占比（默认 0.4）
+  exitEndScale?: number;                  // 离场终点切线长度占比（默认 0.55）
+  entrySamples?: number;                  // 入场段采样数
+  arcSamples?: number;                    // 圆弧段采样数
+  exitSamples?: number;                   // 离场段采样数
 }
 
+/**
+ * 环形曲线完整参数
+ * 支持 auto（自动）和手动参数混用，手动参数会覆盖自动推算结果
+ */
 export interface LoopingCurveParams {
-  entry?: LoopingCurveEntryParams;
-  arc?: LoopingCurveArcParams;
-  exit?: LoopingCurveExitParams;
-  auto?: LoopingCurveAutoParams;
+  entry?: LoopingCurveEntryParams; // 入场段手动参数
+  arc?: LoopingCurveArcParams;     // 圆弧段手动参数
+  exit?: LoopingCurveExitParams;   // 离场段手动参数
+  auto?: LoopingCurveAutoParams;   // 自动切线参数
 }
 
+/**
+ * 曲线预览选项
+ * 用于 CurveTestScreen 等调试工具
+ */
 export interface LoopingCurvePreviewOptions {
-  params?: LoopingCurveParams;
-  direction?: 1 | -1;
-  spawnY?: number;
+  params?: LoopingCurveParams; // 曲线参数
+  direction?: 1 | -1;          // 强制指定方向（1=左侧，-1=右侧）
+  spawnY?: number;             // 实际生成高度（用于动态路径延展）
 }
 
 interface TangentSolution {
