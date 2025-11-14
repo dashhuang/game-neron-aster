@@ -23,6 +23,7 @@ export interface EnemyConfig {
   
   // AI 行为
   aiType: string;                // AI 类型，如 "straight_down", "zigzag", "tracking"
+  aiParams?: Record<string, any>; // AI 可选参数（行为自定义，例如 loop 曲线配置）
   
   // 武器配置（可选）
   weaponId?: string;             // 武器配置 ID（引用 weapons.json）

@@ -23,6 +23,77 @@ export interface LoopingCurvePathData {
   samples: PathSample[];
 }
 
+export interface LoopingCurveEntryParams {
+  startY?: number;
+  targetX?: number;
+  targetY?: number;
+  offsetX?: number;
+  offsetY?: number;
+  angleDeg?: number;
+  approachAngleDeg?: number;
+  approachDistance?: number;
+  tangentDistance?: number;
+  sampleCount?: number;
+}
+
+export interface LoopingCurveArcParams {
+  radius?: number;
+  spanDeg?: number;
+  clockwise?: boolean;
+  centerOffsetAlongTangent?: number;
+  centerOffsetNormal?: number;
+  sampleCount?: number;
+}
+
+export interface LoopingCurveExitParams {
+  targetX?: number;
+  targetY?: number;
+  offsetX?: number;
+  offsetY?: number;
+  distance?: number;
+  angleDeg?: number;
+  startTangentDistance?: number;
+  endTangentDistance?: number;
+  sampleCount?: number;
+}
+
+export interface LoopingCurveParams {
+  entry?: LoopingCurveEntryParams;
+  arc?: LoopingCurveArcParams;
+  exit?: LoopingCurveExitParams;
+}
+
+const DEFAULT_START_Y = -140;
+const DEFAULT_ENTRY_Y = Math.min(GAME_HEIGHT * 0.28, 320);
+const DEFAULT_ENTRY_SAMPLES = 32;
+const DEFAULT_ARC_SAMPLES = 128;
+const DEFAULT_EXIT_SAMPLES = 32;
+const MIN_ARC_RADIUS = 40;
+
+function degToRad(deg: number): number {
+  return (deg * Math.PI) / 180;
+}
+
+function stableStringify(value: any): string {
+  if (value === undefined) {
+    return 'undefined';
+  }
+  if (value === null || typeof value !== 'object') {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map(item => stableStringify(item)).join(',')}]`;
+  }
+  const keys = Object.keys(value)
+    .filter(key => value[key] !== undefined)
+    .sort();
+  return `{${keys.map(key => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
+}
+
+function serializeParams(params?: LoopingCurveParams): string {
+  return params ? stableStringify(params) : 'default';
+}
+
 interface LoopingCurveState {
   path: LoopingCurvePathData;
   distance: number;

@@ -70,7 +70,7 @@ export function createEnemyFromConfig(
   entity.addComponent(createEnemyData(config.id)); // 存储配置ID
   
   // 添加 AI 组件
-  entity.addComponent(createAI(config.aiType));
+  entity.addComponent(createAI(config.aiType, {}, config.aiParams));
   
   // 如果配置了武器，添加 Weapon 组件
   if (config.weaponId) {

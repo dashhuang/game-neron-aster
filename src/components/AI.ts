@@ -9,13 +9,15 @@ export interface AI extends Component {
   behaviorId: string;      // AI 行为类型，如 "straight_down", "zigzag", "tracking"
   state: any;              // AI 状态数据（每种行为可能不同）
   targetId?: number;       // 追踪目标ID（可选）
+  params?: any;            // 行为参数（可选，用于自定义路径/速度等）
 }
 
-export function createAI(behaviorId: string, initialState: any = {}): AI {
+export function createAI(behaviorId: string, initialState: any = {}, params?: any): AI {
   return {
     type: 'AI',
     behaviorId,
     state: initialState,
+    params,
   };
 }
 

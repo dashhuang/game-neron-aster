@@ -17,6 +17,6 @@ export interface AIBehavior {
   /**
    * 初始化 AI 状态（可选）
    */
-  initialize?(entity: Entity, world: World): any;
+  initialize?(entity: Entity, world: World, params?: any): any;
 }
 

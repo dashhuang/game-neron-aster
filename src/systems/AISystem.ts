@@ -52,7 +52,7 @@ export class AISystem extends System {
       if (!this.initializedEntities.has(entity.id)) {
         const behavior = this.behaviors.get(ai.behaviorId);
         if (behavior && behavior.initialize) {
-          ai.state = behavior.initialize(entity, world);
+          ai.state = behavior.initialize(entity, world, ai.params);
         }
         this.initializedEntities.add(entity.id);
       }

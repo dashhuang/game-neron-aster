@@ -177,7 +177,7 @@ export class NeonRenderer {
     const createStarPoints = (radius: number) => {
       const points = [];
       const outerR = radius;
-      const innerR = radius * 0.4;
+      const innerR = radius * 0.6;  // 从0.4增加到0.6，让五角星更胖
       
       for (let i = 0; i < 10; i++) {
         const angle = (i * Math.PI / 5) - Math.PI / 2;
