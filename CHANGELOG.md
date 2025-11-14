@@ -26,6 +26,8 @@
   - `LoopingCurveBehavior` 会根据实际生成高度自动延长入场段，确保整列敌人沿路径保持间距
 - **弧线调试视图与关卡配置不同步**
   - `CurveTestScreen` 直接读取 `enemy_test` 关卡的波次与敌人配置，轨迹效果与实际敌人完全一致，调参后可即时对照
+- **敌人测试关卡镜像波次**
+  - 新增 `triangle_loop_right` / `triangle_loop_shooter_right` 配置，第二波从右侧入场后朝左下离场，仅第 2、6 架射击，便于对比左右两套路径
 
 ---
 
