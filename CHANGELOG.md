@@ -18,6 +18,11 @@
 - `README`、`ARCHITECTURE`、`DATA_CONFIG`、`CONFIG_EXAMPLES` 同步说明 `aiParams` 字段与常用调参示例
 - `enemies.json` 默认为 `triangle_loop` 提供示例配置，便于在不写代码的情况下快速调整弧线形态
 
+### 🔧 修复
+
+- **敌人测试关卡只出现 2 架敌人**
+  - `CleanupSystem` 为敌人向上预热保留 600px 顶部缓冲，避免列队生成时被错误清理
+
 ---
 
 ## [v0.6.1] - 2025-11-11
