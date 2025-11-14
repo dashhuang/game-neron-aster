@@ -135,13 +135,17 @@ function hermite(
   };
 }
 
-function buildLoopingPath(startX: number, direction: 1 | -1, params?: LoopingCurveParams): LoopingCurvePathData {
+function buildLoopingPath(
+  startX: number,
+  direction: 1 | -1,
+  params: LoopingCurveParams | undefined,
+  effectiveStartY: number
+): LoopingCurvePathData {
   const entryParams = params?.entry ?? {};
   const arcParams = params?.arc ?? {};
   const exitParams = params?.exit ?? {};
-  
-  const startY = entryParams.startY ?? DEFAULT_START_Y;
-  const startPoint = { x: startX, y: startY };
+
+  const startPoint = { x: startX, y: effectiveStartY };
   
   const entryTargetX = entryParams.targetX ?? (startX + (entryParams.offsetX ?? 0));
   const entryTargetY = entryParams.targetY ?? (DEFAULT_ENTRY_Y + (entryParams.offsetY ?? 0));
@@ -343,11 +347,18 @@ function updateFacingFromVelocity(transform: Transform, vx: number, vy: number):
 export class LoopingCurveBehavior implements AIBehavior {
   private static pathCache: Map<string, LoopingCurvePathData> = new Map();
   
-  private static getPath(startX: number, direction: 1 | -1, params?: LoopingCurveParams): LoopingCurvePathData {
-    const key = `${direction}:${startX.toFixed(2)}:${serializeParams(params)}`;
+  private static getPath(
+    startX: number,
+    direction: 1 | -1,
+    params: LoopingCurveParams | undefined,
+    spawnY?: number
+  ): LoopingCurvePathData {
+    const configuredStartY = params?.entry?.startY ?? DEFAULT_START_Y;
+    const effectiveStartY = Math.min(configuredStartY, spawnY ?? configuredStartY);
+    const key = `${direction}:${startX.toFixed(2)}:${effectiveStartY.toFixed(1)}:${serializeParams(params)}`;
     let path = this.pathCache.get(key);
     if (!path) {
-      path = buildLoopingPath(startX, direction, params);
+      path = buildLoopingPath(startX, direction, params, effectiveStartY);
       this.pathCache.set(key, path);
     }
     return path;
@@ -384,7 +395,7 @@ export class LoopingCurveBehavior implements AIBehavior {
     const spawnX = transform.x;
     const spawnY = transform.y;
     const direction: 1 | -1 = spawnX >= GAME_WIDTH / 2 ? -1 : 1;
-    const path = LoopingCurveBehavior.getPath(spawnX, direction, params);
+    const path = LoopingCurveBehavior.getPath(spawnX, direction, params, spawnY);
     const speed = Math.max(vecLength(velocity.vx, velocity.vy), 160);
     
     let closestSample = path.samples[0];
