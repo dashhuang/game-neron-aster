@@ -414,6 +414,21 @@ export class GameEngine {
       }
     });
     
+    // 清理 UI 容器（移除所有非菜单的子容器）
+    // UISystem 的 uiContainer 需要被移除，否则重新进入游戏时会重叠
+    const childrenToRemove = this.app.stage.children.filter(child => {
+      // 保留菜单、天赋、关卡选择、结算界面的容器
+      return child !== this.menuScreen?.getContainer() &&
+             child !== this.talentScreen?.getContainer() &&
+             child !== this.levelSelectScreen?.getContainer() &&
+             child !== this.gameResultScreen?.getContainer() &&
+             child !== this.gameStage;
+    });
+    
+    childrenToRemove.forEach(child => {
+      this.app.stage.removeChild(child);
+    });
+    
     // 重置世界（实体/系统/事件监听一并清理）
     this.world.reset();
     
