@@ -63,6 +63,12 @@ export interface LoopingCurveParams {
   exit?: LoopingCurveExitParams;
 }
 
+export interface LoopingCurvePreviewOptions {
+  params?: LoopingCurveParams;
+  direction?: 1 | -1;
+  spawnY?: number;
+}
+
 const DEFAULT_START_Y = -140;
 const DEFAULT_ENTRY_Y = Math.min(GAME_HEIGHT * 0.28, 320);
 const DEFAULT_ENTRY_SAMPLES = 32;
@@ -366,22 +372,35 @@ export class LoopingCurveBehavior implements AIBehavior {
 
   public static getPreviewPath(
     startX: number,
-    paramsOrDirection?: LoopingCurveParams | 1 | -1,
+    paramsOrOptions?: LoopingCurveParams | LoopingCurvePreviewOptions | 1 | -1,
     directionOverride?: 1 | -1
   ): LoopingCurvePathData {
     let params: LoopingCurveParams | undefined;
-    let direction: 1 | -1 = directionOverride ?? (startX >= GAME_WIDTH / 2 ? -1 : 1);
-    
-    if (typeof paramsOrDirection === 'number') {
-      direction = paramsOrDirection;
-    } else if (paramsOrDirection) {
-      params = paramsOrDirection;
-      if (directionOverride) {
-        direction = directionOverride;
+    let direction: 1 | -1 = startX >= GAME_WIDTH / 2 ? -1 : 1;
+    let spawnY: number | undefined;
+
+    if (typeof paramsOrOptions === 'number') {
+      direction = paramsOrOptions;
+    } else if (paramsOrOptions) {
+      if ('params' in paramsOrOptions || 'direction' in paramsOrOptions || 'spawnY' in paramsOrOptions) {
+        const options = paramsOrOptions as LoopingCurvePreviewOptions;
+        params = options.params;
+        if (options.direction !== undefined) {
+          direction = options.direction;
+        }
+        if (options.spawnY !== undefined) {
+          spawnY = options.spawnY;
+        }
+      } else {
+        params = paramsOrOptions as LoopingCurveParams;
       }
     }
+
+    if (directionOverride !== undefined) {
+      direction = directionOverride;
+    }
     
-    return this.getPath(startX, direction, params);
+    return this.getPath(startX, direction, params, spawnY);
   }
   
   initialize(entity: Entity, _world: World, params?: LoopingCurveParams): LoopingCurveState {
