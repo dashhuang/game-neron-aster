@@ -150,8 +150,11 @@
           "spanDeg": 270
         },
         "exit": {
-          "distance": 820,
-          "angleDeg": 225
+          "targetX": -160,
+          "targetY": 1420,
+          "angleDeg": 225,
+          "startTangentDistance": 220,
+          "endTangentDistance": 320
         }
       },
       "tags": ["geometric", "formation", "curve"]
@@ -177,8 +180,11 @@
           "spanDeg": 270
         },
         "exit": {
-          "distance": 820,
-          "angleDeg": 225
+          "targetX": -160,
+          "targetY": 1420,
+          "angleDeg": 225,
+          "startTangentDistance": 220,
+          "endTangentDistance": 320
         }
       },
       "weaponId": "enemy_aimed_shot",
