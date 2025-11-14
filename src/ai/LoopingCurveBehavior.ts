@@ -223,15 +223,15 @@ function buildSimpleLoopingPath(
   let lastTangent = { x: 0, y: 1 };
 
   if (loopEnabled) {
+    const minAngle = loopOptions.minProgress ?? (Math.PI * 1.5); // 保证至少 270°
+    const maxAngle = loopOptions.maxProgress ?? (Math.PI * 2.2);
     const center = {
       x: entryPoint.x + sideSign * radius,
       y: entryPoint.y,
     };
     const thetaStart = Math.atan2(entryPoint.y - center.y, entryPoint.x - center.x);
     const thetaDir = sideSign;
-    const minAngle = loopOptions.minProgress ?? (direction === 1 ? Math.PI * 0.75 : Math.PI * 1.1);
-    const maxAngle = loopOptions.maxProgress ?? Math.PI * 1.9;
-    const steps = 360;
+    const steps = 480;
     let bestTheta = thetaStart + thetaDir * minAngle;
     let bestScore = -Infinity;
 
@@ -287,17 +287,33 @@ function buildSimpleLoopingPath(
 
   const startBlend = loopOptions.startBlend ?? Math.max(exitDistance * 0.35, radius);
   const exitBlend = loopOptions.exitBlend ?? Math.max(exitDistance * 0.45, radius);
-  const blendedStartDir = loopEnabled
-    ? normalize(
-        lastTangent.x * 0.6 + exitDir.x * 0.4,
-        lastTangent.y * 0.6 + exitDir.y * 0.4
-      )
-    : exitDir;
+  const exitStartDir = loopEnabled ? lastTangent : exitDir;
 
   const exitStartTangent = {
-    x: blendedStartDir.x * startBlend,
-    y: blendedStartDir.y * startBlend,
+    x: exitStartDir.x * startBlend,
+    y: exitStartDir.y * startBlend,
   };
+
+  const midAnchor = loopEnabled
+    ? {
+        x: lastPoint.x + exitStartDir.x * startBlend * 0.8 + exitDir.x * startBlend * 0.2,
+        y: lastPoint.y + exitStartDir.y * startBlend * 0.8 + exitDir.y * startBlend * 0.2,
+      }
+    : undefined;
+
+  if (midAnchor) {
+    const midTangent = {
+      x: exitStartDir.x * (startBlend * 0.6),
+      y: exitStartDir.y * (startBlend * 0.6),
+    };
+    for (let k = 1; k <= DEFAULT_EXIT_SAMPLES; k++) {
+      const t = k / DEFAULT_EXIT_SAMPLES;
+      const point = hermite(lastPoint, exitStartTangent, midAnchor, midTangent, t);
+      rawPoints.push(point);
+    }
+    lastPoint = midAnchor;
+  }
+
   const exitEndTangent = {
     x: exitDir.x * exitBlend,
     y: exitDir.y * exitBlend,
