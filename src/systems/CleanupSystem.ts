@@ -32,7 +32,7 @@ export class CleanupSystem extends System {
 
       // 针对不同实体类型使用差异化安全边距
       const baseMargin = 100 * SCALE_FACTOR;
-      const topMargin = tag.value === EntityType.ENEMY ? 600 * SCALE_FACTOR : baseMargin;
+      const topMargin = tag.value === EntityType.ENEMY ? 900 * SCALE_FACTOR : baseMargin;
       const horizontalMargin = baseMargin;
       const bottomMargin = baseMargin;
 
