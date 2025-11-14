@@ -139,7 +139,33 @@ public/data/
 - `straight_down`：垂直俯冲
 - `zigzag`：水平摆动下落
 - `tracking` / `tracking_fast` / `tracking_slow`：追踪玩家（不同转向速度）
-- `looping_curve`：纵向列队垂直入场 → 270° 圆弧绕向远侧 → 沿出生侧水平切线离场，机头持续朝向移动方向
+- `looping_curve`：纵向列队垂直入场 → 绕圈/缓弯 → 离场，机头持续朝向移动方向
+
+#### `looping_curve` 简化参数
+
+新版 `looping_curve` 只需描述“从哪里进入、往哪里离开、是否绕圈”，其余曲线都会自动计算。
+
+```json
+"aiParams": {
+  "entryAnchor": { "x": 220, "y": -40 },   // 可选，缺省=生成点
+  "exitAnchor": { "x": -200, "y": 1500 },  // 离场目标点（必须）
+  "loop": true,                                // 是否绕圈，默认 true
+  "loopOptions": {                             // 可选：覆盖半径/方向等细节
+    "radius": 150,
+    "turnSide": "auto"                        // "auto" / "left" / "right"
+  }
+}
+```
+
+- **entryAnchor**：若不填写，系统直接使用阵型给出的生成坐标；仅在需要水平偏移或特殊高度时配置。
+- **exitAnchor**：指定离场时希望到达的屏幕外锚点（例如左侧离场 `x=-200` 或下方离场 `y=GAME_HEIGHT+200`）。
+- **loop**：`true` 表示在屏幕中部自动寻找最优圆弧接入点；`false` 则改为柔和 S 形离场。
+- **loopOptions.radius**：绕圈半径（默认 150）。
+- **loopOptions.turnSide**：强制指定圆弧方向；`auto` 会根据生成侧自动镜像。
+- **loopOptions.minProgress / maxProgress**：控制最少/最多绕行角度（弧度按弧度制，默认约 135°～340°）。
+- **loopOptions.startBlend / exitBlend**：调整离场段 Hermite 切线长度（默认自动计算）。
+
+> 仍支持旧版 `entry` / `arc` / `exit` 详细配置；若同时填写这些字段，系统会优先采用详细模式，适合在极端场景下手动控制每一段的切线与角度。
 
 #### `looping_curve` 参数（`aiParams`）
 
@@ -344,4 +370,3 @@ public/data/
 |------|------|------|------|
 | `enabled` | boolean | 是否启用爆发模式 | `true` |
 | `shotsPerBurst` | number | 每次爆发的子弹数 | `3` |
-| `

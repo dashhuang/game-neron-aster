@@ -94,18 +94,8 @@
   "xpDrop": 2,
   "aiType": "looping_curve",
   "aiParams": {
-    "entry": {
-      "targetY": 280,
-      "offsetX": -40,
-      "angleDeg": 100
-    },
-    "arc": {
-      "radius": 200,
-      "spanDeg": 300
-    },
-    "exit": {
-      "distance": 520
-    }
+    "exitAnchor": { "x": -200, "y": 1500 },
+    "loop": true
   },
   "tags": ["geometric", "formation", "curve"]
 }
@@ -125,17 +115,11 @@
   "xpDrop": 2,
   "aiType": "looping_curve",
   "aiParams": {
-    "entry": {
-      "targetY": 280,
-      "offsetX": -40,
-      "angleDeg": 100
-    },
-    "arc": {
-      "radius": 200,
-      "spanDeg": 300
-    },
-    "exit": {
-      "distance": 520
+    "exitAnchor": { "x": -200, "y": 1500 },
+    "loop": true,
+    "loopOptions": {
+      "turnSide": "auto",
+      "radius": 150
     }
   },
   "weaponId": "enemy_aimed_shot",
@@ -144,9 +128,20 @@
 }
 ```
 
-> 镜像到右侧时，可复制为 `triangle_loop_right` / `triangle_loop_shooter_right` 并调整 `entry.offsetX`（正值向右偏移）与 `exit.angleDeg=225`，即可实现“右上进场、左下离场”的同款轨迹。
-
-> 调试：主菜单 `弧线测试` 按钮会调用 `CurveTestScreen` 可视化该行为的完整路径（含左右起点与生成点对齐标记）。通过 `aiParams` 可以在不修改代码的情况下微调入场高度、切线方向与离场距离，系统会自动做 Hermite 与圆弧衔接，确保曲线平滑。若需要完全不同的弧线形态，建议复制敌人配置为新的 ID。敌人从同一列生成时，路径会自动向上延展到最靠上的出生点，避免队列互相重叠。弧线测试界面会实时读取 `enemy_test` 关卡的波次与敌人配置，确保与实际轨迹完全一致。
+> 镜像到右侧时，可复制为 `triangle_loop_right` / `triangle_loop_shooter_right`，仅需更改 `exitAnchor` 为屏幕下方偏左位置（如 `{ "x": 220, "y": 1500 }`），必要时通过 `loopOptions` 调整转向半径或强制左右绕圈：
+>
+> ```json
+> "aiParams": {
+>   "exitAnchor": { "x": 220, "y": 1500 },
+>   "loop": true,
+>   "loopOptions": {
+>     "turnSide": "auto",
+>     "radius": 150
+>   }
+> }
+> ```
+>
+> 调试：主菜单 `弧线测试` 按钮会调用 `CurveTestScreen` 可视化该行为的完整轨迹（含左右起点与生成点对齐标记）。通过 `exitAnchor` 仅需描述目标离场位置，系统会自动计算入场/绕圈/离场的切线，使路径保持平滑。若需要完全不同的轨迹形态，可设置 `loop=false` 改为柔和弯曲，或继续覆写 `loopOptions` 半径/最小角度。
 
 ---
 

@@ -57,11 +57,36 @@ export interface LoopingCurveExitParams {
   sampleCount?: number;
 }
 
-export interface LoopingCurveParams {
+export interface LoopingCurveDetailedParams {
   entry?: LoopingCurveEntryParams;
   arc?: LoopingCurveArcParams;
   exit?: LoopingCurveExitParams;
 }
+
+export type LoopingCurveTurnSide = 'auto' | 'left' | 'right';
+
+export interface LoopingCurveAnchor {
+  x: number;
+  y: number;
+}
+
+export interface LoopingCurveLoopOptions {
+  radius?: number;
+  turnSide?: LoopingCurveTurnSide;
+  minProgress?: number;
+  maxProgress?: number;
+  startBlend?: number;
+  exitBlend?: number;
+}
+
+export interface LoopingCurveSimpleParams {
+  entryAnchor?: LoopingCurveAnchor;
+  exitAnchor?: LoopingCurveAnchor;
+  loop?: boolean;
+  loopOptions?: LoopingCurveLoopOptions;
+}
+
+export type LoopingCurveParams = LoopingCurveDetailedParams | LoopingCurveSimpleParams;
 
 export interface LoopingCurvePreviewOptions {
   params?: LoopingCurveParams;
@@ -98,6 +123,17 @@ function stableStringify(value: any): string {
 
 function serializeParams(params?: LoopingCurveParams): string {
   return params ? stableStringify(params) : 'default';
+}
+
+function isDetailedParams(params?: LoopingCurveParams): params is LoopingCurveDetailedParams {
+  return !!params && (Object.prototype.hasOwnProperty.call(params, 'entry') || Object.prototype.hasOwnProperty.call(params, 'arc') || Object.prototype.hasOwnProperty.call(params, 'exit'));
+}
+
+function getDefaultExitAnchor(direction: 1 | -1): LoopingCurveAnchor {
+  if (direction === 1) {
+    return { x: -200, y: GAME_HEIGHT + 200 };
+  }
+  return { x: GAME_WIDTH + 200, y: GAME_HEIGHT + 200 };
 }
 
 interface LoopingCurveState {
@@ -141,10 +177,175 @@ function hermite(
   };
 }
 
-function buildLoopingPath(
+function buildSimpleLoopingPath(
+  startX: number,
+  spawnY: number | undefined,
+  direction: 1 | -1,
+  params: LoopingCurveSimpleParams,
+  effectiveStartY: number
+): LoopingCurvePathData {
+  const exitAnchor = params.exitAnchor ?? getDefaultExitAnchor(direction);
+  const entryX = params.entryAnchor?.x ?? startX;
+  const entryY = params.entryAnchor?.y ?? DEFAULT_ENTRY_Y;
+  const rawPoints: Array<{ x: number; y: number }> = [];
+
+  let startY = effectiveStartY;
+  if (Number.isFinite(spawnY)) {
+    startY = Math.min(startY, spawnY ?? startY);
+  }
+  if (startY > entryY - 20) {
+    startY = entryY - 20;
+  }
+
+  const entryStartPoint = { x: entryX, y: startY };
+  const entryPoint = { x: entryX, y: entryY };
+  const entryDeltaY = entryPoint.y - entryStartPoint.y;
+  const approachDistance = Math.max(Math.abs(entryDeltaY) * 0.6, 80);
+  const entryTangentDistance = Math.max(Math.abs(entryDeltaY) * 0.5, 60);
+  const startTangent = { x: 0, y: approachDistance };
+  const entryTangent = { x: 0, y: entryTangentDistance };
+
+  for (let i = 0; i <= DEFAULT_ENTRY_SAMPLES; i++) {
+    const t = i / DEFAULT_ENTRY_SAMPLES;
+    rawPoints.push(hermite(entryStartPoint, startTangent, entryPoint, entryTangent, t));
+  }
+
+  const loopEnabled = params.loop !== false;
+  const loopOptions = params.loopOptions ?? {};
+  const radius = Math.max(loopOptions.radius ?? 150, MIN_ARC_RADIUS);
+  const sideSign = (() => {
+    if (loopOptions.turnSide === 'left') return -1;
+    if (loopOptions.turnSide === 'right') return 1;
+    return direction === 1 ? 1 : -1;
+  })();
+
+  let lastPoint = entryPoint;
+  let lastTangent = { x: 0, y: 1 };
+
+  if (loopEnabled) {
+    const center = {
+      x: entryPoint.x + sideSign * radius,
+      y: entryPoint.y,
+    };
+    const thetaStart = Math.atan2(entryPoint.y - center.y, entryPoint.x - center.x);
+    const thetaDir = sideSign;
+    const minAngle = loopOptions.minProgress ?? (direction === 1 ? Math.PI * 0.75 : Math.PI * 1.1);
+    const maxAngle = loopOptions.maxProgress ?? Math.PI * 1.9;
+    const steps = 360;
+    let bestTheta = thetaStart + thetaDir * minAngle;
+    let bestScore = -Infinity;
+
+    for (let i = 1; i <= steps; i++) {
+      const progress = (maxAngle * i) / steps;
+      const theta = thetaStart + thetaDir * progress;
+      const angleTravel = Math.abs(progress);
+      if (angleTravel < minAngle) continue;
+
+      const point = {
+        x: center.x + radius * Math.cos(theta),
+        y: center.y + radius * Math.sin(theta),
+      };
+      const tangent = normalize(-Math.sin(theta) * thetaDir, Math.cos(theta) * thetaDir);
+      const toAnchor = normalize(exitAnchor.x - point.x, exitAnchor.y - point.y);
+      const alignment = tangent.x * toAnchor.x + tangent.y * toAnchor.y;
+      const distancePenalty = vecLength(exitAnchor.x - point.x, exitAnchor.y - point.y) * 1e-4;
+      const score = alignment - distancePenalty;
+      if (score > bestScore) {
+        bestScore = score;
+        bestTheta = theta;
+      }
+    }
+
+    const totalAngle = bestTheta - thetaStart;
+    const arcSamples = Math.max(16, Math.round((Math.abs(totalAngle) / (Math.PI * 2)) * DEFAULT_ARC_SAMPLES));
+
+    for (let j = 1; j <= arcSamples; j++) {
+      const t = j / arcSamples;
+      const theta = thetaStart + totalAngle * t;
+      rawPoints.push({
+        x: center.x + radius * Math.cos(theta),
+        y: center.y + radius * Math.sin(theta),
+      });
+    }
+
+    lastPoint = {
+      x: center.x + radius * Math.cos(bestTheta),
+      y: center.y + radius * Math.sin(bestTheta),
+    };
+    lastTangent = normalize(
+      -Math.sin(bestTheta) * thetaDir,
+      Math.cos(bestTheta) * thetaDir
+    );
+  }
+
+  const exitVector = {
+    x: exitAnchor.x - lastPoint.x,
+    y: exitAnchor.y - lastPoint.y,
+  };
+  const exitDistance = Math.max(vecLength(exitVector.x, exitVector.y), 1);
+  const exitDir = normalize(exitVector.x, exitVector.y);
+
+  const startBlend = loopOptions.startBlend ?? Math.max(exitDistance * 0.35, radius);
+  const exitBlend = loopOptions.exitBlend ?? Math.max(exitDistance * 0.45, radius);
+  const blendedStartDir = loopEnabled
+    ? normalize(
+        lastTangent.x * 0.6 + exitDir.x * 0.4,
+        lastTangent.y * 0.6 + exitDir.y * 0.4
+      )
+    : exitDir;
+
+  const exitStartTangent = {
+    x: blendedStartDir.x * startBlend,
+    y: blendedStartDir.y * startBlend,
+  };
+  const exitEndTangent = {
+    x: exitDir.x * exitBlend,
+    y: exitDir.y * exitBlend,
+  };
+
+  for (let k = 1; k <= DEFAULT_EXIT_SAMPLES; k++) {
+    const t = k / DEFAULT_EXIT_SAMPLES;
+    rawPoints.push(hermite(lastPoint, exitStartTangent, exitAnchor, exitEndTangent, t));
+  }
+
+  const samples: PathSample[] = [];
+  let totalLength = 0;
+
+  for (let i = 0; i < rawPoints.length; i++) {
+    const current = rawPoints[i];
+    if (i > 0) {
+      const prev = rawPoints[i - 1];
+      totalLength += vecLength(current.x - prev.x, current.y - prev.y);
+    }
+    let tangent: { x: number; y: number };
+    if (i < rawPoints.length - 1) {
+      const next = rawPoints[i + 1];
+      tangent = normalize(next.x - current.x, next.y - current.y);
+    } else if (i > 0) {
+      const prev = rawPoints[i - 1];
+      tangent = normalize(current.x - prev.x, current.y - prev.y);
+    } else {
+      tangent = { x: 0, y: 1 };
+    }
+    samples.push({
+      distance: totalLength,
+      x: current.x,
+      y: current.y,
+      dx: tangent.x,
+      dy: tangent.y,
+    });
+  }
+
+  return {
+    totalLength,
+    samples,
+  };
+}
+
+function buildDetailedLoopingPath(
   startX: number,
   direction: 1 | -1,
-  params: LoopingCurveParams | undefined,
+  params: LoopingCurveDetailedParams | undefined,
   effectiveStartY: number
 ): LoopingCurvePathData {
   const entryParams = params?.entry ?? {};
@@ -359,12 +560,20 @@ export class LoopingCurveBehavior implements AIBehavior {
     params: LoopingCurveParams | undefined,
     spawnY?: number
   ): LoopingCurvePathData {
-    const configuredStartY = params?.entry?.startY ?? DEFAULT_START_Y;
-    const effectiveStartY = Math.min(configuredStartY, spawnY ?? configuredStartY);
-    const key = `${direction}:${startX.toFixed(2)}:${effectiveStartY.toFixed(1)}:${serializeParams(params)}`;
+    const configuredStartBase = isDetailedParams(params)
+      ? params?.entry?.startY ?? DEFAULT_START_Y
+      : (params as LoopingCurveSimpleParams | undefined)?.entryAnchor?.y ?? DEFAULT_START_Y;
+    const spawnBase = spawnY ?? configuredStartBase;
+    const effectiveStartY = Math.min(configuredStartBase, spawnBase);
+    const modeKey = isDetailedParams(params) ? 'detailed' : 'simple';
+    const key = `${modeKey}:${direction}:${startX.toFixed(2)}:${effectiveStartY.toFixed(1)}:${serializeParams(params)}`;
     let path = this.pathCache.get(key);
     if (!path) {
-      path = buildLoopingPath(startX, direction, params, effectiveStartY);
+      if (!params || isDetailedParams(params)) {
+        path = buildDetailedLoopingPath(startX, direction, params as LoopingCurveDetailedParams | undefined, effectiveStartY);
+      } else {
+        path = buildSimpleLoopingPath(startX, spawnY, direction, params as LoopingCurveSimpleParams, effectiveStartY);
+      }
       this.pathCache.set(key, path);
     }
     return path;
