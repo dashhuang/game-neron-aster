@@ -13,7 +13,7 @@
   - 自动推算出的 `entry / arc / exit` 可被同名字段按需覆盖，用于局部微调切线角度或离场距离
   - 为未来新敌人降低配置难度，编队中的每一架飞机都会共享同一条自动生成的曲线
   - `triangle_loop` / `triangle_loop_shooter` 现作为唯一的环形敌人类型，真实关卡与弧线测试默认应用自动切线方案
-  - wave_script 波次可直接覆写 `enemies[]` 中的 `aiParams` / `overrides`，无需再为不同轨迹复制额外敌人 ID（敌人测试关卡第二、三波即为示例）
+  - wave_script 波次可直接覆写 `enemies[]` 中的 `aiParams` / `overrides`，无需再为不同轨迹复制额外敌人 ID（`enemy_test` 关卡现展示左入右出、右入左下出、左下入右上出、上入左下出的四种组合）
 
 - **环形尖兵曲线调参能力**
   - `EnemyConfig` 支持可选 `aiParams` 字段，通过 `entry / arc / exit` 三段参数控制入场高度、圆弧半径/角度与离场方向
