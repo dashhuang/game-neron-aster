@@ -138,19 +138,19 @@ export const gameData = new DataLoader();
    ↓
 3. AISystem                # AI 行为（更新敌人移动策略）
    ↓
-4. ProjectileSystem        # 子弹行为（追踪）
+4. ProjectileSystem        # 子弹行为（追踪/弹跳）
    ↓
-5. MovementSystem          # 更新位置
+5. HomingSystem            # 追踪导弹系统
    ↓
-6. CompanionSystem         # 僚机跟随
+6. MovementSystem          # 更新位置
    ↓
-7. CompanionWeaponSystem   # 僚机射击
+7. CompanionSystem         # 僚机跟随
    ↓
-8. WeaponSystem            # 玩家武器射击
+8. CompanionWeaponSystem   # 僚机射击
    ↓
-9. EnemyWeaponSystem       # 敌人武器射击
+9. WeaponSystem            # 玩家武器射击
    ↓
-10. HomingSystem           # 追踪导弹系统
+10. EnemyWeaponSystem      # 敌人武器射击
    ↓
 11. CollisionSystem        # 碰撞检测（含弹射重定向）
    ↓
@@ -166,17 +166,21 @@ export const gameData = new DataLoader();
    ↓
 17. PerformanceSystem      # 限制实体数量
    ↓
-16. EnemySpawnSystem       # 生成敌人
+18. WaveSystem             # 关卡波次 / 算法生成 / 通关检测
    ↓
-17. DeathSystem            # 处理死亡
+19. BossSystem             # Boss 多阶段管理
    ↓
-18. HitFlashSystem         # 受击特效
+20. VictorySystem          # 胜利收尾与飞离
    ↓
-19. UpgradeSystem          # 升级管理
+21. DeathSystem            # 处理死亡、生成掉落
    ↓
-20. RenderSystem           # 同步渲染
+22. HitFlashSystem         # 受击特效
    ↓
-21. UISystem               # UI 更新
+23. UpgradeSystem          # 升级管理（暂停状态仍需更新）
+   ↓
+24. RenderSystem           # 同步渲染
+   ↓
+25. UISystem               # UI 更新
 ```
 
 **顺序原则**：
@@ -184,6 +188,13 @@ export const gameData = new DataLoader();
 - 先生成事件 → 后消费事件
 - 性能系统在生成系统之前
 - AI 和 Projectile 在 Movement 之前更新速度
+- WaveSystem 统一承担刷怪/关卡状态控制职责，已完全替代旧的 EnemySpawnSystem
+
+### WaveSystem & LevelManager（关卡驱动）
+
+- **WaveSystem (`src/systems/WaveSystem.ts`)**：依据关卡 `spawnMode` 执行三种路径——`wave_script`（脚本化时间轴 + `formation` / `weaponMultipliers`）、`algorithm`（难度权重 + 自动缩短间隔）与 `boss_only`（交给 BossSystem）。针对 `wave_script`，当所有波次生成完且场上无敌人时，调用 `LevelManager.enterCleanupPhase()`，停止继续刷怪。
+- **LevelManager (`src/managers/LevelManager.ts`)**：保存当前关卡、时间轴与状态机（`PLAYING → VICTORY_CLEANUP → VICTORY_EXIT → COMPLETE`），WaveSystem 每帧同步时间，VictorySystem 根据状态触发暂停/飞离/回到主菜单。
+- **BossSystem + VictorySystem**：BossSystem 监听 WaveSystem/LevelManager，生成多阶段 Boss；VictorySystem 监听 `level_complete` 事件，处理 10 秒收尾、玩家飞离、清理世界并回到菜单。
 
 ### 内置 AI 行为
 

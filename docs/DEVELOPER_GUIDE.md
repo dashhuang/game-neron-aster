@@ -324,7 +324,9 @@ resumeGame() {
 ```typescript
 // 临时禁用某个系统
 // 在 registerSystems() 中注释掉
-// .addSystem(new EnemySpawnSystem(this.gameStage))
+// if (this.waveSystem) {
+//   this.world.addSystem(this.waveSystem); // WaveSystem 负责波次/算法生成
+// }
 ```
 
 ### 4. 查看性能
