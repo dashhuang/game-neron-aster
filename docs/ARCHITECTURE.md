@@ -190,7 +190,7 @@ export const gameData = new DataLoader();
 - `straight_down`：恒定向下冲刺
 - `zigzag`：水平摆动 + 下落
 - `tracking` / `tracking_fast` / `tracking_slow`：不同转向速度的追踪玩家
-- `looping_curve`：纵向列队垂直入场 → 270° 圆弧绕向远侧（入场/离场均保持切线方向）→ 沿出生侧水平切线离场，同时保持模型朝向移动方向
+- `looping_curve`：纵向列队垂直入场 → 270° 圆弧绕向远侧（入场/离场均保持切线方向）→ 沿出生侧水平切线离场，同时保持模型朝向移动方向。通过敌人配置中的 `aiParams.entry / arc / exit` 可分别调整入场高度、圆弧半径/角度、离场距离与朝向，系统会自动保持曲线光滑。
 
 ---
 

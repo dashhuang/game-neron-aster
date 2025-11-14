@@ -4,6 +4,22 @@
 
 ---
 
+## [v0.6.2] - 2025-11-14
+
+### ✨ 新增
+
+- **环形尖兵曲线调参能力**
+  - `EnemyConfig` 支持可选 `aiParams` 字段，通过 `entry / arc / exit` 三段参数控制入场高度、圆弧半径/角度与离场方向
+  - `LoopingCurveBehavior` 根据参数自动重建 Hermite + 圆弧路径，保证过渡连续且保持机头朝向
+  - `AISystem` / `AI` 组件新增行为参数透传机制，后续其他行为亦可复用
+
+### 📚 文档
+
+- `README`、`ARCHITECTURE`、`DATA_CONFIG`、`CONFIG_EXAMPLES` 同步说明 `aiParams` 字段与常用调参示例
+- `enemies.json` 默认为 `triangle_loop` 提供示例配置，便于在不写代码的情况下快速调整弧线形态
+
+---
+
 ## [v0.6.1] - 2025-11-11
 
 ### 🔧 修复

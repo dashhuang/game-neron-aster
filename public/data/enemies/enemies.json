@@ -84,6 +84,18 @@
       "shape": "triangle",
       "xpDrop": 2,
       "aiType": "looping_curve",
+      "aiParams": {
+        "entry": {
+          "targetY": 320
+        },
+        "arc": {
+          "radius": 150,
+          "spanDeg": 270
+        },
+        "exit": {
+          "distance": 420
+        }
+      },
       "deathEffect": {
         "type": "explosion_small",
         "particleCount": 10

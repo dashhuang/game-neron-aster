@@ -93,11 +93,25 @@
   "shape": "triangle",
   "xpDrop": 2,
   "aiType": "looping_curve",
+  "aiParams": {
+    "entry": {
+      "targetY": 280,
+      "offsetX": -40,
+      "angleDeg": 100
+    },
+    "arc": {
+      "radius": 200,
+      "spanDeg": 300
+    },
+    "exit": {
+      "distance": 520
+    }
+  },
   "tags": ["geometric", "formation", "curve"]
 }
 ```
 
-> 调试：主菜单 `弧线测试` 按钮会调用 `CurveTestScreen` 可视化该行为的完整路径（含左右起点与生成点对齐标记）。入场保持垂直切线，绕行 270° 至远侧后再沿出生侧水平切线离开，不再出现额外折线。
+> 调试：主菜单 `弧线测试` 按钮会调用 `CurveTestScreen` 可视化该行为的完整路径（含左右起点与生成点对齐标记）。通过 `aiParams` 可以在不修改代码的情况下微调入场高度、切线方向与离场距离，系统会自动做 Hermite 与圆弧衔接，确保曲线平滑。若需要完全不同的弧线形态，建议复制敌人配置为新的 ID。
 
 ---
 

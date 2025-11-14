@@ -135,55 +135,125 @@ function hermite(
   };
 }
 
-function buildLoopingPath(startX: number, direction: 1 | -1): LoopingCurvePathData {
-  const startY = -140;
-  const entryY = Math.min(GAME_HEIGHT * 0.28, 320);
-  const circleRadius = 150;
-  const circleArcSpan = Math.PI * 1.5; // 270°：垂直入场→圆弧转向→水平离场
-  const circleCenterX = startX + direction * circleRadius; // 远离出生侧的圆心偏移
-  const circleCenterY = entryY;
-
+function buildLoopingPath(startX: number, direction: 1 | -1, params?: LoopingCurveParams): LoopingCurvePathData {
+  const entryParams = params?.entry ?? {};
+  const arcParams = params?.arc ?? {};
+  const exitParams = params?.exit ?? {};
+  
+  const startY = entryParams.startY ?? DEFAULT_START_Y;
+  const startPoint = { x: startX, y: startY };
+  
+  const entryTargetX = entryParams.targetX ?? (startX + (entryParams.offsetX ?? 0));
+  const entryTargetY = entryParams.targetY ?? (DEFAULT_ENTRY_Y + (entryParams.offsetY ?? 0));
+  const entryPoint = { x: entryTargetX, y: entryTargetY };
+  
+  const entryAngleDeg = entryParams.angleDeg ?? 90;
+  const entryAngleRad = degToRad(entryAngleDeg);
+  const entryTangentDir = normalize(Math.cos(entryAngleRad), Math.sin(entryAngleRad));
+  
+  const approachAngleRad = degToRad(entryParams.approachAngleDeg ?? entryAngleDeg);
+  const approachDir = normalize(Math.cos(approachAngleRad), Math.sin(approachAngleRad));
+  
+  const entrySegmentLength = Math.max(vecLength(entryPoint.x - startPoint.x, entryPoint.y - startPoint.y), 1);
+  const approachDistance = entryParams.approachDistance ?? Math.max(entrySegmentLength * 0.6, 80);
+  const entryTangentDistance = entryParams.tangentDistance ?? Math.max(entrySegmentLength * 0.5, 60);
+  const entrySamples = Math.max(8, entryParams.sampleCount ?? DEFAULT_ENTRY_SAMPLES);
+  
+  const startTangent = {
+    x: approachDir.x * approachDistance,
+    y: approachDir.y * approachDistance,
+  };
+  const entryTangent = {
+    x: entryTangentDir.x * entryTangentDistance,
+    y: entryTangentDir.y * entryTangentDistance,
+  };
+  
   const rawPoints: Array<{ x: number; y: number }> = [];
-  const entrySamples = 32;
-  const circleSamples = 128;
-  const exitSamples = 32;
-
-  // 段1：垂直直线下降，保持与圆弧切点垂直
+  
   for (let i = 0; i <= entrySamples; i++) {
     const t = i / entrySamples;
-    rawPoints.push({
-      x: startX,
-      y: startY + (entryY - startY) * t,
-    });
+    rawPoints.push(hermite(startPoint, startTangent, entryPoint, entryTangent, t));
   }
-
-  // 段2：以圆心位于远侧构建 270° 圆弧（入场垂直，离场水平）
-  const circleThetaStart = direction === 1 ? Math.PI : 0;
-  const circleThetaDir = direction === 1 ? -1 : 1;
-  let lastCirclePoint: { x: number; y: number } = rawPoints[rawPoints.length - 1];
-  for (let j = 1; j <= circleSamples; j++) {
-    const progress = j / circleSamples;
-    const theta = circleThetaStart + circleThetaDir * progress * circleArcSpan;
+  
+  const radius = Math.max(arcParams.radius ?? 150, MIN_ARC_RADIUS);
+  const spanDeg = arcParams.spanDeg ?? 270;
+  const spanRad = degToRad(spanDeg);
+  const clockwise = arcParams.clockwise ?? (direction === 1);
+  const arcSamples = Math.max(16, arcParams.sampleCount ?? DEFAULT_ARC_SAMPLES);
+  
+  const baseNormal = clockwise
+    ? { x: entryTangentDir.y, y: -entryTangentDir.x }
+    : { x: -entryTangentDir.y, y: entryTangentDir.x };
+  const centerOffsetAlongTangent = arcParams.centerOffsetAlongTangent ?? 0;
+  const centerOffsetNormal = arcParams.centerOffsetNormal ?? 0;
+  
+  const baseCenter = {
+    x: entryPoint.x + baseNormal.x * radius,
+    y: entryPoint.y + baseNormal.y * radius,
+  };
+  const circleCenter = {
+    x: baseCenter.x + entryTangentDir.x * centerOffsetAlongTangent + baseNormal.x * centerOffsetNormal,
+    y: baseCenter.y + entryTangentDir.y * centerOffsetAlongTangent + baseNormal.y * centerOffsetNormal,
+  };
+  
+  const thetaStart = Math.atan2(entryPoint.y - circleCenter.y, entryPoint.x - circleCenter.x);
+  const thetaDir = clockwise ? -1 : 1;
+  let lastTheta = thetaStart;
+  let lastCirclePoint = entryPoint;
+  
+  for (let j = 1; j <= arcSamples; j++) {
+    const progress = j / arcSamples;
+    const theta = thetaStart + thetaDir * spanRad * progress;
+    lastTheta = theta;
     lastCirclePoint = {
-      x: circleCenterX + circleRadius * Math.cos(theta),
-      y: circleCenterY + circleRadius * Math.sin(theta),
+      x: circleCenter.x + radius * Math.cos(theta),
+      y: circleCenter.y + radius * Math.sin(theta),
     };
     rawPoints.push(lastCirclePoint);
   }
-
-  // 段3：沿出生侧水平驶离屏幕，使用 Hermite 保持切线
-  const exitTarget = {
-    x: direction === 1 ? -260 : GAME_WIDTH + 260,
-    y: lastCirclePoint.y,
+  
+  const arcTangentDir = normalize(
+    -Math.sin(lastTheta) * thetaDir,
+    Math.cos(lastTheta) * thetaDir
+  );
+  
+  const exitSamples = Math.max(8, exitParams.sampleCount ?? DEFAULT_EXIT_SAMPLES);
+  const exitAngleRad = exitParams.angleDeg !== undefined ? degToRad(exitParams.angleDeg) : undefined;
+  const exitDirection = exitAngleRad !== undefined
+    ? normalize(Math.cos(exitAngleRad), Math.sin(exitAngleRad))
+    : arcTangentDir;
+  
+  const baseExitDistance = exitParams.distance ?? 420;
+  const exitDistance = baseExitDistance > 1 ? baseExitDistance : 1;
+  
+  const baseExitTarget = {
+    x: lastCirclePoint.x + exitDirection.x * exitDistance,
+    y: lastCirclePoint.y + exitDirection.y * exitDistance,
   };
-  const exitTangentStart = { x: direction === 1 ? -360 : 360, y: 0 };
-  const exitTangentEnd = { x: direction === 1 ? -320 : 320, y: 0 };
-
+  
+  const exitTarget = {
+    x: exitParams.targetX ?? (baseExitTarget.x + (exitParams.offsetX ?? 0)),
+    y: exitParams.targetY ?? (baseExitTarget.y + (exitParams.offsetY ?? 0)),
+  };
+  
+  const exitVectorLength = Math.max(vecLength(exitTarget.x - lastCirclePoint.x, exitTarget.y - lastCirclePoint.y), 1);
+  const exitStartTangentDistance = exitParams.startTangentDistance ?? Math.max(exitVectorLength * 0.3, 100);
+  const exitEndTangentDistance = exitParams.endTangentDistance ?? Math.max(exitVectorLength * 0.4, 140);
+  
+  const exitStartTangent = {
+    x: arcTangentDir.x * exitStartTangentDistance,
+    y: arcTangentDir.y * exitStartTangentDistance,
+  };
+  const exitEndTangent = {
+    x: exitDirection.x * exitEndTangentDistance,
+    y: exitDirection.y * exitEndTangentDistance,
+  };
+  
   for (let k = 1; k <= exitSamples; k++) {
     const t = k / exitSamples;
-    rawPoints.push(hermite(lastCirclePoint, exitTangentStart, exitTarget, exitTangentEnd, t));
+    rawPoints.push(hermite(lastCirclePoint, exitStartTangent, exitTarget, exitEndTangent, t));
   }
-
+  
   const samples: PathSample[] = [];
   let totalLength = 0;
   
@@ -217,7 +287,7 @@ function buildLoopingPath(startX: number, direction: 1 | -1): LoopingCurvePathDa
   }
   
   return {
-    totalLength: totalLength,
+    totalLength,
     samples,
   };
 }
@@ -273,22 +343,37 @@ function updateFacingFromVelocity(transform: Transform, vx: number, vy: number):
 export class LoopingCurveBehavior implements AIBehavior {
   private static pathCache: Map<string, LoopingCurvePathData> = new Map();
   
-  private static getPath(startX: number, direction: 1 | -1): LoopingCurvePathData {
-    const key = `${direction}:${Math.round(startX)}`;
+  private static getPath(startX: number, direction: 1 | -1, params?: LoopingCurveParams): LoopingCurvePathData {
+    const key = `${direction}:${startX.toFixed(2)}:${serializeParams(params)}`;
     let path = this.pathCache.get(key);
     if (!path) {
-      path = buildLoopingPath(startX, direction);
+      path = buildLoopingPath(startX, direction, params);
       this.pathCache.set(key, path);
     }
     return path;
   }
-  
-  public static getPreviewPath(startX: number, direction?: 1 | -1): LoopingCurvePathData {
-    const dir = direction ?? (startX >= GAME_WIDTH / 2 ? -1 : 1);
-    return this.getPath(startX, dir);
+
+  public static getPreviewPath(
+    startX: number,
+    paramsOrDirection?: LoopingCurveParams | 1 | -1,
+    directionOverride?: 1 | -1
+  ): LoopingCurvePathData {
+    let params: LoopingCurveParams | undefined;
+    let direction: 1 | -1 = directionOverride ?? (startX >= GAME_WIDTH / 2 ? -1 : 1);
+    
+    if (typeof paramsOrDirection === 'number') {
+      direction = paramsOrDirection;
+    } else if (paramsOrDirection) {
+      params = paramsOrDirection;
+      if (directionOverride) {
+        direction = directionOverride;
+      }
+    }
+    
+    return this.getPath(startX, direction, params);
   }
   
-  initialize(entity: Entity, _world: World): LoopingCurveState {
+  initialize(entity: Entity, _world: World, params?: LoopingCurveParams): LoopingCurveState {
     const transform = entity.getComponent<Transform>('Transform');
     const velocity = entity.getComponent<Velocity>('Velocity');
     
@@ -299,7 +384,7 @@ export class LoopingCurveBehavior implements AIBehavior {
     const spawnX = transform.x;
     const spawnY = transform.y;
     const direction: 1 | -1 = spawnX >= GAME_WIDTH / 2 ? -1 : 1;
-    const path = LoopingCurveBehavior.getPath(spawnX, direction);
+    const path = LoopingCurveBehavior.getPath(spawnX, direction, params);
     const speed = Math.max(vecLength(velocity.vx, velocity.vy), 160);
     
     let closestSample = path.samples[0];

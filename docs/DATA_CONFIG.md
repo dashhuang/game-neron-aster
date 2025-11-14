@@ -123,6 +123,7 @@ public/data/
 | `shape` | string | 形状类型 | `"hexagon"`, `"triangle"`, `"diamond"`, `"star"` |
 | `xpDrop` | number | 掉落经验值 | `2` |
 | `aiType` | string | AI 行为类型 | `"straight_down"` / `"zigzag"` / `"tracking"` / `"looping_curve"` |
+| `aiParams` | object | AI 行为自定义参数（可选） | 详见下方 `looping_curve` 参数说明 |
 | `weaponId` | string | 武器ID（可选）| `"enemy_straight_shot"` - 引用 weapons.json |
 | `initialFireDelay` | number | 首次射击延迟（秒，可选） | `1.0` - 生成后延迟多久开始射击 |
 | `shootingCondition` | object | 射击条件（可选） | 见下方说明 |
@@ -137,6 +138,66 @@ public/data/
 - `zigzag`：水平摆动下落
 - `tracking` / `tracking_fast` / `tracking_slow`：追踪玩家（不同转向速度）
 - `looping_curve`：纵向列队垂直入场 → 270° 圆弧绕向远侧 → 沿出生侧水平切线离场，机头持续朝向移动方向
+
+#### `looping_curve` 参数（`aiParams`）
+
+为 `looping_curve` 敌人配置 `aiParams` 后，可在保持整条路径平滑、切线连续的前提下调整入场 / 圆弧 / 离场的空间位置与角度。所有字段均为可选，未填写时会使用系统默认值。
+
+```json
+"aiParams": {
+  "entry": {
+    "targetY": 300,
+    "angleDeg": 100
+  },
+  "arc": {
+    "radius": 180,
+    "spanDeg": 300
+  },
+  "exit": {
+    "distance": 520,
+    "angleDeg": 0
+  }
+}
+```
+
+**entry（入场段）**
+
+| 字段 | 默认值 | 说明 |
+|------|--------|------|
+| `startY` | `-140` | 敌人生成时的初始高度（通常保持默认） |
+| `targetY` | `320` | 入场段结束的高度，决定弧线起点位置 |
+| `targetX` | 生成点 x | 入场段结束的水平位置（优先级高于 `offsetX`） |
+| `offsetX` / `offsetY` | `0` | 相对于生成点的偏移量，用于微调入场切点 |
+| `angleDeg` | `90` | 入场段终点的切线角度（90° 表示正下方） |
+| `approachAngleDeg` | `angleDeg` | 入场段开头的朝向角度 |
+| `approachDistance` | `max(0.6 × distance, 80)` | Hermite 曲线起点切线长度，影响入场弧度 |
+| `tangentDistance` | `max(0.5 × distance, 60)` | Hermite 曲线终点切线长度，影响与圆弧的拼接 |
+| `sampleCount` | `32` | 入场段采样精度（越大越平滑，性能开销略增） |
+
+**arc（圆弧段）**
+
+| 字段 | 默认值 | 说明 |
+|------|--------|------|
+| `radius` | `150` | 圆弧半径，控制弧线转弯力度 |
+| `spanDeg` | `270` | 绕行角度（度数），决定入场/离场角度差 |
+| `clockwise` | 左侧敌人 `true` / 右侧敌人 `false` | 强制指定弧线方向（顺时针 / 逆时针） |
+| `centerOffsetAlongTangent` | `0` | 沿入场切线方向平移圆心（正值向前，负值向后） |
+| `centerOffsetNormal` | `0` | 沿法线方向平移圆心（正值离开出生侧，负值靠近出生侧） |
+| `sampleCount` | `128` | 圆弧段采样精度 |
+
+**exit（离场段）**
+
+| 字段 | 默认值 | 说明 |
+|------|--------|------|
+| `distance` | `420` | 离场段长度（沿切线延伸的距离） |
+| `angleDeg` | 圆弧切线角度 | 离场段最终朝向；未设置时自动沿圆弧切线继续 |
+| `targetX` / `targetY` | 自动推算 | 直接指定离场段终点（优先级高于 `offset` 与 `distance`） |
+| `offsetX` / `offsetY` | `0` | 在自动计算的终点基础上再平移 |
+| `startTangentDistance` | `max(0.3 × distance, 100)` | 离场段起点切线长度，影响衔接顺滑度 |
+| `endTangentDistance` | `max(0.4 × distance, 140)` | 离场段终点切线长度，影响直线段延展 |
+| `sampleCount` | `32` | 离场段采样精度 |
+
+> ⚠️ 提示：参数值会自动做长度与角度的归一化，确保路径在任何组合下都保持光滑。若同一关卡需要多种弧线形态，可复制 `triangle_loop` 配置为新敌人并分别设置 `aiParams`。
 
 ### 射击条件配置（shootingCondition）
 
