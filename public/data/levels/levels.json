@@ -254,7 +254,7 @@
               "id": "triangle_loop",
               "aiParams": {
                 "auto": {
-                  "entryPoint": { "x": 220, "y": 820 },
+                  "entryPoint": { "x": 220, "y": 1380 },
                   "circleCenter": { "x": 360, "y": 360 },
                   "radius": 160,
                   "exitPoint": { "x": 520, "y": -200 },
@@ -270,7 +270,7 @@
               "id": "triangle_loop_shooter",
               "aiParams": {
                 "auto": {
-                  "entryPoint": { "x": 220, "y": 820 },
+                  "entryPoint": { "x": 220, "y": 1380 },
                   "circleCenter": { "x": 360, "y": 360 },
                   "radius": 160,
                   "exitPoint": { "x": 520, "y": -200 },
@@ -286,7 +286,7 @@
               "id": "triangle_loop",
               "aiParams": {
                 "auto": {
-                  "entryPoint": { "x": 220, "y": 820 },
+                  "entryPoint": { "x": 220, "y": 1380 },
                   "circleCenter": { "x": 360, "y": 360 },
                   "radius": 160,
                   "exitPoint": { "x": 520, "y": -200 },
@@ -302,7 +302,7 @@
               "id": "triangle_loop",
               "aiParams": {
                 "auto": {
-                  "entryPoint": { "x": 220, "y": 820 },
+                  "entryPoint": { "x": 220, "y": 1380 },
                   "circleCenter": { "x": 360, "y": 360 },
                   "radius": 160,
                   "exitPoint": { "x": 520, "y": -200 },
@@ -318,7 +318,7 @@
               "id": "triangle_loop",
               "aiParams": {
                 "auto": {
-                  "entryPoint": { "x": 220, "y": 820 },
+                  "entryPoint": { "x": 220, "y": 1380 },
                   "circleCenter": { "x": 360, "y": 360 },
                   "radius": 160,
                   "exitPoint": { "x": 520, "y": -200 },
@@ -334,7 +334,7 @@
               "id": "triangle_loop_shooter",
               "aiParams": {
                 "auto": {
-                  "entryPoint": { "x": 220, "y": 820 },
+                  "entryPoint": { "x": 220, "y": 1380 },
                   "circleCenter": { "x": 360, "y": 360 },
                   "radius": 160,
                   "exitPoint": { "x": 520, "y": -200 },
@@ -350,7 +350,7 @@
               "id": "triangle_loop",
               "aiParams": {
                 "auto": {
-                  "entryPoint": { "x": 220, "y": 820 },
+                  "entryPoint": { "x": 220, "y": 1380 },
                   "circleCenter": { "x": 360, "y": 360 },
                   "radius": 160,
                   "exitPoint": { "x": 520, "y": -200 },
@@ -366,7 +366,7 @@
               "id": "triangle_loop",
               "aiParams": {
                 "auto": {
-                  "entryPoint": { "x": 220, "y": 820 },
+                  "entryPoint": { "x": 220, "y": 1380 },
                   "circleCenter": { "x": 360, "y": 360 },
                   "radius": 160,
                   "exitPoint": { "x": 520, "y": -200 },
@@ -381,7 +381,7 @@
           ],
           "count": 8,
           "formation": "column",
-          "formation_params": { "x": 220, "spacing": 60, "y": 780 }
+          "formation_params": { "x": 220, "spacing": 60, "y": 1380 }
         },
         {
           "time": 36,
