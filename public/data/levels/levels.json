@@ -134,6 +134,22 @@
           "count": 8,
           "formation": "column",
           "formation_params": { "x": 500, "spacing": 60, "y": -40 }
+        },
+        {
+          "time": 24,
+          "enemies": [
+            "triangle_loop_bottom",
+            "triangle_loop_shooter_bottom",
+            "triangle_loop_bottom",
+            "triangle_loop_bottom",
+            "triangle_loop_bottom",
+            "triangle_loop_shooter_bottom",
+            "triangle_loop_bottom",
+            "triangle_loop_bottom"
+          ],
+          "count": 8,
+          "formation": "column",
+          "formation_params": { "x": 220, "spacing": 60, "y": -40 }
         }
       ],
       "objective": {
