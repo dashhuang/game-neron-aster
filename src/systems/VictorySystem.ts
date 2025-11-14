@@ -11,6 +11,7 @@ import { Transform } from '../components/Transform';
 import { Velocity } from '../components/Velocity';
 import { Weapon } from '../components/Weapon';
 import { CompanionWeapon } from '../components/CompanionWeapon';
+import { Render } from '../components/Render';
 
 export class VictorySystem extends System {
   private playerExitSpeed: number = 800;  // 玩家飞离速度（快速飞离）
@@ -121,6 +122,42 @@ export class VictorySystem extends System {
         companionWeapon.fireCooldown = 999999;
       }
     }
+    
+    // 清除所有敌人子弹（通关时立即消失）
+    const enemyBullets = world.entities.filter(e => {
+      if (!e.active) return false;
+      const tag = e.getComponent<Tag>('Tag');
+      return tag && tag.value === EntityType.ENEMY_BULLET;
+    });
+    
+    for (const bullet of enemyBullets) {
+      // 移除精灵
+      const render = bullet.getComponent<Render>('Render');
+      if (render && render.sprite && render.sprite.parent) {
+        render.sprite.parent.removeChild(render.sprite);
+      }
+      // 销毁实体
+      bullet.destroy();
+    }
+    
+    // 清除所有敌人（通关时立即消失）
+    const enemies = world.entities.filter(e => {
+      if (!e.active) return false;
+      const tag = e.getComponent<Tag>('Tag');
+      return tag && tag.value === EntityType.ENEMY;
+    });
+    
+    for (const enemy of enemies) {
+      // 移除精灵
+      const render = enemy.getComponent<Render>('Render');
+      if (render && render.sprite && render.sprite.parent) {
+        render.sprite.parent.removeChild(render.sprite);
+      }
+      // 销毁实体
+      enemy.destroy();
+    }
+    
+    console.log(`🧹 通关清理：移除 ${enemyBullets.length} 个敌人子弹，${enemies.length} 个敌人`);
   }
   
   /**
