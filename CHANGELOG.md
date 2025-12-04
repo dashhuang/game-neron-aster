@@ -19,6 +19,11 @@
   - `EnemyConfig` 支持可选 `aiParams` 字段，通过 `entry / arc / exit` 三段参数控制入场高度、圆弧半径/角度与离场方向
   - `LoopingCurveBehavior` 根据参数自动重建 Hermite + 圆弧路径，保证过渡连续且保持机头朝向
   - `AISystem` / `AI` 组件新增行为参数透传机制，后续其他行为亦可复用
+- **天赋树 UI 原型升级**
+  - 重构 `talentTree.ts`，改为“战舰核心 + 4 个母节点（进攻/防御/成长/机动）+ 对应子分支”的结构
+  - 新增 `costs` 数组字段，支持节点按等级切换资源（如 PITY 首次用时间棱晶、后续用核心能量）
+  - `TalentScreen` 读取新结构，动态用节点下一次升级的资源颜色渲染图标与连线，并在 Tooltip 中展示真实消耗
+  - 成长系新增“稀有技能保底（PITY）”节点：第 5/10/15 级固定保底紫卡，首次激活用时间棱晶，后续升级改用核心能量
 
 ### 🔧 修复
 
@@ -39,6 +44,13 @@
   - 新增 `src/utils/ConfigUtils.ts`，提取 `resolveEnemyConfig`、`deepMerge`、`cloneEnemyConfig` 等重复逻辑
   - `WaveSystem` 和 `CurveTestScreen` 引用统一实现，消除代码重复
 
+### ⚙️ 调整
+
+- **线性关卡1**（linear_01）
+  - 自第 25 波起所有 `count` 统一 +2，让 80 秒后的场面密度持续攀升
+  - 保持波次间隔不变，仅通过数量叠加和既有武器倍数（最高 ×2.0）创造后期压力
+  - README / LEVEL_CONFIG.md 同步记录新的难度曲线
+
 ### 📚 文档
 
 - 为 `LoopingCurveBehavior` 和 `LevelConfig` 类型添加完整 JSDoc 注释
@@ -48,6 +60,7 @@
 - 为所有配置手册添加目录导航
 - 在 `README.md` 顶部添加文档导航链接
 - 统一所有文档中的术语和描述风格（"波次覆写"、"自动切线模式"等）
+- `docs/TALENT_DESIGN.md`、`README.md`、`DATA_CONFIG.md` 同步更新天赋树结构、成本字段与 UI 实装状态
 
 ---
 

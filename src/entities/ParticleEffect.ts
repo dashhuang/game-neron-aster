@@ -47,37 +47,65 @@ export function createExplosion(
     
     // 创建粒子图形（小圆点或线段）
     const sprite = new Graphics();
-    const particleSize = config.SIZE_MIN + Math.random() * (config.SIZE_MAX - config.SIZE_MIN);
+    // 基础尺寸由 Particle 组件的缩放控制，这里绘制标准尺寸
+    const baseSize = 10; 
     
     if (Math.random() > 0.5) {
       // 实心圆粒子
-      sprite.circle(0, 0, particleSize);
+      sprite.circle(0, 0, baseSize / 2);
       sprite.fill({ color, alpha: 1 });
       
-      // 减少外发光（更清晰）
-      sprite.circle(0, 0, particleSize + 1);
-      sprite.stroke({ width: 2, color, alpha: 0.3 });
+      // 核心更亮
+      sprite.circle(0, 0, baseSize / 4);
+      sprite.fill({ color: 0xffffff, alpha: 0.5 });
     } else {
       // 线段粒子（更有霓虹感）
-      const length = particleSize * config.LINE_LENGTH_MULTIPLIER;
+      const length = baseSize * config.LINE_LENGTH_MULTIPLIER;
       sprite.moveTo(0, 0);
-      sprite.lineTo(Math.cos(angle) * length, Math.sin(angle) * length);
-      sprite.stroke({ width: config.LINE_WIDTH, color, alpha: 1 });
+      sprite.lineTo(length, 0); // 水平绘制，通过 Transform 旋转
+      sprite.stroke({ width: config.LINE_WIDTH, color, alpha: 1, cap: 'round' });
       
       // 发光效果
       sprite.moveTo(0, 0);
-      sprite.lineTo(Math.cos(angle) * length, Math.sin(angle) * length);
-      sprite.stroke({ width: config.GLOW_WIDTH, color, alpha: config.GLOW_ALPHA });
+      sprite.lineTo(length, 0);
+      sprite.stroke({ width: config.GLOW_WIDTH, color, alpha: config.GLOW_ALPHA, cap: 'round' });
     }
     
     stage.addChild(sprite);
     
+    const particleSize = config.SIZE_MIN + Math.random() * (config.SIZE_MAX - config.SIZE_MIN);
+    // 计算初始缩放 (基于 baseSize=10)
+    const initialScale = particleSize / 10;
+    
+    // 设置旋转为运动方向
+    const rotation = Math.atan2(vy, vx);
+
     // 添加组件
-    entity.addComponent(createTransform(x, y, angle, 1));
+    entity.addComponent(createTransform(x, y, rotation, initialScale));
     entity.addComponent(createVelocity(vx, vy));
     entity.addComponent(createRender(sprite, LAYERS.EFFECTS_FRONT));
+    
     const lifetime = config.LIFETIME_MIN + Math.random() * (config.LIFETIME_MAX - config.LIFETIME_MIN);
-    entity.addComponent(createParticle(lifetime, 1.0, true));
+    
+    // 设定缩放曲线：
+    // 小型爆炸：快速缩小消失
+    // 大型爆炸：膨胀扩散
+    let startScale = initialScale;
+    let endScale = initialScale * 0.1;
+    
+    if (explosionType === 'explosion_large' || explosionType === 'explosion') {
+        startScale = initialScale * 0.5; // 初始较小
+        endScale = initialScale * 2.0;   // 结束较大
+    }
+    
+    entity.addComponent(createParticle(
+        lifetime, 
+        1.0, 
+        true, 
+        startScale, 
+        endScale, 
+        'add' // 关键：使用叠加混合模式
+    ));
     entity.addComponent(createTag('particle' as any));
   }
 }
@@ -104,17 +132,28 @@ export function createDebris(
     
     // 小方块碎片
     const sprite = new Graphics();
-    const size = (1 + Math.random() * 2) * SCALE_FACTOR;
+    const size = 10; // 基础尺寸
     sprite.rect(-size/2, -size/2, size, size);
     sprite.fill({ color, alpha: 0.8 });
     
     stage.addChild(sprite);
     
-    entity.addComponent(createTransform(x, y, angle, 1));
+    const realSize = (1 + Math.random() * 2) * SCALE_FACTOR;
+    const scale = realSize / 10;
+
+    entity.addComponent(createTransform(x, y, angle, scale));
     entity.addComponent(createVelocity(vx, vy));
     entity.addComponent(createRender(sprite, LAYERS.EFFECTS_BACK));
-    entity.addComponent(createParticle(0.3 + Math.random() * 0.2, 0.8, true));
+    
+    // 碎片逐渐变小
+    entity.addComponent(createParticle(
+        0.3 + Math.random() * 0.2, 
+        0.8, 
+        true,
+        scale,
+        scale * 0.5,
+        'normal' // 碎片不需要高亮叠加
+    ));
     entity.addComponent(createTag('particle' as any));
   }
 }
-

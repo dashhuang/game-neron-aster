@@ -53,18 +53,29 @@ export class NeonRenderer {
   ): Graphics {
     graphics.clear();
     
-    // 绘制线框
+    // 1. 绘制核心线框 (最亮，实心)
     graphics.poly(points, true);
     graphics.stroke({ width: lineWidth, color, alpha: 1 });
     
-    // 添加辉光效果（使用简化的外发光）
+    // 2. 添加多层辉光效果
     if (addGlow) {
-      // 创建外发光图层（绘制稍粗的半透明线）
+      // 启用叠加混合模式，让重叠部分更亮（仅对支持的环境有效）
+      // 注意：直接设置 Graphics 的 blendMode 可能会影响整体，这里主要靠多层透明度模拟
+      
+      // 内发光 (较亮，较窄)
       graphics.poly(points, true);
       graphics.stroke({ 
         width: lineWidth + 4, 
         color, 
-        alpha: 0.3 
+        alpha: 0.4
+      });
+
+      // 外发光 (较暗，很宽，模拟光晕)
+      graphics.poly(points, true);
+      graphics.stroke({ 
+        width: lineWidth + 10,
+        color, 
+        alpha: 0.15
       });
     }
     
@@ -87,13 +98,22 @@ export class NeonRenderer {
     graphics.circle(0, 0, radius);
     graphics.stroke({ width: lineWidth, color, alpha: 1 });
     
-    // 添加辉光
+    // 添加双层辉光
     if (addGlow) {
+      // 内发光
       graphics.circle(0, 0, radius);
       graphics.stroke({ 
-        width: lineWidth + 3, 
+        width: lineWidth + 4, 
         color, 
-        alpha: 0.3 
+        alpha: 0.4 
+      });
+      
+      // 外发光
+      graphics.circle(0, 0, radius);
+      graphics.stroke({ 
+        width: lineWidth + 10, 
+        color, 
+        alpha: 0.15 
       });
     }
     
@@ -111,14 +131,17 @@ export class NeonRenderer {
   ): Graphics {
     graphics.clear();
     
-    // 绘制实心圆
+    // 核心
     graphics.circle(0, 0, radius);
-    graphics.fill({ color, alpha: 0.9 });
+    graphics.fill({ color, alpha: 1.0 });
     
-    // 外环增强辉光感
+    // 辉光
     if (addGlow) {
-      graphics.circle(0, 0, radius + 2);
-      graphics.stroke({ width: 2, color, alpha: 0.4 });
+      graphics.circle(0, 0, radius + 3);
+      graphics.stroke({ width: 2, color, alpha: 0.5 });
+      
+      graphics.circle(0, 0, radius + 6);
+      graphics.stroke({ width: 4, color, alpha: 0.2 });
     }
     
     return graphics;

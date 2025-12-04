@@ -422,3 +422,55 @@ public/data/
 |------|------|------|------|
 | `enabled` | boolean | 是否启用爆发模式 | `true` |
 | `shotsPerBurst` | number | 每次爆发的子弹数 | `3` |
+
+---
+
+## 🌲 天赋树静态数据（`src/data/talents/talentTree.ts`）
+
+> 目前天赋树配置仍写在 TypeScript 常量里（用于 UI 原型）。迁移至 JSON 时也请沿用以下字段与语义。
+
+```ts
+export interface TalentNodeConfig {
+  id: string;
+  title: string;
+  description: string;
+  shortLabel: string;
+  category: 'core' | 'attack' | 'defense' | 'growth' | 'mobility' | 'utility';
+  maxLevel: number;
+  initialLevel?: number;
+  position: { x: number; y: number };
+  connections: string[];
+  costs: { resource: TalentResource; amount: number }[];
+}
+```
+
+- `id`：唯一标识符（如 `attack_mastery`），与设计文档、UI 描述保持一致。
+- `shortLabel`：节点中心显示的 2–5 字母标签。
+- `category`：决定节点配色与分支归属。
+- `position`：在 720×1280 画布坐标系中的位置，用于 `TalentScreen` 绘制。
+- `connections`：**双向列表**。父节点需要写入子节点 ID，子节点也要写入父节点 ID，这样既能判断前置条件，也能绘制连线。
+- `costs`：数组形式的升级花费。第 `n` 次升级读取 `costs[min(n, costs.length-1)]`：
+  - 若每级消耗不同，就按顺序写出多个 `{ resource, amount }`
+  - 若所有等级相同，可以复制同一个条目多次
+  - 若需要“首次用稀有资源，后续用基础资源”（如 `growth_pity`），就把不同资源放在数组不同索引，UI 会自动读取下一等级所需资源并展示对应颜色
+
+### 示例
+
+```ts
+{
+  id: 'growth_pity',
+  title: '稀有技能保底',
+  shortLabel: 'PITY',
+  category: 'growth',
+  maxLevel: 3,
+  position: { x: 220, y: 860 },
+  connections: ['growth_mastery', 'growth_choice'],
+  costs: [
+    { resource: 'time', amount: 1 },   // Lv1：首次激活使用时间棱晶
+    { resource: 'core', amount: 300 }, // Lv2：核心能量
+    { resource: 'core', amount: 600 }  // Lv3：核心能量
+  ]
+}
+```
+
+`TalentScreen` 根据 `costs` 计算下一次升级所需的资源，并在 Tooltip 中显示图标 + 数值；当节点达到 `maxLevel` 时不再展示消耗。

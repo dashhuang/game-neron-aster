@@ -1,12 +1,12 @@
 /**
  * ParticleSystem - 粒子系统
- * 处理粒子的生命周期和淡出效果
+ * 处理粒子的生命周期、淡出效果和动态缩放
  */
 
 import { System, World } from '../core/ECS';
 import { Particle } from '../components/Particle';
 import { Render } from '../components/Render';
-import { Graphics } from 'pixi.js';
+import { Graphics, Container } from 'pixi.js';
 
 export class ParticleSystem extends System {
   update(world: World, delta: number): void {
@@ -22,10 +22,31 @@ export class ParticleSystem extends System {
       
       // 计算生命周期进度 (0 到 1)
       const progress = Math.min(1, particle.elapsed / particle.lifetime);
+      const sprite = render.sprite;
       
-      // 淡出效果
-      if (particle.fadeOut && render.sprite instanceof Graphics) {
-        render.sprite.alpha = particle.initialAlpha * (1 - progress);
+      // 1. 应用混合模式 (仅当不匹配时设置)
+      if (sprite.blendMode !== particle.blendMode) {
+        sprite.blendMode = particle.blendMode;
+      }
+      
+      // 2. 淡出效果
+      if (particle.fadeOut && (sprite instanceof Graphics || sprite instanceof Container)) {
+        sprite.alpha = particle.initialAlpha * (1 - progress);
+      }
+      
+      // 3. 动态缩放效果 (如果有变化)
+      if (particle.startScale !== particle.endScale) {
+        // 使用缓动函数让变化更自然 (easeOutQuad)
+        const easeProgress = 1 - (1 - progress) * (1 - progress);
+        const currentScale = particle.startScale + (particle.endScale - particle.startScale) * easeProgress;
+        
+        // 只有当缩放值有意义时才应用 (避免 scale 0 导致的渲染问题)
+        if (currentScale > 0.01) {
+          sprite.scale.set(currentScale);
+        } else {
+          sprite.scale.set(0.01);
+          sprite.visible = false;
+        }
       }
       
       // 生命周期结束，销毁粒子
@@ -39,4 +60,3 @@ export class ParticleSystem extends System {
     }
   }
 }
-

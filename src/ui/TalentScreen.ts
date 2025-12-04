@@ -12,7 +12,8 @@ import {
   TALENT_NODES,
   TALENT_RESOURCE_META,
   TalentNodeConfig,
-  TalentResource
+  TalentResource,
+  TalentCostConfig
 } from '../data/talents/talentTree';
 import {
   TalentTooltip,
@@ -419,7 +420,7 @@ export class TalentScreen {
         const bx = nodeB.position.x;
         const by = nodeB.position.y;
 
-        const resourceColor = TALENT_RESOURCE_META[config.resource].color;
+        const resourceColor = this.getNodeColor(config, this.nodeLevels.get(config.id) ?? 0);
         const activeLine =
           (stateA === 'upgradeable' || stateA === 'maxed') &&
           (stateB === 'upgradeable' || stateB === 'maxed');
@@ -455,9 +456,9 @@ export class TalentScreen {
       return connLevel > 0;
     });
 
-    const resource = this.resources[config.resource];
-    if (!resource) return 'hidden';
-    const enough = resource.current >= config.cost;
+    const nextCost = this.getNextCost(config, level);
+    const resourceState = nextCost ? this.resources[nextCost.resource] : undefined;
+    const enough = nextCost ? ((resourceState?.current ?? 0) >= nextCost.amount) : false;
 
     // 未激活状态
     if (level === 0) {
@@ -478,7 +479,7 @@ export class TalentScreen {
     const label = container.getChildByName('label') as Text;
     const levelText = container.getChildByName('level') as Text;
     const level = this.nodeLevels.get(config.id) ?? 0;
-    const resource = TALENT_RESOURCE_META[config.resource];
+    const baseColor = this.getNodeColor(config, level);
     const isSelected = this.selectedNodeId === config.id;
 
     if (state === 'hidden') {
@@ -523,11 +524,11 @@ export class TalentScreen {
       shape.roundRect(-32, -32, 64, 64, 14);
       shape.fill({ color: 0x101226, alpha: 0.6 });
       shape.roundRect(-32, -32, 64, 64, 14);
-      shape.stroke({ width: 2, color: resource.color, alpha: 0.9 });
+      shape.stroke({ width: 2, color: baseColor, alpha: 0.9 });
       label.text = config.shortLabel;
       label.style.fontFamily = '"Press Start 2P", Arial';
       label.style.fontSize = 12;
-      label.style.fill = resource.color;
+      label.style.fill = baseColor;
       label.style.align = 'center';
       label.style.wordWrap = true;
       label.style.wordWrapWidth = 60;
@@ -548,7 +549,7 @@ export class TalentScreen {
       label.style.wordWrapWidth = 60;
       levelText.text = '';
       badge.roundRect(-18, -28, 36, 12, 5);
-      badge.fill({ color: resource.color, alpha: 0.35 });
+      badge.fill({ color: baseColor, alpha: 0.35 });
     } else if (state === 'locked' && level > 0) {
       // 已激活但资源不足升级
       shape.roundRect(-32, -32, 64, 64, 14);
@@ -565,14 +566,14 @@ export class TalentScreen {
       levelText.text = `${level}/${config.maxLevel}`;
       levelText.style.fill = 0xb97388;
       badge.roundRect(-18, -28, 36, 12, 5);
-      badge.fill({ color: resource.color, alpha: 0.35 });
+      badge.fill({ color: baseColor, alpha: 0.35 });
     } else if (state === 'upgradeable') {
       badge.roundRect(-20, -30, 40, 16, 6);
-      badge.fill({ color: resource.color, alpha: 0.45 });
+      badge.fill({ color: baseColor, alpha: 0.45 });
       shape.roundRect(-32, -32, 64, 64, 14);
-      shape.fill({ color: resource.color, alpha: 0.22 });
+      shape.fill({ color: baseColor, alpha: 0.22 });
       shape.roundRect(-32, -32, 64, 64, 14);
-      shape.stroke({ width: 3, color: resource.color, alpha: 0.95 });
+      shape.stroke({ width: 3, color: baseColor, alpha: 0.95 });
       label.text = config.shortLabel;
       label.style.fontFamily = '"Press Start 2P", Arial';
       label.style.fontSize = 12;
@@ -584,9 +585,9 @@ export class TalentScreen {
       levelText.style.fill = 0xffffff;
     } else if (state === 'maxed') {
       badge.roundRect(-20, -30, 40, 16, 6);
-      badge.fill({ color: resource.color, alpha: 0.9 });
+      badge.fill({ color: baseColor, alpha: 0.9 });
       shape.roundRect(-32, -32, 64, 64, 14);
-      shape.fill({ color: resource.color, alpha: 0.65 });
+      shape.fill({ color: baseColor, alpha: 0.65 });
       shape.roundRect(-32, -32, 64, 64, 14);
       shape.stroke({ width: 3, color: 0xffffff, alpha: 0.85 });
       label.text = config.shortLabel;
@@ -602,7 +603,7 @@ export class TalentScreen {
 
     if (isSelected) {
       glow.roundRect(-40, -40, 80, 80, 18);
-      glow.stroke({ width: 6, color: resource.color, alpha: 0.35 });
+      glow.stroke({ width: 6, color: baseColor, alpha: 0.35 });
     }
   }
 
@@ -646,13 +647,14 @@ export class TalentScreen {
       return;
     }
 
-    const resource = TALENT_RESOURCE_META[config.resource];
-    const action = this.buildTooltipAction(nodeId, state, resource.color);
+    const actionColor = this.getNodeColor(config, level);
+    const action = this.buildTooltipAction(nodeId, state, actionColor);
     
     // 构建代价信息（仅传递数量和颜色，让 Tooltip 绘制图标）
-    const costInfo = config.cost > 0 ? {
-      amount: config.cost,
-      color: resource.color
+    const nextCost = this.getNextCost(config, level);
+    const costInfo = nextCost ? {
+      amount: nextCost.amount,
+      color: TALENT_RESOURCE_META[nextCost.resource].color
     } : undefined;
 
     const tooltipData: TalentTooltipData = {
@@ -738,14 +740,20 @@ export class TalentScreen {
     const config = this.nodeConfigs.get(nodeId);
     if (!config) return;
 
-    const resource = this.resources[config.resource];
-    if (!resource || resource.current < config.cost) {
+    const current = this.nodeLevels.get(nodeId) ?? 0;
+    const nextCost = this.getNextCost(config, current);
+    if (!nextCost) {
       this.showInfoForNode(nodeId);
       return;
     }
 
-    resource.current -= config.cost;
-    const current = this.nodeLevels.get(nodeId) ?? 0;
+    const resource = this.resources[nextCost.resource];
+    if (!resource || resource.current < nextCost.amount) {
+      this.showInfoForNode(nodeId);
+      return;
+    }
+
+    resource.current -= nextCost.amount;
     const nextLevel = Math.min(current + 1, config.maxLevel);
     this.nodeLevels.set(nodeId, nextLevel);
     this.accessibleNodes.add(nodeId);
@@ -854,6 +862,29 @@ export class TalentScreen {
 
   private clampScale(value: number): number {
     return Math.min(this.maxScale, Math.max(this.minScale, value));
+  }
+
+  private getNextCost(config: TalentNodeConfig, currentLevel: number): TalentCostConfig | null {
+    if (currentLevel >= config.maxLevel) return null;
+    if (!config.costs.length) return null;
+    const index = Math.min(currentLevel, config.costs.length - 1);
+    return config.costs[index];
+  }
+
+  private getCostForDisplay(config: TalentNodeConfig, level: number): TalentCostConfig | null {
+    if (!config.costs.length) return null;
+    const safeLevel = Math.max(0, Math.min(level, config.maxLevel - 1));
+    const index = Math.min(safeLevel, config.costs.length - 1);
+    return config.costs[index];
+  }
+
+  private getNodeColor(config: TalentNodeConfig, level: number): number {
+    const cost =
+      level >= config.maxLevel
+        ? this.getCostForDisplay(config, config.maxLevel - 1)
+        : this.getCostForDisplay(config, level);
+    if (!cost) return 0xb0bfd0;
+    return TALENT_RESOURCE_META[cost.resource].color;
   }
 }
 

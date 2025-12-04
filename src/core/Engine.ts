@@ -45,6 +45,7 @@ import { GameResultScreen } from '../ui/GameResultScreen';
 import { LevelManager } from '../managers/LevelManager';
 import { CompanionSystem } from '../systems/CompanionSystem';
 import { CompanionWeaponSystem } from '../systems/CompanionWeaponSystem';
+import { CameraSystem } from '../systems/CameraSystem';
 import { createCompanionBullet } from '../entities/CompanionBullet';
 
 export class GameEngine {
@@ -505,7 +506,8 @@ export class GameEngine {
       .addSystem(new BossSystem())         // Boss 系统
       .addSystem(new VictorySystem())      // 通关系统（通过事件触发）
       .addSystem(new DeathSystem(this.gameStage))
-      .addSystem(new HitFlashSystem());
+      .addSystem(new HitFlashSystem())
+      .addSystem(new CameraSystem(this.gameStage));
 
     if (this.upgradeSystem) {
       this.world.addSystem(this.upgradeSystem);       // 升级系统
