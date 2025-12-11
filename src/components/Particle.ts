@@ -12,7 +12,7 @@ export interface Particle extends Component {
   fadeOut: boolean;       // 是否淡出
   startScale: number;     // 初始缩放
   endScale: number;       // 结束缩放
-  blendMode: 'normal' | 'add' | 'screen'; // 混合模式
+  blendMode: 'normal' | 'add' | 'screen'; // 混合模式（与 PixiJS v8 的 BLEND_MODES 字符串兼容）
 }
 
 export function createParticle(

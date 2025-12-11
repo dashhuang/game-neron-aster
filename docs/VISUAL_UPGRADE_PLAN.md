@@ -3,14 +3,24 @@
 ## 1. 概述
 为了提升游戏的“动感”与“高品质”视觉体验，本方案从后期处理、动态反馈、背景氛围和粒子特效四个维度进行升级。目标是实现标准的“赛博霓虹”风格：高亮过曝的色彩、强烈的打击感和深邃的空间感。
 
+## 1.1 当前实现状态（截至目前）
+
+*   **已实装**：
+    *   `NeonRenderer`：多层描边辉光（核心线框 + 内发光 + 外发光）
+    *   `ParticleSystem`：支持生命周期缩放曲线（通过 `Transform.scale` 驱动）与 `blendMode: 'add'`
+    *   `CameraSystem`：基础屏幕震动（射击/死亡触发，按 BossData 区分 Boss 强震）
+*   **未实装（规划中）**：
+    *   全局 Bloom/后期滤镜链（需要引入滤镜库或自定义 Filter，并评估移动端性能）
+    *   动态背景（视差星空/网格）
+    *   受击顿帧（Hit Stop）、色差故障（Chromatic Aberration）、拖尾（Trail）
+
 ## 2. 核心升级模块
 
 ### 2.1 全局泛光 (Global Bloom)
-目前的“双重描边”方式效率低且效果生硬。我们将采用后期处理管线（Post-processing Pipeline）。
+目前项目尚未引入全局 Bloom 滤镜链，当前主要通过 `Graphics` 多层描边来模拟霓虹辉光。后续如要进一步提升“过曝/融光”质感，可采用后期处理管线（Post-processing Pipeline）。
 
 *   **方案**：
-    *   移除 `NeonRenderer` 中的 `stroke` 双重绘制逻辑。
-    *   在 `GameEngine` 中为 `gameStage` 容器添加 PixiJS 的 `AdvancedBloomFilter` 或组合滤镜（Blur + ColorMatrix）。
+    *   在 `GameEngine` 中为 `gameStage` 容器添加 Bloom/Blur 类滤镜，或组合滤镜（Blur + ColorMatrix）。
     *   **效果**：所有高亮物体（玩家、子弹、激光）将自然产生柔和的光晕，且颜色会叠加产生“过曝”的白热感。
 
 ### 2.2 摄像机系统 (Camera System)
@@ -36,7 +46,7 @@
 
 *   **方案**：
     *   **缩放曲线**：支持粒子生命周期内的 `scale` 变化（如爆炸初快后慢的扩散）。
-    *   **混合模式**：强制所有发光粒子使用 `BLEND_MODES.ADD`（线性减淡），使重叠粒子产生高亮白斑。
+    *   **混合模式**：发光粒子使用 `blendMode: 'add'`（线性减淡），使重叠粒子产生高亮白斑。
     *   **拖尾效果**：为高速物体（子弹、玩家）添加简单的拖尾（Trail）。
 
 ### 2.5 色差故障效果 (Chromatic Aberration)

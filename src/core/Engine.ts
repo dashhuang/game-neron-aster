@@ -507,7 +507,7 @@ export class GameEngine {
       .addSystem(new VictorySystem())      // 通关系统（通过事件触发）
       .addSystem(new DeathSystem(this.gameStage))
       .addSystem(new HitFlashSystem())
-      .addSystem(new CameraSystem(this.gameStage));
+      .addSystem(new CameraSystem(this.world, this.gameStage));
 
     if (this.upgradeSystem) {
       this.world.addSystem(this.upgradeSystem);       // 升级系统

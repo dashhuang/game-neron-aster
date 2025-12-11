@@ -382,12 +382,12 @@
   - LifetimeSystem（生命周期）、CleanupSystem（屏幕外清理）
   - ParticleSystem（粒子特效）、DeathSystem（死亡爆炸）
   - HitFlashSystem（受击闪烁）
+  - CameraSystem（震屏：射击/死亡触发，Boss更强）
   - RenderSystem（渲染同步）、UISystem（HUD/面板/通关UI）
   - PerformanceSystem（性能监控 / 敌人上限200 / 子弹上限50（玩家+敌人+僚机）/ 清理残留精灵）
 * **计划中**：
   - StatusEffectSystem（减速/流血/易伤）
   - AudioSystem（音效系统）
-  - CameraSystem（震屏/跟随）
   - SaveSystem（存档系统）
 
 **事件（Events）**：DamageEvent, DeathEvent, SpawnEvent, PickupEvent, LevelUpEvent, CastUltimateEvent, WaveReachedEvent。
@@ -398,7 +398,9 @@
 
 # 11. 渲染与特效实现
 
-* **线框与辉光**：矢量绘制到 RenderTexture → 高斯模糊 → Additive 混合叠加主图层（Bloom 伪实现）。
+* **线框与辉光（当前实现）**：`Graphics` 多层描边（核心线框 + 内发光 + 外发光）模拟霓虹效果。
+* **粒子叠加（当前实现）**：爆炸粒子使用 `blendMode: 'add'`，重叠处产生更亮的“白热感”。
+* **全局 Bloom（规划）**：如需更真实的融光/过曝，可在 `gameStage` 上引入 Blur/Bloom 滤镜链（详见 `docs/VISUAL_UPGRADE_PLAN.md`），需评估移动端性能。
 * **描边几何**：预存顶点数组（正多边形/箭头/自定义），运行时按缩放旋转。
 * **飘字**：对象池 + 贝塞尔上飘 + 1 秒淡出。
 * **护盾弧线/扇区**：用几何扇形 Mesh；CD 可视化为弧形进度。

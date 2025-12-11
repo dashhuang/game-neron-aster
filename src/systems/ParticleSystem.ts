@@ -6,17 +6,18 @@
 import { System, World } from '../core/ECS';
 import { Particle } from '../components/Particle';
 import { Render } from '../components/Render';
-import { Graphics, Container } from 'pixi.js';
+import { Transform } from '../components/Transform';
 
 export class ParticleSystem extends System {
   update(world: World, delta: number): void {
-    const entities = this.query(world, 'Particle', 'Render');
+    const entities = this.query(world, 'Particle', 'Render', 'Transform');
     
     for (const entity of entities) {
       const particle = entity.getComponent<Particle>('Particle');
       const render = entity.getComponent<Render>('Render');
+      const transform = entity.getComponent<Transform>('Transform');
       
-      if (!particle || !render) continue;
+      if (!particle || !render || !transform) continue;
       
       particle.elapsed += delta;
       
@@ -30,7 +31,7 @@ export class ParticleSystem extends System {
       }
       
       // 2. 淡出效果
-      if (particle.fadeOut && (sprite instanceof Graphics || sprite instanceof Container)) {
+      if (particle.fadeOut) {
         sprite.alpha = particle.initialAlpha * (1 - progress);
       }
       
@@ -42,9 +43,10 @@ export class ParticleSystem extends System {
         
         // 只有当缩放值有意义时才应用 (避免 scale 0 导致的渲染问题)
         if (currentScale > 0.01) {
-          sprite.scale.set(currentScale);
+          transform.scale = currentScale;
+          sprite.visible = true;
         } else {
-          sprite.scale.set(0.01);
+          transform.scale = 0.01;
           sprite.visible = false;
         }
       }

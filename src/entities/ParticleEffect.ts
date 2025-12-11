@@ -79,7 +79,7 @@ export function createExplosion(
     
     // 设置旋转为运动方向
     const rotation = Math.atan2(vy, vx);
-
+    
     // 添加组件
     entity.addComponent(createTransform(x, y, rotation, initialScale));
     entity.addComponent(createVelocity(vx, vy));

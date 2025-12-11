@@ -5,18 +5,20 @@
 
 import { System, World, Events } from '../core/ECS';
 import { Container } from 'pixi.js';
+import { EntityType } from '../config/constants';
 
 export class CameraSystem extends System {
   private stage: Container;
   private shakeIntensity: number = 0;
   private shakeDecay: number = 0.9; // 震动衰减系数
   
-  constructor(stage: Container) {
+  constructor(world: World, stage: Container) {
     super();
     this.stage = stage;
+    this.bindEvents(world);
   }
 
-  update(world: World, _delta: number): void {
+  update(_world: World, _delta: number): void {
     // 如果没有震动，重置位置并跳过
     if (this.shakeIntensity < 0.5) {
       this.stage.x = 0;
@@ -36,39 +38,31 @@ export class CameraSystem extends System {
     this.shakeIntensity *= this.shakeDecay;
   }
 
-  onAdd(world: World): void {
-    // 监听事件触发震动
-    
+  private bindEvents(world: World): void {
     // 玩家射击：极微弱震动（增加打击感）
     world.eventBus.on(Events.SHOOT, (data) => {
-        // 仅玩家射击触发
-        const player = world.entities.find(e => e.id === data.ownerId);
-        if (player) {
-             const tag = player.getComponent('Tag') as any;
-             if (tag && tag.value === 'player') {
-                 this.addShake(2); 
-             }
-        }
+      // data.companion 表示僚机射击，弱化震动
+      const amount = data?.companion ? 0.6 : 2;
+      this.addShake(amount);
     });
 
-    // 敌人死亡：中等震动
+    // 死亡事件：敌人中震、Boss 大震、玩家极强震
     world.eventBus.on(Events.DEATH, (data) => {
-      if (data.entity) {
-        const tag = data.entity.getComponent('Tag') as any;
-        if (tag && tag.value === 'enemy') {
-            this.addShake(5);
-        } else if (tag && tag.value === 'boss') {
-            this.addShake(20); // Boss 死亡剧烈震动
-        } else if (tag && tag.value === 'player') {
-            this.addShake(30); // 玩家死亡剧烈震动
-        }
+      const entity = data?.entity;
+      if (!entity) return;
+
+      const tag = entity.getComponent('Tag') as any;
+      if (tag?.value === EntityType.PLAYER) {
+        this.addShake(30);
+        return;
+      }
+
+      if (tag?.value === EntityType.ENEMY) {
+        // Boss 目前同样使用 ENEMY 标签，可通过 BossData 判断
+        const isBoss = !!entity.getComponent('BossData');
+        this.addShake(isBoss ? 20 : 5);
       }
     });
-    
-    // 玩家受击（可以通过监听 HEALTH_CHANGED 或特定事件，目前假设有 damage 事件，或者我们监听 Projectile 击中）
-    // 暂时监听 HIT 事件如果存在，或者依靠 DEATH.
-    // 更好的方式是监听 'damage' 事件，但当前 ECS 可能没有统一的 damage 事件。
-    // 我们可以在 HealthSystem 触发 damage 事件，这里先暂时略过，依靠死亡震动。
   }
 
   private addShake(amount: number): void {
